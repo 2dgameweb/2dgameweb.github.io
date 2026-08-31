@@ -8,7 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Rubik:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-[hidden]{display:none!important}               /* FIX: hidden vince sempre sul CSS */
+[hidden]{display:none!important}
 html,body{height:100%}
 body{
   font-family:Rubik,system-ui,"Segoe UI",sans-serif;color:#fff;overflow:hidden;
@@ -28,15 +28,23 @@ body{
 .chip b{font-weight:800;font-size:15px;font-variant-numeric:tabular-nums}
 .lbl{opacity:.6;font-size:10px;text-transform:uppercase;letter-spacing:.6px}
 #scoreEl{color:#7cffb2}#recEl{color:#ffd54a}#lvlEl{color:#7cc4ff}
+/* barra vita 100 HP */
+.hpbar{width:110px;height:11px;border-radius:6px;background:rgba(0,0,0,.55);overflow:hidden;
+  box-shadow:0 0 0 1px rgba(255,255,255,.22)}
+.hpbar i{display:block;height:100%;width:100%;border-radius:6px;
+  background:linear-gradient(90deg,#39ff88,#a8ff78);transition:width .2s}
+#hpNum{min-width:30px;text-align:right}
+#hpChip.dmg{animation:dmgFlash .35s}
+@keyframes dmgFlash{0%{box-shadow:0 0 0 2px #ff4d6d,0 0 20px rgba(255,77,109,.9);transform:scale(1.06)}100%{}}
+#hpChip.low .hpbar i{animation:pulse .7s infinite}
+@keyframes pulse{50%{opacity:.55}}
 #comboChip{display:none;background:rgba(255,120,60,.16);border-color:rgba(255,150,80,.5);color:#ffc07c;font-weight:800}
 #bossChip{display:none;color:#ffb3c1;border-color:rgba(255,90,120,.45);font-weight:700}
 #bossChip.urgent{animation:pulse .7s infinite}
-@keyframes pulse{50%{transform:scale(1.08);box-shadow:0 0 14px rgba(255,77,109,.5)}}
 .spacer{flex:1}
 .icon-btn{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.18);color:#fff;
   border-radius:12px;padding:7px 11px;font-size:16px;cursor:pointer;transition:.15s}
 .icon-btn:hover{background:rgba(255,255,255,.2)}
-#heartsEl{letter-spacing:2px;font-size:14px}
 
 /* ---------- ARENA ---------- */
 #arena{flex:1;position:relative;overflow:hidden;border-radius:18px;touch-action:none;
@@ -54,7 +62,7 @@ body{
 .m-body{line-height:1;filter:drop-shadow(0 4px 10px rgba(0,0,0,.5));animation:bob 1.6s ease-in-out infinite}
 @keyframes bob{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-4px) rotate(3deg)}}
 .m-bar{width:36px;height:4px;border-radius:3px;background:rgba(0,0,0,.45);overflow:hidden;
-  box-shadow:0 0 0 1px rgba(255,255,255,.14)}                 /* barretta tempo rimasto */
+  box-shadow:0 0 0 1px rgba(255,255,255,.14)}
 .m-bar i{display:block;height:100%;width:100%;background:#39ff88;border-radius:3px}
 .m-pips{font-size:8px;letter-spacing:2px;color:#ff8a8a;text-shadow:0 1px 2px #000}
 .m-hp{width:92px;height:6px;border-radius:3px;background:rgba(0,0,0,.5);overflow:hidden;
@@ -98,14 +106,15 @@ body{
 .screen{position:absolute;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;
   background:rgba(8,4,20,.74);backdrop-filter:blur(6px);padding:14px}
 .card{background:linear-gradient(170deg,rgba(60,30,110,.6),rgba(15,25,55,.7));
-  border:1px solid rgba(255,255,255,.16);border-radius:22px;padding:22px;max-width:540px;width:100%;
+  border:1px solid rgba(255,255,255,.16);border-radius:22px;padding:22px;max-width:560px;width:100%;
   text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.5);max-height:100%;overflow:auto}
 .title{font-family:'Press Start 2P',monospace;font-size:clamp(14px,4vw,21px);color:#fff;
   text-shadow:0 0 18px rgba(124,77,255,.9);margin-bottom:8px}
-.subtitle{opacity:.8;font-size:13px;margin-bottom:12px;line-height:1.5}
+.subtitle{opacity:.85;font-size:13px;margin-bottom:12px;line-height:1.55}
 .legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:7px;margin:14px 0;text-align:left}
 .legend div{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:10px;
   padding:7px 9px;font-size:12px;line-height:1.3}
+.legend div.warn{background:rgba(255,77,109,.12);border-color:rgba(255,77,109,.45)}
 .btn-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:12px}
 .big-btn{font-family:'Press Start 2P',monospace;font-size:13px;padding:14px 24px;border-radius:14px;
   border:none;cursor:pointer;color:#08121f;background:linear-gradient(180deg,#5dff9d,#19c96d);
@@ -166,7 +175,7 @@ body{
 .ad-progress{height:10px;background:rgba(255,255,255,.15);border-radius:6px;overflow:hidden;margin-top:14px}
 .ad-progress i{display:block;height:100%;width:0;background:linear-gradient(90deg,#7c4dff,#00e5ff)}
 
-@media (max-width:640px){.brand{display:none}.lbl{display:none}.final-grid{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:640px){.brand{display:none}.lbl{display:none}.final-grid{grid-template-columns:repeat(2,1fr)}.hpbar{width:80px}}
 </style>
 </head>
 <body>
@@ -177,7 +186,8 @@ body{
     <div class="chip"><span class="lbl">Punti</span><b id="scoreEl">0</b></div>
     <div class="chip"><span class="lbl">Record</span><b id="recEl">0</b></div>
     <div class="chip"><span class="lbl">Liv</span><b id="lvlEl">1</b></div>
-    <div class="chip"><span id="heartsEl">❤️❤️❤️❤️❤️</span></div>
+    <div class="chip" id="hpChip"><span class="lbl">HP</span>
+      <div class="hpbar"><i id="hpFill"></i></div><b id="hpNum">100</b></div>
     <div class="chip" id="comboChip">🔥 x3</div>
     <div class="chip" id="bossChip">👿</div>
     <div class="spacer"></div>
@@ -193,16 +203,17 @@ body{
     <div class="screen" id="startScreen">
       <div class="card">
         <div class="title">👾 SCHIACCIA I MOSTRI</div>
-        <div class="subtitle">Colpiscili prima che la loro barretta del tempo si svuoti!</div>
+        <div class="subtitle">Schiacciali prima che la loro barretta scada:<br><b>ogni mostro che svanisce ti toglie HP!</b></div>
         <div class="legend">
           <div>👾 <b>Normale</b> — 1 colpo</div>
           <div>🦇 <b>Pipistrello</b> — veloce!</div>
           <div>👻 <b>Fantasma</b> — quasi invisibile</div>
           <div>🧟 <b>Zombie</b> — 3 colpi</div>
           <div>🦠 <b>Virus</b> — si divide 1 volta sola</div>
-          <div>👹 <b>Orco</b> — coliscilo solo se VERDE!</div>
-          <div>🎃 <b>Trappola</b> — NON cliccarlo!</div>
+          <div>👹 <b>Orco</b> — colpiscilo solo se VERDE!</div>
+          <div>🎃 <b>Trappola</b> — NON cliccarlo: -15 HP</div>
           <div>👿 <b>BOSS</b> — ogni 1–2 minuti</div>
+          <div class="warn">⚠️ <b>Se scadono perdi HP</b>: 👾 -5 • 👻🧟👹 -10 • 👿 -30</div>
         </div>
         <div class="subtitle">🏅 Record personale: <b id="startRec">0</b></div>
         <div class="btn-row">
@@ -214,9 +225,9 @@ body{
 
     <div class="screen" id="rebirthScreen" hidden>
       <div class="card">
-        <div class="title">😵 SEI STATO SCONFITTO</div>
+        <div class="title">😵 HP ESAURITI</div>
         <div class="subtitle">Punteggio attuale: <b id="rebirthScore">0</b></div>
-        <button class="big-btn alt" id="adBtn">📺 GUARDA PUBBLICITÀ → +1 ❤️</button>
+        <button class="big-btn alt" id="adBtn">📺 GUARDA PUBBLICITÀ → +50 HP</button>
         <div><button class="link-btn" id="declineBtn">No grazie, termina la partita →</button></div>
         <p class="lb-note">(pubblicità simulata — collega AdSense / AdInMo / Unity Ads)</p>
       </div>
@@ -282,5 +293,463 @@ body{
 <script>
 'use strict';
 /* ============================================================
-   SCHIACCIA I MOSTRI — v2
-   FIX
+   SCHIACCIA I MOSTRI — v3
+   NOVITÀ: barra vita da 100 HP.
+   Ogni mostro che scade toglie HP:
+     👾🦇🦠 -5   (figli del virus -3)
+     👻🧟👹 -10
+     👿 boss -30
+   🎃 cliccare la trappola: -15 HP.
+   📺 Rinascita con pubblicità: +50 HP.
+   ============================================================ */
+
+/* ---------- utilità ---------- */
+const rand=(a,b)=>a+Math.random()*(b-a);
+const ri=(a,b)=>Math.floor(rand(a,b+1));
+const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+/* riferimenti DOM */
+const arena=document.getElementById('arena');
+const scoreEl=document.getElementById('scoreEl'), recEl=document.getElementById('recEl'),
+      lvlEl=document.getElementById('lvlEl'),
+      hpChip=document.getElementById('hpChip'), hpFill=document.getElementById('hpFill'),
+      hpNum=document.getElementById('hpNum'),
+      comboChip=document.getElementById('comboChip'), bossChip=document.getElementById('bossChip'),
+      bannerEl=document.getElementById('banner'), cdEl=document.getElementById('countdown'),
+      startRec=document.getElementById('startRec'),
+      rebirthScore=document.getElementById('rebirthScore'),
+      finalScore=document.getElementById('finalScore'), finalRec=document.getElementById('finalRec'),
+      finalLvl=document.getElementById('finalLvl'), finalSmash=document.getElementById('finalSmash'),
+      nameInput=document.getElementById('nameInput'), submitBtn=document.getElementById('submitBtn'),
+      lbStatus=document.getElementById('lbStatus'),
+      lbModal=document.getElementById('lbModal'), lbList=document.getElementById('lbList'),
+      lbOnline=document.getElementById('lbOnline'),
+      adOverlay=document.getElementById('adOverlay'),
+      adMsg=document.getElementById('adMsg'), adFill=document.getElementById('adFill');
+
+/* ---------- audio ---------- */
+const AudioFX=(()=>{
+  let ctx=null, muted=localStorage.getItem('sm_muted')==='1';
+  function ac(){if(!ctx)ctx=new (window.AudioContext||window.webkitAudioContext)();return ctx;}
+  function beep(o){
+    if(muted)return;
+    try{const c=ac(),t=c.currentTime+(o.delay||0),os=c.createOscillator(),g=c.createGain();
+      os.type=o.type||'square';os.frequency.setValueAtTime(o.f,t);
+      if(o.f2)os.frequency.exponentialRampToValueAtTime(Math.max(o.f2,1),t+o.dur);
+      g.gain.setValueAtTime(o.vol||.12,t);g.gain.exponentialRampToValueAtTime(.001,t+o.dur);
+      os.connect(g).connect(c.destination);os.start(t);os.stop(t+o.dur+.02);}catch(e){}
+  }
+  return{
+    get muted(){return muted;},
+    unlock(){try{const c=ac();if(c.state==='suspended')c.resume();}catch(e){}},
+    toggle(){muted=!muted;localStorage.setItem('sm_muted',muted?'1':'0');return muted;},
+    squash(){beep({f:300,f2:80,dur:.09});},
+    hit(){beep({f:160,f2:90,type:'triangle',dur:.07,vol:.15});},
+    hurt(){beep({f:200,f2:60,type:'sawtooth',dur:.2,vol:.18});},
+    trap(){beep({f:120,f2:40,type:'sawtooth',dur:.3,vol:.2});},
+    coin(){beep({f:880,f2:1320,type:'sine',dur:.09,vol:.1});},
+    level(){[523,659,784].forEach((f,i)=>beep({f,dur:.09,delay:i*.09}));},
+    bossIn(){beep({f:80,f2:40,type:'sawtooth',dur:.7,vol:.22});},
+    bossDie(){[392,523,659,784].forEach((f,i)=>beep({f,dur:.12,vol:.15,delay:i*.1}));},
+    over(){[400,300,200,120].forEach((f,i)=>beep({f,type:'triangle',dur:.18,vol:.15,delay:i*.15}));}
+  };
+})();
+
+/* ---------- classifica "online" ---------- */
+const LB_KEY='sm_my_scores_v2', SIM_KEY='sm_global_sim_v1',
+      NAME_KEY='sm_name', REC_KEY='sm_record';
+function loadJSON(k,f){try{const v=JSON.parse(localStorage.getItem(k));return v==null?f:v;}catch(e){return f;}}
+function saveJSON(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
+const SIM_NAMES=['DragonKiller','xX_Slayer_Xx','NonnaPina','ProGamer2016','SchiacciaPro','Luca09',
+ 'Martina✨','IlBossDeiBoss','Kekko99','Aurora','ZioPeppe','NoobHunter','Giulia🍕','DarkPhoenix',
+ 'Matteo','SuperMarta','CacciatoreDiMostri','PixelPazzo'];
+function ensureSim(){
+  let sim=loadJSON(SIM_KEY,null);
+  if(!sim){
+    sim=SIM_NAMES.map(n=>({name:n,score:ri(300,9000),level:ri(2,9),ts:Date.now()-ri(0,5e8)}));
+    saveJSON(SIM_KEY,sim);
+  }else if(Math.random()<.6){
+    sim[ri(0,sim.length-1)].score+=ri(10,220);saveJSON(SIM_KEY,sim);
+  }
+  return sim;
+}
+const LeaderboardAPI={
+  _net(){return new Promise(r=>setTimeout(r,rand(350,900)));},
+  async fetch(){
+    await this._net();
+    return [...ensureSim(),...loadJSON(LB_KEY,[])].sort((a,b)=>b.score-a.score).slice(0,50);
+  },
+  async submit(e){
+    await this._net();
+    const mine=loadJSON(LB_KEY,[]);
+    const i=mine.findIndex(x=>x.runId&&x.runId===e.runId);
+    if(i>=0)mine[i]=e;else mine.push(e);
+    mine.sort((a,b)=>b.score-a.score);
+    saveJSON(LB_KEY,mine.slice(0,20));
+    const all=[...ensureSim(),...mine].sort((a,b)=>b.score-a.score);
+    return{pos:all.findIndex(x=>x.runId===e.runId)+1,total:all.length};
+  }
+};
+
+/* ---------- tipi di mostro ---------- */
+const TYPES={
+  normal:{emoji:'👾',size:46,life:4.5,hp:1,pts:10},
+  bat:{emoji:'🦇',size:38,life:2.8,hp:1,pts:25,move:130},
+  ghost:{emoji:'👻',size:46,life:4.2,hp:1,pts:30},
+  zombie:{emoji:'🧟',size:52,life:6,hp:3,pts:40},
+  virus:{emoji:'🦠',size:42,life:4.5,hp:1,pts:20},
+  ogre:{emoji:'👹',size:54,life:6.5,hp:1,pts:60},
+  trap:{emoji:'🎃',size:46,life:4,hp:1,pts:10},
+  boss:{emoji:'👿',size:104,life:20,hp:15,pts:300,move:85}
+};
+/* 💥 HP tolti quando il mostro svanisce per tempo scaduto */
+const DMG={normal:5,bat:5,ghost:10,zombie:10,virus:5,ogre:10,trap:0,boss:30};
+const TRAP_CLICK_DMG=15;   /* se clicchi la zucca */
+const REBIRTH_HEAL=50;     /* quanto rigenera la pubblicità */
+
+/* ---------- stato ---------- */
+let uid=0,AW=0,AH=0;
+function newRunId(){return 'r'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);}
+const S={running:false,paused:false,score:0,level:1,
+  hp:100,maxHp:100,                       /* ❤️ barra vita da 100 */
+  combo:0,comboT:0,smashed:0,monsters:[],spawnT:1.2,
+  bossActive:false,bossIn:90,
+  rebirthUsed:false,runSubmitted:false,runId:newRunId()};
+function record(){return +localStorage.getItem(REC_KEY)||0;}
+function measure(){const r=arena.getBoundingClientRect();AW=r.width;AH=r.height;}
+function levelFactor(){return clamp(1-(S.level-1)*.045,.55,1);}
+
+/* ---------- HUD ---------- */
+function addScore(n){S.score=Math.max(0,S.score+n);scoreEl.textContent=S.score;
+  if(S.score>record())recEl.textContent=S.score;}
+function renderHP(hit){
+  const pct=clamp(S.hp/S.maxHp*100,0,100);
+  hpFill.style.width=pct+'%';
+  hpFill.style.background=pct>50?'linear-gradient(90deg,#39ff88,#a8ff78)'
+    :pct>25?'linear-gradient(90deg,#ffd54a,#ffb300)'
+    :'linear-gradient(90deg,#ff4d6d,#ff8a8a)';
+  hpNum.textContent=S.hp;
+  hpChip.classList.toggle('low',pct<=25&&S.hp>0);
+  if(hit){hpChip.classList.remove('dmg');void hpChip.offsetWidth;hpChip.classList.add('dmg');}
+}
+function renderHUDAll(){scoreEl.textContent=0;recEl.textContent=record();lvlEl.textContent=1;
+  renderHP(false);startRec.textContent=record();}
+function setCombo(n){S.combo=n;S.comboT=n>0?3:0;
+  if(n>=3){comboChip.style.display='flex';comboChip.textContent='🔥 x'+n;}
+  else comboChip.style.display='none';}
+
+/* ---------- schermate ---------- */
+const SCREENS=['startScreen','rebirthScreen','overScreen','pauseOverlay'];
+function showScreen(id){for(const s of SCREENS)document.getElementById(s).hidden=(s!==id);}
+function hideScreens(){showScreen(null);}
+
+/* ---------- effetti ---------- */
+let bannerT=null;
+function banner(txt,cls){bannerEl.textContent=txt;bannerEl.className='show '+(cls||'');
+  clearTimeout(bannerT);bannerT=setTimeout(()=>{bannerEl.className='';},1800);}
+function floatText(x,y,txt,cls){const d=document.createElement('div');
+  d.className='ftext '+(cls||'');d.textContent=txt;d.style.left=x+'px';d.style.top=(y-30)+'px';
+  arena.appendChild(d);setTimeout(()=>d.remove(),850);}
+function particles(x,y,n){const cols=['#7c4dff','#00e5ff','#39ff88','#ffd54a','#ff4d6d'];
+  for(let i=0;i<n;i++){const p=document.createElement('div');p.className='part';
+    p.style.left=x+'px';p.style.top=y+'px';p.style.background=cols[ri(0,cols.length-1)];
+    arena.appendChild(p);
+    const a=rand(0,Math.PI*2),d=rand(22,70);
+    p.animate([{transform:'translate(-50%,-50%)',opacity:1},
+      {transform:'translate('+(Math.cos(a)*d)+'px,'+(Math.sin(a)*d)+'px) scale(.3)',opacity:0}],
+      {duration:rand(300,550),easing:'ease-out'}).onfinish=()=>p.remove();}}
+function splat(x,y){const d=document.createElement('div');d.className='splat';d.textContent='💥';
+  d.style.left=x+'px';d.style.top=y+'px';arena.appendChild(d);setTimeout(()=>d.remove(),320);}
+function shake(){arena.classList.remove('shake');void arena.offsetWidth;arena.classList.add('shake');}
+function flashEl(m){m.el.classList.add('flash');setTimeout(()=>{if(m.el)m.el.classList.remove('flash');},130);}
+
+/* ---------- danni / morte ---------- */
+function damage(n,x,y){
+  if(!S.running)return;
+  S.hp=Math.max(0,S.hp-n);
+  renderHP(true);AudioFX.hurt();
+  if(x!=null)floatText(x,y,'-'+n+' HP','bad');
+  if(S.hp<=0){
+    S.running=false;AudioFX.over();
+    if(S.score>record())localStorage.setItem(REC_KEY,S.score);
+    recEl.textContent=record();clearMonsters();
+    if(!S.rebirthUsed){rebirthScore.textContent=S.score;showScreen('rebirthScreen');}
+    else finalOver();
+  }
+}
+
+/* ---------- mostri ---------- */
+function pickType(){
+  const L=S.level,w=[['normal',30],['bat',16]];
+  if(L>=2)w.push(['ghost',12],['zombie',11],['trap',8]);
+  if(L>=3)w.push(['virus',11],['ogre',9]);
+  let tot=0;for(const x of w)tot+=x[1];
+  let r=Math.random()*tot;
+  for(const[t,p]of w){r-=p;if(r<=0)return t;}
+  return 'normal';
+}
+function buildEl(m){
+  const T=TYPES[m.type],el=document.createElement('div');
+  el.className='monster '+m.type;
+  const body=document.createElement('div');body.className='m-body';
+  body.textContent=T.emoji;body.style.fontSize=m.size+'px';
+  if(m.type==='bat')body.style.animationDuration='.5s';
+  if(m.type==='ghost')body.style.animationDuration='2.4s';
+  el.appendChild(body);
+  if(m.type==='zombie'){const p=document.createElement('div');p.className='m-pips';
+    p.textContent='●'.repeat(m.hp);el.appendChild(p);m.pipsEl=p;}
+  if(m.type==='boss'){const hp=document.createElement('div');hp.className='m-hp';
+    hp.innerHTML='<i></i>';el.appendChild(hp);m.hpEl=hp.firstElementChild;}
+  const bar=document.createElement('div');bar.className='m-bar';bar.innerHTML='<i></i>';
+  el.appendChild(bar);m.barEl=bar.firstElementChild;
+  el.style.transform='translate('+m.x+'px,'+m.y+'px) translate(-50%,-50%)';
+  el.addEventListener('pointerdown',ev=>{ev.preventDefault();ev.stopPropagation();hitMonster(m);},{passive:false});
+  arena.appendChild(el);m.el=el;m.bodyEl=body;
+}
+function spawnMonster(type,o){
+  o=o||{};
+  if(S.monsters.length>=16&&type!=='boss')return null;
+  const T=TYPES[type];
+  const m={id:++uid,type:type,gen:o.gen||0,hp:o.hp!=null?o.hp:T.hp,
+    x:o.x!=null?o.x:rand(T.size,Math.max(T.size+1,AW-T.size)),
+    y:o.y!=null?o.y:rand(T.size,Math.max(T.size+1,AH-T.size-8)),
+    size:o.size||T.size,maxLife:o.life!=null?o.life:T.life*levelFactor(),
+    vx:0,vy:0,phase:rand(0,6.28),dead:false};
+  m.life=m.maxLife;
+  if(T.move){const s=T.move*(1+S.level*.05),a=rand(0,Math.PI*2);
+    m.vx=Math.cos(a)*s;m.vy=Math.sin(a)*s;}
+  if(type==='boss'){m.hp=T.hp+S.level*3;m.maxHp=m.hp;}
+  buildEl(m);S.monsters.push(m);return m;
+}
+function spawnBoss(){
+  S.bossActive=true;
+  spawnMonster('boss',{x:rand(AW*.3,AW*.7),y:rand(AH*.25,AH*.6),life:20+S.level});
+  banner('⚠️ È ARRIVATO IL BOSS! 👿','bad');AudioFX.bossIn();shake();
+}
+function scheduleBoss(){S.bossIn=rand(60,120);}  /* 👿 ogni 1–2 minuti */
+function removeMonster(m){
+  m.dead=true;
+  const i=S.monsters.indexOf(m);if(i>=0)S.monsters.splice(i,1);
+  if(m.el){m.el.classList.add('gone');const el=m.el;setTimeout(()=>el.remove(),300);}
+}
+function clearMonsters(){for(const m of S.monsters){m.dead=true;if(m.el)m.el.remove();}S.monsters.length=0;S.bossActive=false;}
+
+/* ---------- combattimento ---------- */
+function hitMonster(m){
+  if(!S.running||S.paused||m.dead)return;
+  const t=m.type;
+  if(t==='trap'){ /* 🎃 trappola cliccata: -15 HP */
+    AudioFX.trap();shake();setCombo(0);
+    removeMonster(m);damage(TRAP_CLICK_DMG,m.x,m.y);
+    return;
+  }
+  if(t==='ogre'){
+    const green=(m.phase%2.6)<1.3;
+    if(!green){addScore(-20);floatText(m.x,m.y,'❌ È ROSSO! -20','bad');
+      AudioFX.hit();setCombo(0);flashEl(m);return;}
+  }
+  if(t==='zombie'||t==='boss'){
+    m.hp--;AudioFX.hit();flashEl(m);
+    if(t==='zombie'){if(m.hp>0){m.pipsEl.textContent='●'.repeat(m.hp);return;}}
+    else{m.hpEl.style.width=Math.max(0,m.hp/m.maxHp*100)+'%';if(m.hp>0)return;}
+  }
+  killMonster(m);
+}
+function killMonster(m){
+  if(m.dead)return;
+  const T=TYPES[m.type],x=m.x,y=m.y;
+  removeMonster(m);
+  particles(x,y,m.type==='boss'?26:10);splat(x,y);
+  setCombo(S.combo+1);
+  const base=m.type==='boss'?T.pts+S.level*50:T.pts;
+  const pts=Math.round(base*(1+Math.min(S.combo,25)*.04));
+  addScore(pts);floatText(x,y,'+'+pts,'pts');
+  if(m.type==='boss'){AudioFX.bossDie();banner('🎉 BOSS SCONFITTO! +'+pts,'good');
+    S.bossActive=false;scheduleBoss();shake();}
+  else AudioFX.squash();
+  if(m.type==='virus'&&m.gen===0){
+    /* 🦠 si divide UNA sola volta */
+    floatText(x,y-22,'🦠 si divide!','info');
+    for(let i=0;i<2;i++){
+      spawnMonster('virus',{gen:1,size:26,life:3,
+        x:clamp(x+rand(-60,60),30,Math.max(60,AW-30)),
+        y:clamp(y+rand(-60,60),40,Math.max(70,AH-30))});
+    }
+  }
+  S.smashed++;
+  if(S.smashed%12===0){S.level++;lvlEl.textContent=S.level;
+    banner('⬆️ LIVELLO '+S.level,'good');AudioFX.level();}
+}
+function escapeMonster(m){
+  /* ⏰ il mostro svanisce per tempo scaduto → toglie HP */
+  const x=m.x,y=m.y,type=m.type;
+  removeMonster(m);
+  if(type==='trap'){addScore(10);floatText(x,y,'🎃 evitata +10','info');AudioFX.coin();return;}
+  let d=DMG[type]||5;
+  if(type==='virus'&&m.gen>0)d=3;              /* figli piccoli: -3 */
+  if(type==='boss'){S.bossActive=false;scheduleBoss();
+    banner('💨 Il boss è fuggito! -'+d+' HP','bad');}
+  damage(d,x,y);
+}
+
+/* ---------- fine partita / rinascita ---------- */
+function finalOver(){
+  finalScore.textContent=S.score;finalRec.textContent=record();
+  finalLvl.textContent=S.level;finalSmash.textContent=S.smashed;
+  nameInput.value=localStorage.getItem(NAME_KEY)||'';
+  submitBtn.disabled=false;submitBtn.textContent='📤 SALVA';lbStatus.textContent='';
+  showScreen('overScreen');
+}
+async function submitScore(){
+  if(S.runSubmitted){lbStatus.textContent='Punteggio già inviato per questa partita ✔️';return;}
+  const name=(nameInput.value.trim()||'Anonimo').slice(0,14);
+  localStorage.setItem(NAME_KEY,name);
+  S.runSubmitted=true;submitBtn.disabled=true;submitBtn.textContent='INVIO…';
+  lbStatus.textContent='📡 Invio del punteggio…';
+  try{
+    const res=await LeaderboardAPI.submit({name:name,score:S.score,level:S.level,
+      ts:Date.now(),runId:S.runId,me:true});
+    lbStatus.textContent='✅ Salvato! Sei #'+res.pos+' al mondo 🌍';
+    openLeaderboard();
+  }catch(e){
+    S.runSubmitted=false;submitBtn.disabled=false;submitBtn.textContent='📤 SALVA';
+    lbStatus.textContent='❌ Errore di rete, riprova.';
+  }
+}
+function showAdOverlay(done){
+  adOverlay.hidden=false;
+  adMsg.innerHTML='Ricompensa in <span id="adCount">3</span>…';
+  const cnt=document.getElementById('adCount');
+  let t=3;
+  const iv=setInterval(()=>{t--;if(t>0&&cnt)cnt.textContent=t;},1000);
+  adFill.style.transition='none';adFill.style.width='0%';
+  requestAnimationFrame(()=>{adFill.style.transition='width 3s linear';adFill.style.width='100%';});
+  setTimeout(()=>{clearInterval(iv);adMsg.textContent='✅ +'+REBIRTH_HEAL+' HP!';
+    setTimeout(()=>{adOverlay.hidden=true;done();},700);},3100);
+}
+
+/* ---------- avvio partita ---------- */
+function newRun(){
+  clearMonsters();
+  S.score=0;S.level=1;S.hp=S.maxHp;S.combo=0;S.comboT=0;S.smashed=0;S.spawnT=1.2;
+  S.rebirthUsed=false;S.runSubmitted=false;S.runId=newRunId();
+  S.bossActive=false;scheduleBoss();
+  S.paused=false;document.getElementById('pauseBtn').textContent='⏸️';
+  bossChip.style.display='none';comboChip.style.display='none';
+  renderHUDAll();hideScreens();measure();countdownGo();
+}
+function countdownGo(){
+  S.running=false;
+  cdEl.hidden=false;
+  const seq=['3','2','1','VIA!'];let i=0;cdEl.textContent=seq[0];
+  const iv=setInterval(()=>{i++;
+    if(i>=seq.length){clearInterval(iv);cdEl.hidden=true;S.running=true;return;}
+    cdEl.textContent=seq[i];},650);
+}
+
+/* ---------- loop ---------- */
+function update(dt){
+  S.spawnT-=dt;
+  if(S.spawnT<=0){
+    spawnMonster(pickType());
+    if(S.level>=4&&Math.random()<.3)spawnMonster(pickType());
+    const base=clamp(1.2-S.level*.08,.42,1.2);
+    S.spawnT=base*(S.bossActive?2.2:1)*rand(.7,1.3);
+  }
+  if(!S.bossActive){
+    S.bossIn-=dt;
+    bossChip.style.display='flex';
+    if(S.bossIn<=10){bossChip.textContent='👿 IN ARRIVO!';bossChip.classList.add('urgent');}
+    else{bossChip.textContent='👿 '+Math.ceil(S.bossIn)+'s';bossChip.classList.remove('urgent');}
+    if(S.bossIn<=0)spawnBoss();
+  }else{bossChip.style.display='flex';bossChip.textContent='👿 BOSS ATTIVO';bossChip.classList.add('urgent');}
+  if(S.combo>0){S.comboT-=dt;if(S.comboT<=0)setCombo(0);}
+  for(const m of [...S.monsters]){
+    if(m.dead)continue;
+    m.life-=dt;
+    if(m.life<=0){escapeMonster(m);continue;}
+    if(m.vx||m.vy){
+      m.x+=m.vx*dt;m.y+=m.vy*dt;
+      const h=m.size*.6;
+      if(m.x<h){m.x=h;m.vx=Math.abs(m.vx);}
+      if(m.x>AW-h){m.x=AW-h;m.vx=-Math.abs(m.vx);}
+      if(m.y<h){m.y=h;m.vy=Math.abs(m.vy);}
+      if(m.y>AH-h){m.y=AH-h;m.vy=-Math.abs(m.vy);}
+    }
+    if(m.type==='ghost'){m.phase+=dt*2.1;
+      m.bodyEl.style.opacity=(0.12+0.7*(0.5+0.5*Math.sin(m.phase))).toFixed(2);}
+    if(m.type==='ogre'){m.phase+=dt;const g=(m.phase%2.6)<1.3;
+      m.el.classList.toggle('green',g);m.el.classList.toggle('red',!g);}
+    const pct=clamp(m.life/m.maxLife,0,1);
+    m.barEl.style.width=(pct*100)+'%';
+    m.barEl.style.background=pct>.5?'#39ff88':pct>.25?'#ffd54a':'#ff4d6d';
+    m.el.style.transform='translate('+m.x+'px,'+m.y+'px) translate(-50%,-50%)';
+  }
+}
+let last=performance.now();
+function loop(t){
+  const dt=Math.min((t-last)/1000,.05);last=t;
+  if(S.running&&!S.paused)update(dt);
+  requestAnimationFrame(loop);
+}
+
+/* ---------- classifica (modale) ---------- */
+async function openLeaderboard(){
+  lbModal.hidden=false;
+  lbList.innerHTML='<div class="spinner"></div>';
+  lbOnline.textContent='🟢 '+ri(12,140)+' giocatori online';
+  try{
+    const list=await LeaderboardAPI.fetch();
+    const medals=['🥇','🥈','🥉'];
+    lbList.innerHTML=list.slice(0,20).map((e,i)=>
+      '<div class="lb-row'+(e.me?' me':'')+'">'+
+      '<span class="pos">'+(i<3?medals[i]:(i+1))+'</span>'+
+      '<span class="nm">'+escapeHtml(e.name)+(e.me?'<em>TU</em>':'')+'</span>'+
+      '<span class="lvl">Lv.'+(e.level||1)+'</span><b>'+e.score.toLocaleString('it-IT')+'</b></div>'
+    ).join('');
+  }catch(e){lbList.innerHTML='<div style="opacity:.6;padding:20px">Errore nel caricamento 😢</div>';}
+}
+
+/* ============================================================
+   WIRING — registrato a DOM pronto
+   ============================================================ */
+document.getElementById('playBtn').addEventListener('click',()=>{AudioFX.unlock();newRun();});
+document.getElementById('retryBtn').addEventListener('click',()=>{AudioFX.unlock();newRun();});
+document.getElementById('playLbBtn').addEventListener('click',openLeaderboard);
+document.getElementById('lbBtn').addEventListener('click',openLeaderboard);
+document.getElementById('overLbBtn').addEventListener('click',openLeaderboard);
+document.getElementById('lbClose').addEventListener('click',()=>{lbModal.hidden=true;});
+document.getElementById('lbRefresh').addEventListener('click',openLeaderboard);
+lbModal.addEventListener('click',e=>{if(e.target===lbModal)lbModal.hidden=true;});
+document.getElementById('submitBtn').addEventListener('click',submitScore);
+document.getElementById('adBtn').addEventListener('click',()=>{
+  showAdOverlay(()=>{ /* 📺 rinascita: +50 HP, stessa partita, nessun invio in classifica */
+    S.rebirthUsed=true;S.hp=Math.min(S.maxHp,REBIRTH_HEAL);
+    renderHP(false);S.spawnT=1.5;hideScreens();countdownGo();
+  });
+});
+document.getElementById('declineBtn').addEventListener('click',finalOver);
+document.getElementById('pauseBtn').addEventListener('click',()=>{
+  if(!S.running)return;
+  S.paused=!S.paused;
+  document.getElementById('pauseOverlay').hidden=!S.paused;
+  document.getElementById('pauseBtn').textContent=S.paused?'▶️':'⏸️';
+});
+document.getElementById('resumeBtn').addEventListener('click',()=>{
+  S.paused=false;document.getElementById('pauseOverlay').hidden=true;
+  document.getElementById('pauseBtn').textContent='⏸️';
+});
+document.getElementById('muteBtn').addEventListener('click',function(){
+  this.textContent=AudioFX.toggle()?'🔇':'🔊';
+});
+document.addEventListener('pointerdown',()=>AudioFX.unlock(),{once:true});
+arena.addEventListener('contextmenu',e=>e.preventDefault());
+window.addEventListener('resize',measure);
+
+/* boot */
+if(AudioFX.muted)document.getElementById('muteBtn').textContent='🔇';
+measure();renderHUDAll();requestAnimationFrame(loop);
+</script>
+</body>
+</html>
