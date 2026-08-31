@@ -1,628 +1,438 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Schiaccia i Mostri</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>👾 Schiaccia i Mostri</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Rubik:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
-  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none; -webkit-user-select:none; touch-action:manipulation; }
-  html, body { width:100%; height:100%; overflow:hidden; overscroll-behavior:none; }
-  body {
-    font-family: 'Segoe UI', Tahoma, sans-serif;
-    background: radial-gradient(circle at 50% 30%, #2a0845 0%, #0a0015 100%);
-    color:#fff;
-    min-height:100vh;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    padding:10px;
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  [hidden]{display:none!important}
+  html,body{height:100%}
+  body{
+    font-family:Rubik,system-ui,"Segoe UI",sans-serif;color:#fff;overflow:hidden;
+    user-select:none;-webkit-user-select:none;touch-action:manipulation;
+    background:
+      radial-gradient(900px 520px at 15% -10%,rgba(124,77,255,.35),transparent 60%),
+      radial-gradient(800px 520px at 110% 115%,rgba(0,229,255,.16),transparent 60%),
+      linear-gradient(165deg,#160a2e 0%,#0d1b36 100%);
   }
-  h1 { font-size:clamp(1.4rem, 5vw, 2.2rem); text-shadow:0 0 10px #ff00ff, 0 0 20px #ff00ff; margin-bottom:8px; text-align:center; }
-  .hud {
-    display:flex; justify-content:space-around; width:100%; max-width:500px;
-    background:rgba(0,0,0,0.5); padding:8px 12px; border-radius:12px;
-    border:2px solid #ff00ff; margin-bottom:8px; font-size:clamp(0.8rem, 3vw, 1rem);
-    flex-wrap:wrap; gap:6px;
-  }
-  .hud span { font-weight:bold; }
-  .hearts { color:#ff3366; letter-spacing:2px; }
-  #gameArea {
-    position:relative;
-    width:100%; max-width:500px;
-    height:60vh; min-height:350px;
-    background: linear-gradient(180deg, #1a0033 0%, #0d001a 100%);
-    border:3px solid #00ffff;
-    border-radius:16px;
-    overflow:hidden;
-    box-shadow:0 0 20px #00ffff55;
-    touch-action:manipulation;
-  }
-  .monster {
-    position:absolute;
-    font-size:clamp(2rem, 8vw, 3rem);
-    cursor:pointer;
-    transition: transform 0.1s;
-    text-shadow: 0 0 8px currentColor;
-    animation: pop 0.3s ease-out;
-  }
-  .monster:active { transform:scale(0.85); }
-  @keyframes pop { from { transform:scale(0); } to { transform:scale(1); } }
-  @keyframes shake { 0%,100%{transform:translateX(0);} 25%{transform:translateX(-4px);} 75%{transform:translateX(4px);} }
-  .shake { animation: shake 0.2s; }
-  .ghost { opacity:0.25; }
-  .ogre { color:#888; transition: color 0.3s; }
-  .ogre.green { color:#00ff66; text-shadow:0 0 15px #00ff66; }
-  .trap { color:#ff0066; }
-  .boss {
-    font-size:clamp(4rem, 15vw, 6rem);
-    color:#ff3300;
-    text-shadow:0 0 20px #ff0000, 0 0 40px #ff0000;
-    animation: bossPulse 1s infinite;
-  }
-  @keyframes bossPulse { 0%,100%{transform:scale(1);} 50%{transform:scale(1.1);} }
-  .hp-bar {
-    position:absolute; bottom:-10px; left:50%; transform:translateX(-50%);
-    width:80px; height:6px; background:#333; border-radius:3px; overflow:hidden;
-  }
-  .hp-fill { height:100%; background:linear-gradient(90deg,#ff0000,#ffaa00); transition:width 0.2s; }
-  .overlay {
-    position:absolute; inset:0;
-    background:rgba(0,0,0,0.85);
-    display:flex; flex-direction:column; align-items:center; justify-content:center;
-    z-index:10; padding:20px; text-align:center;
-  }
-  .overlay.hidden { display:none; }
-  .overlay h2 { font-size:clamp(1.5rem, 6vw, 2.5rem); margin-bottom:12px; color:#ff00ff; text-shadow:0 0 10px #ff00ff; }
-  .overlay p { margin:6px 0; font-size:clamp(0.9rem, 3.5vw, 1.1rem); }
-  button {
-    background:linear-gradient(135deg, #ff00ff, #00ffff);
-    color:#000; font-weight:bold; font-size:clamp(1rem, 4vw, 1.3rem);
-    padding:12px 28px; border:none; border-radius:25px; cursor:pointer;
-    margin-top:14px; box-shadow:0 0 15px #ff00ff88;
-  }
-  button:active { transform:scale(0.95); }
-  .legend {
-    width:100%; max-width:500px;
-    background:rgba(0,0,0,0.4); padding:8px 12px; border-radius:10px;
-    margin-top:8px; font-size:clamp(0.7rem, 2.5vw, 0.85rem); text-align:center;
-    border:1px solid #ffffff33;
-  }
-  .ad-box {
-    width:100%; max-width:500px; height:60px;
-    background:repeating-linear-gradient(45deg, #222, #222 10px, #333 10px, #333 20px);
-    border:2px dashed #666; border-radius:8px;
-    display:flex; align-items:center; justify-content:center;
-    margin-top:10px; color:#888; font-size:0.8rem;
-  }
-  .leaderboard {
-    width:100%; max-width:500px; margin-top:10px;
-    background:rgba(0,0,0,0.5); padding:10px; border-radius:10px;
-    border:2px solid #ffaa00;
-  }
-  .leaderboard h3 { color:#ffaa00; text-align:center; margin-bottom:8px; font-size:1rem; }
-  .lb-list { list-style:none; font-size:0.85rem; }
-  .lb-list li { display:flex; justify-content:space-between; padding:3px 6px; border-bottom:1px solid #ffffff22; }
-  .lb-list li:nth-child(1) { color:#ffd700; font-weight:bold; }
-  .lb-list li:nth-child(2) { color:#c0c0c0; }
-  .lb-list li:nth-child(3) { color:#cd7f32; }
-  .name-input {
-    background:#000; color:#fff; border:2px solid #00ffff; border-radius:8px;
-    padding:8px; font-size:1rem; text-align:center; width:80%; max-width:200px;
-    margin:8px 0;
-  }
-  .flash {
-    position:absolute; inset:0; background:#ff0000; opacity:0; pointer-events:none;
-    animation: flash 0.3s;
-  }
-  @keyframes flash { 0%{opacity:0.6;} 100%{opacity:0;} }
+  #app{height:100vh;height:100dvh;display:flex;flex-direction:column;gap:8px;padding:10px}
+
+  /* ---------- HUD ---------- */
+  #hud{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+  .brand{font-family:'Press Start 2P',monospace;font-size:10px;line-height:1.5;color:#c9b6ff;
+    text-shadow:0 0 14px rgba(124,77,255,.9)}
+  .chip{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);border-radius:12px;
+    padding:5px 10px;font-size:12px;display:flex;align-items:center;gap:6px;backdrop-filter:blur(4px)}
+  .chip .lbl{opacity:.6;font-size:10px;text-transform:uppercase;letter-spacing:.6px}
+  .chip b{font-weight:800;font-size:15px;font-variant-numeric:tabular-nums}
+  #scoreChip b{color:#7cffb2}#recChip b{color:#ffd54a}#lvlChip b{color:#7cc4ff}
+  #comboChip{display:none;background:rgba(255,120,60,.16);border-color:rgba(255,150,80,.55);color:#ffc07c;font-weight:800}
+  #bossChip{display:none;color:#ff9d9d;border-color:rgba(255,90,90,.4);font-weight:700}
+  #bossChip.urgent{animation:urgent .5s infinite alternate;border-color:#ff4d6d;color:#ff8095}
+  @keyframes urgent{to{box-shadow:0 0 14px rgba(255,77,109,.6)}}
+  .spacer{flex:1}
+  .icon-btn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:12px;
+    font-size:16px;padding:6px 10px;cursor:pointer;color:#fff;transition:.15s}
+  .icon-btn:hover{background:rgba(255,255,255,.18)}
+  .mini-btn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:9px;
+    color:#fff;font-size:12px;padding:5px 10px;cursor:pointer}
+
+  /* ---------- ARENA ---------- */
+  #arena{flex:1;position:relative;overflow:hidden;border-radius:18px;border:1px solid rgba(255,255,255,.1);
+    touch-action:none;box-shadow:inset 0 0 70px rgba(0,0,0,.5);
+    background:
+      radial-gradient(600px 300px at 50% 0%,rgba(124,77,255,.12),transparent 70%),
+      radial-gradient(rgba(255,255,255,.06) 1px,transparent 1.6px);
+    background-size:auto,26px 26px}
+  #arena.shake{animation:shake .3s}
+  @keyframes shake{0%,100%{transform:translate(0)}25%{transform:translate(-7px,3px)}50%{transform:translate(6px,-4px)}75%{transform:translate(-3px,2px)}}
+
+  /* ---------- MOSTRI ---------- */
+  .monster{position:absolute;left:0;top:0;display:flex;flex-direction:column;align-items:center;gap:3px;
+    cursor:pointer;z-index:5;will-change:transform}
+  .m-body{line-height:1;filter:drop-shadow(0 4px 10px rgba(0,0,0,.55));animation:bob 1.6s ease-in-out infinite}
+  @keyframes bob{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-4px) rotate(3deg)}}
+  .m-bar{width:36px;height:4px;border-radius:3px;background:rgba(0,0,0,.5);overflow:hidden;
+    box-shadow:0 0 0 1px rgba(255,255,255,.15)}
+  .m-bar i{display:block;height:100%;width:100%;background:#39ff88;border-radius:3px}
+  .m-hp{width:92px;height:6px;border-radius:3px;background:rgba(0,0,0,.55);overflow:hidden;
+    box-shadow:0 0 0 1px rgba(255,80,80,.45)}
+  .m-hp i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#ff4d6d,#ff9d4d)}
+  .m-pips{font-size:9px;letter-spacing:2px;color:#ff8a8a;text-shadow:0 1px 2px #000}
+  .monster.dying{pointer-events:none}
+  .monster.dying .m-body{animation:squash .22s forwards}
+  .monster.dying .m-bar,.monster.dying .m-pips,.monster.dying .m-hp{opacity:0}
+  @keyframes squash{to{transform:scale(0) rotate(50deg);opacity:0}}
+  .monster.gone{transition:opacity .25s;opacity:0;pointer-events:none}
+  .monster.flash .m-body{filter:drop-shadow(0 0 12px #fff) brightness(2.2)}
+  .monster.ogre.red  .m-body{filter:drop-shadow(0 0 10px rgba(255,60,60,.9))}
+  .monster.ogre.green .m-body{filter:drop-shadow(0 0 14px #3dff6e) hue-rotate(85deg) saturate(2.4) brightness(1.2)}
+  .monster.trap .m-body{animation:wiggle .5s ease-in-out infinite}
+  .monster.trap{animation:trapPulse 1s infinite}
+  @keyframes wiggle{0%,100%{transform:rotate(-9deg)}50%{transform:rotate(9deg)}}
+  @keyframes trapPulse{50%{filter:drop-shadow(0 0 14px rgba(255,140,0,.85))}}
+  .monster.boss .m-body{animation:bossBob .9s ease-in-out infinite}
+  @keyframes bossBob{0%,100%{transform:scale(1) rotate(-2deg)}50%{transform:scale(1.07) rotate(2deg)}}
+  .monster.boss .m-bar{width:92px;height:6px}
+
+  /* effetti */
+  .ftext{position:absolute;z-index:30;font-weight:800;font-size:16px;pointer-events:none;
+    text-shadow:0 2px 6px rgba(0,0,0,.75);animation:rise .8s forwards}
+  .ftext.pts{color:#7cffb2}.ftext.bad{color:#ff5d7d}.ftext.info{color:#9fd8ff;font-size:13px}
+  @keyframes rise{from{transform:translate(-50%,0);opacity:1}to{transform:translate(-50%,-46px);opacity:0}}
+  .part{position:absolute;width:8px;height:8px;border-radius:50%;z-index:25;pointer-events:none}
+  .splat{position:absolute;z-index:24;pointer-events:none;animation:splatPop .35s forwards}
+  @keyframes splatPop{from{transform:translate(-50%,-50%) scale(.4);opacity:1}to{transform:translate(-50%,-50%) scale(1.7);opacity:0}}
+
+  #banner{position:absolute;top:14px;left:50%;transform:translateX(-50%);z-index:40;
+    font-family:'Press Start 2P',monospace;font-size:11px;padding:10px 16px;border-radius:12px;
+    background:rgba(20,10,40,.88);border:1px solid rgba(255,255,255,.25);opacity:0;pointer-events:none;
+    transition:.2s;white-space:nowrap}
+  #banner.show{opacity:1;transform:translateX(-50%) translateY(4px)}
+  #banner.bad{border-color:#ff4d6d;color:#ffb3c1;box-shadow:0 0 24px rgba(255,77,109,.35)}
+  #banner.good{border-color:#39ff88;color:#b6ffd9;box-shadow:0 0 24px rgba(57,255,136,.3)}
+  #countdown{position:absolute;inset:0;z-index:60;display:none;align-items:center;justify-content:center;
+    font-family:'Press Start 2P',monospace;font-size:54px;text-shadow:0 0 30px rgba(124,77,255,1);pointer-events:none}
+
+  /* ---------- SCHERMATE ---------- */
+  .screen{position:absolute;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;
+    background:rgba(8,4,20,.74);backdrop-filter:blur(6px);padding:14px}
+  .card{background:linear-gradient(170deg,rgba(60,30,110,.6),rgba(15,25,55,.7));
+    border:1px solid rgba(255,255,255,.16);border-radius:22px;padding:22px;max-width:540px;width:100%;
+    text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.5);max-height:100%;overflow:auto}
+  .title{font-family:'Press Start 2P',monospace;font-size:clamp(14px,4vw,21px);
+    text-shadow:0 0 18px rgba(124,77,255,.95);margin-bottom:8px}
+  .subtitle{opacity:.8;font-size:13px;margin-bottom:12px;line-height:1.5}
+  .legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:7px;margin:14px 0;text-align:left}
+  .legend div{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:10px;
+    padding:7px 9px;font-size:12px;line-height:1.3}
+  .btn-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:12px}
+  .big-btn{font-family:'Press Start 2P',monospace;font-size:13px;padding:14px 24px;border-radius:14px;border:none;
+    cursor:pointer;color:#08121f;background:linear-gradient(180deg,#5dff9d,#19c96d);
+    box-shadow:0 6px 0 #0d8a49,0 10px 24px rgba(25,201,109,.35);transition:transform .06s}
+  .big-btn:active{transform:translateY(3px);box-shadow:0 3px 0 #0d8a49}
+  .big-btn.alt{background:linear-gradient(180deg,#ffd54a,#ffab00);box-shadow:0 6px 0 #b26e00,0 10px 24px rgba(255,171,0,.3);color:#241a00}
+  .big-btn.ghost{background:transparent;border:2px solid rgba(255,255,255,.4);color:#fff;box-shadow:none}
+  .link-btn{background:none;border:none;color:#9fb4ff;text-decoration:underline;cursor:pointer;font-size:13px;margin-top:10px}
+  .final-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:14px 0}
+  .final-grid div{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:9px 4px}
+  .final-grid span{display:block;font-size:10px;opacity:.6;text-transform:uppercase;letter-spacing:.5px}
+  .final-grid b{font-size:18px}
+  .submit-row{display:flex;gap:8px;justify-content:center;margin:10px 0 4px}
+  .submit-row input{flex:1;max-width:220px;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.25);
+    border-radius:12px;padding:11px 12px;color:#fff;font:600 14px Rubik,sans-serif;outline:none}
+  .submit-row input:focus{border-color:#ffd54a}
+  .lb-status{font-size:13px;min-height:20px;margin:6px 0;color:#b8ffe0}
+  @media(max-width:520px){.final-grid{grid-template-columns:repeat(2,1fr)}.brand{display:none}}
+
+  /* ---------- MODALE CLASSIFICA ---------- */
+  .modal{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;
+    background:rgba(5,2,15,.72);backdrop-filter:blur(5px);padding:14px}
+  .modal-card{width:100%;max-width:470px;max-height:92vh;max-height:92dvh;display:flex;flex-direction:column;
+    background:linear-gradient(170deg,#2a1750,#101c38);border:1px solid rgba(255,255,255,.18);
+    border-radius:20px;padding:16px;box-shadow:0 24px 70px rgba(0,0,0,.6);animation:pop .22s}
+  @keyframes pop{from{transform:scale(.92);opacity:0}}
+  .modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+  .modal-head h2{font-family:'Press Start 2P',monospace;font-size:11px;color:#ffd54a;text-shadow:0 0 14px rgba(255,213,74,.5)}
+  .lb-meta{display:flex;justify-content:space-between;align-items:center;font-size:12px;opacity:.9;margin-bottom:8px}
+  .lb-list{overflow:auto;display:flex;flex-direction:column;gap:6px}
+  .lb-row{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.05);
+    border:1px solid rgba(255,255,255,.08);padding:8px 10px;border-radius:10px;font-size:14px}
+  .lb-row .pos{width:32px;text-align:center;font-weight:800}
+  .lb-row .nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+  .lb-row .nm em{font-style:normal;font-size:9px;background:#ffd54a;color:#241a00;border-radius:5px;
+    padding:2px 5px;margin-left:6px;font-weight:800;vertical-align:middle}
+  .lb-row .lvl{font-size:11px;opacity:.6}
+  .lb-row b{font-variant-numeric:tabular-nums}
+  .lb-row.me{border-color:#ffd54a;background:rgba(255,213,74,.1);box-shadow:0 0 14px rgba(255,213,74,.15)}
+  .lb-note{font-size:10.5px;opacity:.55;margin-top:10px;line-height:1.55}
+  .spinner{margin:28px auto;width:28px;height:28px;border:3px solid rgba(255,255,255,.2);
+    border-top-color:#ffd54a;border-radius:50%;animation:spin .7s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* ---------- PUBBLICITÀ ---------- */
+  #adbar{border-radius:12px;border:1px dashed rgba(255,255,255,.28);background:rgba(255,255,255,.04);
+    text-align:center;padding:8px;font-size:11.5px;opacity:.75}
+  #adOverlay{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.92);display:flex;align-items:center;justify-content:center;padding:16px}
+  .ad-card{max-width:380px;width:100%;background:linear-gradient(170deg,#23233d,#141428);
+    border:1px solid rgba(255,255,255,.2);border-radius:20px;padding:22px;text-align:center}
+  .ad-tag{font-size:10px;letter-spacing:2px;opacity:.6;margin-bottom:12px}
+  .ad-fake{background:rgba(255,255,255,.06);border-radius:14px;padding:18px;font-weight:700;line-height:1.6}
+  .ad-fake small{font-weight:400;opacity:.6}
+  #adMsg{margin-top:12px;font-weight:800}
+  .ad-progress{height:10px;background:rgba(255,255,255,.15);border-radius:6px;overflow:hidden;margin-top:12px}
+  .ad-progress i{display:block;height:100%;width:0;background:linear-gradient(90deg,#7c4dff,#00e5ff)}
 </style>
 </head>
 <body>
+<div id="app">
 
-<h1>👾 SCHIACCIA I MOSTRI</h1>
+  <!-- ==================== HUD ==================== -->
+  <header id="hud">
+    <div class="brand">👾 SCHIACCIA<br>I MOSTRI</div>
+    <div class="chip" id="scoreChip"><span class="lbl">Punti</span><b id="scoreEl">0</b></div>
+    <div class="chip" id="recChip"><span class="lbl">Record</span><b id="recEl">0</b></div>
+    <div class="chip" id="lvlChip"><span class="lbl">Liv</span><b id="lvlEl">1</b></div>
+    <div class="chip"><span id="heartsEl">❤️❤️❤️❤️❤️</span></div>
+    <div class="chip" id="comboChip">🔥 x3</div>
+    <div class="chip" id="bossChip">👿 90s</div>
+    <div class="spacer"></div>
+    <button class="icon-btn" id="lbBtn" title="Classifica mondiale">🏆</button>
+    <button class="icon-btn" id="muteBtn" title="Audio">🔊</button>
+    <button class="icon-btn" id="pauseBtn" title="Pausa">⏸️</button>
+  </header>
 
-<div class="hud">
-  <div>PUNTI: <span id="score">0</span></div>
-  <div>RECORD: <span id="record">0</span></div>
-  <div>LIVELLO: <span id="level">1</span></div>
-  <div class="hearts" id="hearts">❤️❤️❤️❤️❤️</div>
-</div>
+  <!-- ==================== ARENA ==================== -->
+  <div id="arena">
+    <div id="banner"></div>
+    <div id="countdown"></div>
 
-<div id="gameArea">
-  <div class="overlay" id="startScreen">
-    <h2>Schiaccia i mostri!</h2>
-    <p>👾 normali • 🦇 veloci • 👻 quasi invisibili</p>
-    <p>🧟 da colpire più volte • 🦠 si duplicano alla morte</p>
-    <p>👹 colpiscili quando diventano verdi!</p>
-    <p>🎃 trappola: NON cliccarlo o perdi vita!</p>
-    <p>👿 BOSS ogni 1-2 minuti</p>
-    <input type="text" class="name-input" id="playerName" placeholder="Il tuo nome" maxlength="12">
-    <button id="playBtn">GIOCA</button>
+    <!-- SCHERMATA INIZIALE -->
+    <div class="screen" id="startScreen">
+      <div class="card">
+        <div class="title">👾 SCHIACCIA I MOSTRI</div>
+        <div class="subtitle">Schiacciali prima che la loro <b>barretta del tempo</b> si svuoti!</div>
+        <div class="legend">
+          <div>👾 <b>Normale</b> · 1 colpo</div>
+          <div>🦇 <b>Veloce</b> · vola in giro!</div>
+          <div>👻 <b>Fantasma</b> · quasi invisibile</div>
+          <div>🧟 <b>Zombie</b> · 3 colpi</div>
+          <div>🦠 <b>Virus</b> · si divide 1 volta</div>
+          <div>👹 <b>Orco</b> · colpiscilo solo quando è VERDE!</div>
+          <div>🎃 <b>Trappola</b> · NON cliccarlo!</div>
+          <div>👿 <b>BOSS</b> · ogni 1–2 minuti</div>
+        </div>
+        <div class="subtitle">🏅 Record personale: <b id="startRec">0</b></div>
+        <div class="btn-row">
+          <button class="big-btn" id="playBtn">▶ GIOCA</button>
+          <button class="big-btn alt" id="playLbBtn">🏆 CLASSIFICA</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCHERMATA RINASCITA (dopo la 1ª morte) -->
+    <div class="screen" id="rebirthScreen" hidden>
+      <div class="card">
+        <div class="title">😵 SEI STATO SCONFITTO</div>
+        <div class="subtitle">Punteggio attuale: <b id="rebirthScore">0</b><br>Vuoi continuare la partita?</div>
+        <button class="big-btn alt" id="adBtn">📺 GUARDA PUBBLICITÀ → +1 ❤️</button>
+        <div><button class="link-btn" id="declineBtn">No grazie, termina la partita →</button></div>
+        <p class="lb-note">(pubblicità simulata — collega qui AdSense / AdInMo / Unity Ads)</p>
+      </div>
+    </div>
+
+    <!-- GAME OVER FINALE -->
+    <div class="screen" id="overScreen" hidden>
+      <div class="card">
+        <div class="title">GAME OVER</div>
+        <div class="final-grid">
+          <div><span>Punteggio</span><b id="finalScore">0</b></div>
+          <div><span>Record</span><b id="finalRec">0</b></div>
+          <div><span>Livello</span><b id="finalLvl">1</b></div>
+          <div><span>Schiacciati</span><b id="finalSmash">0</b></div>
+        </div>
+        <div class="submit-row">
+          <input id="nameInput" maxlength="14" placeholder="Il tuo nome">
+          <button class="big-btn alt" id="submitBtn">📤 SALVA</button>
+        </div>
+        <div id="lbStatus" class="lb-status"></div>
+        <div class="btn-row">
+          <button class="big-btn" id="retryBtn">🔄 RIPROVA</button>
+          <button class="big-btn ghost" id="overLbBtn">🏆 CLASSIFICA</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAUSA -->
+    <div class="screen" id="pauseOverlay" hidden>
+      <div class="card">
+        <div class="title">⏸️ PAUSA</div>
+        <div class="btn-row"><button class="big-btn" id="resumeBtn">▶ RIPRENDI</button></div>
+      </div>
+    </div>
   </div>
 
-  <div class="overlay hidden" id="gameOverScreen">
-    <h2>GAME OVER</h2>
-    <p>Punteggio: <span id="finalScore">0</span></p>
-    <p>Record: <span id="finalRecord">0</span></p>
-    <button id="retryBtn">RIPROVA</button>
-    <button id="adBtn" style="background:linear-gradient(135deg,#ffaa00,#ff6600); margin-top:8px;">📺 Guarda pubblicità: +1 vita</button>
-    <p style="font-size:0.7rem; opacity:0.6; margin-top:6px;">(simulato — collega AdSense / AdInMo / Unity Ads)</p>
+  <footer id="adbar">📢 SPAZIO PUBBLICITÀ — sostituisci con AdSense / AdInMo / banner</footer>
+</div>
+
+<!-- ==================== MODALE CLASSIFICA ==================== -->
+<div class="modal" id="lbModal" hidden>
+  <div class="modal-card">
+    <div class="modal-head">
+      <h2>🏆 CLASSIFICA MONDIALE</h2>
+      <button class="icon-btn" id="lbClose">✖</button>
+    </div>
+    <div class="lb-meta">
+      <span id="lbOnline">🟢 …</span>
+      <button class="mini-btn" id="lbRefresh">🔄 Aggiorna</button>
+    </div>
+    <div class="lb-list" id="lbList"></div>
+    <p class="lb-note">Demo "online": dati salvati in locale + giocatori globali simulati con latenza di rete.<br>
+    Per la classifica <b>realmente online</b>: collega Firebase / Supabase / un tuo endpoint dentro <b>LeaderboardAPI</b> nel codice.</p>
   </div>
 </div>
 
-<div class="legend">
-  👾 normali • 🦇 veloci • 👻 quasi invisibili • 🧟 multi-colpo<br>
-  🦠 si duplicano • 👹 verdi • 🎃 trappola • 👿 BOSS
+<!-- OVERLAY PUBBLICITÀ (RINASCITA) -->
+<div id="adOverlay" hidden>
+  <div class="ad-card">
+    <div class="ad-tag">📺 PUBBLICITÀ (SIMULATA)</div>
+    <div class="ad-fake">🍕 PIZZA TOWER — il gioco più buono del 2026! 🎮<br><small>Installa ora (finto)</small></div>
+    <div id="adMsg">Ricompensa in <span id="adCount">3</span>…</div>
+    <div class="ad-progress"><i id="adFill"></i></div>
+    <p class="lb-note">Collega qui AdSense / AdInMo / Unity Ads</p>
+  </div>
 </div>
-
-<div class="leaderboard">
-  <h3>🏆 CLASSIFICA MONDIALE</h3>
-  <ul class="lb-list" id="lbList"></ul>
-</div>
-
-<div class="ad-box">📢 SPAZIO PUBBLICITÀ — sostituisci con AdSense / AdInMo / banner</div>
 
 <script>
-(() => {
-  const gameArea = document.getElementById('gameArea');
-  const scoreEl = document.getElementById('score');
-  const recordEl = document.getElementById('record');
-  const levelEl = document.getElementById('level');
-  const heartsEl = document.getElementById('hearts');
-  const startScreen = document.getElementById('startScreen');
-  const gameOverScreen = document.getElementById('gameOverScreen');
-  const finalScoreEl = document.getElementById('finalScore');
-  const finalRecordEl = document.getElementById('finalRecord');
-  const playBtn = document.getElementById('playBtn');
-  const retryBtn = document.getElementById('retryBtn');
-  const adBtn = document.getElementById('adBtn');
-  const playerNameInput = document.getElementById('playerName');
-  const lbList = document.getElementById('lbList');
+'use strict';
+/* =============== UTIL =============== */
+const $=s=>document.querySelector(s);
+const arena=$('#arena');
+const rand=(a,b)=>a+Math.random()*(b-a);
+const ri=(a,b)=>Math.floor(rand(a,b+1));
+const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let AW=0,AH=0;
+function measure(){const r=arena.getBoundingClientRect();AW=r.width;AH=r.height;}
+addEventListener('resize',measure);
 
-  let state = {
-    score: 0,
-    lives: 5,
-    level: 1,
-    running: false,
-    monsters: [],
-    spawnTimer: null,
-    loopTimer: null,
-    bossTimer: null,
-    playerName: 'Player'
+/* =============== AUDIO (WebAudio, sintetizzato) =============== */
+const AudioFX=(()=>{
+  let ctx=null,muted=localStorage.getItem('sm_muted')==='1';
+  const ac=()=>{if(!ctx)ctx=new (window.AudioContext||window.webkitAudioContext)();return ctx;};
+  function beep({f=440,f2,type='square',dur=.08,vol=.15,delay=0}){
+    if(muted)return;
+    try{const c=ac(),t=c.currentTime+delay,o=c.createOscillator(),g=c.createGain();
+      o.type=type;o.frequency.setValueAtTime(f,t);
+      if(f2)o.frequency.exponentialRampToValueAtTime(Math.max(f2,1),t+dur);
+      g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.001,t+dur);
+      o.connect(g).connect(c.destination);o.start(t);o.stop(t+dur+.02);}catch(e){}
+  }
+  return{
+    get muted(){return muted;},
+    toggle(){muted=!muted;localStorage.setItem('sm_muted',muted?'1':'0');return muted;},
+    unlock(){try{const c=ac();if(c.state==='suspended')c.resume();}catch(e){}},
+    squash(){beep({f:300,f2:80,dur:.09,vol:.12});},
+    hit(){beep({f:160,f2:90,type:'triangle',dur:.07,vol:.16});},
+    trap(){beep({f:120,f2:40,type:'sawtooth',dur:.3,vol:.2});},
+    coin(){beep({f:880,f2:1320,type:'sine',dur:.09,vol:.1});},
+    level(){[523,659,784].forEach((f,i)=>beep({f,dur:.09,vol:.12,delay:i*.09}));},
+    bossIn(){beep({f:80,f2:40,type:'sawtooth',dur:.7,vol:.22});},
+    bossDie(){[392,523,659,784].forEach((f,i)=>beep({f,dur:.12,vol:.15,delay:i*.1}));},
+    over(){[400,300,200,120].forEach((f,i)=>beep({f,type:'triangle',dur:.18,vol:.15,delay:i*.15}));}
   };
-
-  let record = parseInt(localStorage.getItem('sm_record') || '0');
-  recordEl.textContent = record;
-
-  // === CLASSIFICA (localStorage, top 10) ===
-  function loadLeaderboard() {
-    try { return JSON.parse(localStorage.getItem('sm_lb') || '[]'); }
-    catch(e){ return []; }
-  }
-  function saveLeaderboard(lb) {
-    localStorage.setItem('sm_lb', JSON.stringify(lb));
-  }
-  function addScore(name, score) {
-    const lb = loadLeaderboard();
-    lb.push({ name: (name||'Anon').slice(0,12), score, date: Date.now() });
-    lb.sort((a,b) => b.score - a.score);
-    const top = lb.slice(0, 10);
-    saveLeaderboard(top);
-    renderLeaderboard();
-  }
-  function renderLeaderboard() {
-    const lb = loadLeaderboard();
-    if (lb.length === 0) {
-      lbList.innerHTML = '<li style="justify-content:center;opacity:0.6">Nessun record ancora</li>';
-      return;
-    }
-    lbList.innerHTML = lb.map((e,i) =>
-      `<li><span>${i+1}. ${escapeHtml(e.name)}</span><span>${e.score} pts</span></li>`
-    ).join('');
-  }
-  function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-  renderLeaderboard();
-
-  // === BLOCCO ZOOM ===
-  document.addEventListener('gesturestart', e => e.preventDefault());
-  document.addEventListener('dblclick', e => e.preventDefault());
-
-  // === TIPI DI MOSTRI ===
-  // Difficoltà progressiva in base al punteggio
-  function availableTypes() {
-    const s = state.score;
-    const types = ['normal', 'fast'];              // 0+
-    if (s >= 300)  types.push('ghost');            // 300+
-    if (s >= 600)  types.push('tank');             // 600+
-    if (s >= 1000) types.push('splitter');         // 1000+
-    if (s >= 1500) types.push('ogre');             // 1500+
-    if (s >= 2000) types.push('trap');             // 2000+
-    return types;
-  }
-
-  // Pesi di spawn
-  function pickType() {
-    const types = availableTypes();
-    // Il tipo più recente ha peso leggermente maggiore
-    const weights = types.map((t,i) => 1 + i*0.5);
-    const total = weights.reduce((a,b)=>a+b,0);
-    let r = Math.random()*total;
-    for (let i=0;i<types.length;i++){
-      r -= weights[i];
-      if (r<=0) return types[i];
-    }
-    return types[types.length-1];
-  }
-
-  // === CREAZIONE MOSTRO ===
-  function spawnMonster(type) {
-    const rect = gameArea.getBoundingClientRect();
-    const size = 50;
-    const x = Math.random() * (rect.width - size);
-    const y = Math.random() * (rect.height - size);
-
-    const el = document.createElement('div');
-    el.className = 'monster';
-    el.style.left = x + 'px';
-    el.style.top = y + 'px';
-
-    const m = {
-      id: Math.random().toString(36).slice(2),
-      type, el,
-      x, y,
-      vx: 0, vy: 0,
-      hp: 1,
-      maxHp: 1,
-      life: 0,        // tempo di vita
-      maxLife: 4000,  // ms prima che sparisca (per alcuni)
-      age: 0,
-      dead: false,
-      greenCycle: 0,  // per ogre
-      isGreen: false
-    };
-
-    switch(type) {
-      case 'normal':
-        el.textContent = '👾';
-        m.maxLife = 3500;
-        m.points = 10;
-        break;
-      case 'fast':
-        el.textContent = '🦇';
-        m.maxLife = 2500;
-        m.points = 20;
-        m.vx = (Math.random()-0.5) * 3;
-        m.vy = (Math.random()-0.5) * 3;
-        break;
-      case 'ghost':
-        el.textContent = '👻';
-        el.classList.add('ghost');
-        m.maxLife = 3000;
-        m.points = 30;
-        break;
-      case 'tank':
-        el.textContent = '🧟';
-        m.hp = 3; m.maxHp = 3;
-        m.maxLife = 5000;
-        m.points = 40;
-        break;
-      case 'splitter':
-        el.textContent = '🦠';
-        m.maxLife = 4000;
-        m.points = 25;
-        break;
-      case 'ogre':
-        el.textContent = '👹';
-        el.classList.add('ogre');
-        m.maxLife = 6000;
-        m.points = 50;
-        break;
-      case 'trap':
-        el.textContent = '🎃';
-        el.classList.add('trap');
-        m.maxLife = 3500;
-        m.points = 0; // non dà punti
-        m.isTrap = true;
-        break;
-    }
-
-    // HP bar per tank
-    if (m.maxHp > 1) {
-      const bar = document.createElement('div');
-      bar.className = 'hp-bar';
-      const fill = document.createElement('div');
-      fill.className = 'hp-fill';
-      fill.style.width = '100%';
-      bar.appendChild(fill);
-      el.appendChild(bar);
-      m.hpFill = fill;
-    }
-
-    el.addEventListener('click', (e) => {
-      e.stopPropagation();
-      onMonsterClick(m);
-    });
-    el.addEventListener('touchstart', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      onMonsterClick(m);
-    }, {passive:false});
-
-    gameArea.appendChild(el);
-    state.monsters.push(m);
-    return m;
-  }
-
-  function onMonsterClick(m) {
-    if (m.dead || !state.running) return;
-
-    // TRAPPOLA: se cliccata, perdi vita
-    if (m.isTrap) {
-      loseLife();
-      killMonster(m, false, true); // true = trap penalty
-      return;
-    }
-
-    // OGRE: vale solo se verde
-    if (m.type === 'ogre' && !m.isGreen) {
-      // click sbagliato: shake, nessun danno al mostro
-      m.el.classList.add('shake');
-      setTimeout(()=>m.el.classList.remove('shake'), 200);
-      return;
-    }
-
-    m.hp--;
-    if (m.hpFill) {
-      m.hpFill.style.width = (m.hp / m.maxHp * 100) + '%';
-    }
-    m.el.classList.add('shake');
-    setTimeout(()=>m.el.classList.remove('shake'), 200);
-
-    if (m.hp <= 0) {
-      state.score += m.points;
-      updateHUD();
-      killMonster(m, true, false);
-    }
-  }
-
-  function killMonster(m, scored, trapPenalty) {
-    m.dead = true;
-    const el = m.el;
-
-    // Effetto scomparsa
-    el.style.transition = 'transform 0.2s, opacity 0.2s';
-    el.style.transform = 'scale(0)';
-    el.style.opacity = '0';
-    setTimeout(() => el.remove(), 200);
-
-    // 🦠 SPLITTER: alla morte genera 2 nuovi 🦠
-    if (m.type === 'splitter' && scored) {
-      setTimeout(() => {
-        if (!state.running) return;
-        spawnMonster('splitter');
-        spawnMonster('splitter');
-      }, 150);
-    }
-
-    // BOSS: se ucciso, bonus
-    if (m.type === 'boss' && scored) {
-      state.score += 200;
-      updateHUD();
-    }
-
-    // Aggiorna lista
-    state.monsters = state.monsters.filter(x => x.id !== m.id);
-  }
-
-  // === BOSS ===
-  function spawnBoss() {
-    if (!state.running) return;
-    const rect = gameArea.getBoundingClientRect();
-    const el = document.createElement('div');
-    el.className = 'monster boss';
-    el.textContent = '👿';
-    const x = rect.width/2 - 40;
-    const y = rect.height/2 - 40;
-    el.style.left = x + 'px';
-    el.style.top = y + 'px';
-
-    const bossHp = 10 + Math.floor(state.score / 500);
-    const m = {
-      id: Math.random().toString(36).slice(2),
-      type: 'boss', el,
-      x, y, vx:0, vy:0,
-      hp: bossHp, maxHp: bossHp,
-      life: 0, maxLife: 15000,
-      age: 0, dead: false, points: 200
-    };
-
-    const bar = document.createElement('div');
-    bar.className = 'hp-bar';
-    bar.style.width = '120px';
-    const fill = document.createElement('div');
-    fill.className = 'hp-fill';
-    fill.style.width = '100%';
-    bar.appendChild(fill);
-    el.appendChild(bar);
-    m.hpFill = fill;
-
-    el.addEventListener('click', (e) => { e.stopPropagation(); onMonsterClick(m); });
-    el.addEventListener('touchstart', (e) => { e.preventDefault(); e.stopPropagation(); onMonsterClick(m); }, {passive:false});
-
-    gameArea.appendChild(el);
-    state.monsters.push(m);
-  }
-
-  function scheduleBoss() {
-    const delay = 60000 + Math.random() * 60000; // 60-120s
-    state.bossTimer = setTimeout(() => {
-      if (state.running) {
-        spawnBoss();
-        scheduleBoss();
-      }
-    }, delay);
-  }
-
-  // === VITA / HUD ===
-  function loseLife() {
-    state.lives--;
-    updateHUD();
-    const flash = document.createElement('div');
-    flash.className = 'flash';
-    gameArea.appendChild(flash);
-    setTimeout(()=>flash.remove(), 300);
-    if (state.lives <= 0) {
-      endGame();
-    }
-  }
-
-  function updateHUD() {
-    scoreEl.textContent = state.score;
-    state.level = 1 + Math.floor(state.score / 300);
-    levelEl.textContent = state.level;
-    heartsEl.textContent = '❤️'.repeat(Math.max(0,state.lives)) + '🖤'.repeat(Math.max(0, 5-state.lives));
-    if (state.score > record) {
-      record = state.score;
-      recordEl.textContent = record;
-      localStorage.setItem('sm_record', record);
-    }
-  }
-
-  // === LOOP ===
-  function loop(dt) {
-    if (!state.running) return;
-    const rect = gameArea.getBoundingClientRect();
-
-    for (const m of state.monsters) {
-      if (m.dead) continue;
-      m.age += dt;
-
-      // Movimento per fast
-      if (m.type === 'fast') {
-        m.x += m.vx;
-        m.y += m.vy;
-        if (m.x < 0 || m.x > rect.width - 50) m.vx *= -1;
-        if (m.y < 0 || m.y > rect.height - 50) m.vy *= -1;
-        m.x = Math.max(0, Math.min(rect.width-50, m.x));
-        m.y = Math.max(0, Math.min(rect.height-50, m.y));
-        m.el.style.left = m.x + 'px';
-        m.el.style.top = m.y + 'px';
-      }
-
-      // Ogre: ciclo verde
-      if (m.type === 'ogre') {
-        m.greenCycle += dt;
-        const shouldBeGreen = (m.greenCycle % 2000) < 700;
-        if (shouldBeGreen !== m.isGreen) {
-          m.isGreen = shouldBeGreen;
-          m.el.classList.toggle('green', shouldBeGreen);
-        }
-      }
-
-      // Scaduto: perde vita (tranne trappola che sparisce senza danno)
-      if (m.age >= m.maxLife) {
-        if (m.isTrap) {
-          // La trappola se ne va senza recare danno
-          killMonster(m, false, false);
-        } else if (m.type === 'boss') {
-          // Boss sfuggito: perdi 2 vite
-          killMonster(m, false, false);
-          loseLife();
-          loseLife();
-        } else {
-          killMonster(m, false, false);
-          loseLife();
-        }
-      }
-    }
-  }
-
-  // === SPAWN ===
-  function scheduleSpawn() {
-    if (!state.running) return;
-    // Velocità di spawn cresce con il livello
-    const base = 1200;
-    const min = 400;
-    const delay = Math.max(min, base - state.level * 80) + Math.random()*400;
-    state.spawnTimer = setTimeout(() => {
-      if (!state.running) return;
-      const type = pickType();
-      spawnMonster(type);
-      scheduleSpawn();
-    }, delay);
-  }
-
-  // === GAME LOOP ===
-  let lastT = 0;
-  function frame(t) {
-    if (!state.running) return;
-    const dt = lastT ? t - lastT : 16;
-    lastT = t;
-    loop(dt);
-    state.loopTimer = requestAnimationFrame(frame);
-  }
-
-  // === START / END ===
-  function startGame() {
-    // Pulizia
-    state.monsters.forEach(m => m.el.remove());
-    state.monsters = [];
-    clearTimeout(state.spawnTimer);
-    clearTimeout(state.bossTimer);
-    cancelAnimationFrame(state.loopTimer);
-
-    state.score = 0;
-    state.lives = 5;
-    state.level = 1;
-    state.running = true;
-    lastT = 0;
-
-    state.playerName = (playerNameInput.value || 'Player').trim().slice(0,12) || 'Player';
-
-    updateHUD();
-    startScreen.classList.add('hidden');
-    gameOverScreen.classList.add('hidden');
-
-    scheduleSpawn();
-    scheduleBoss();
-    state.loopTimer = requestAnimationFrame(frame);
-  }
-
-  function endGame() {
-    state.running = false;
-    clearTimeout(state.spawnTimer);
-    clearTimeout(state.bossTimer);
-    cancelAnimationFrame(state.loopTimer);
-
-    finalScoreEl.textContent = state.score;
-    finalRecordEl.textContent = record;
-    gameOverScreen.classList.remove('hidden');
-
-    addScore(state.playerName, state.score);
-  }
-
-  playBtn.addEventListener('click', startGame);
-  retryBtn.addEventListener('click', startGame);
-  adBtn.addEventListener('click', () => {
-    // Simula广告: +1 vita (max 5)
-    if (state.lives < 5) {
-      state.lives++;
-      updateHUD();
-      gameOverScreen.classList.add('hidden');
-      state.running = true;
-      lastT = 0;
-      scheduleSpawn();
-      scheduleBoss();
-      state.loopTimer = requestAnimationFrame(frame);
-    }
-  });
-
-  // Previeni pinch-zoom
-  document.addEventListener('touchmove', (e) => {
-    if (e.touches.length > 1) e.preventDefault();
-  }, {passive:false});
-
 })();
-</script>
-</body>
-</html>
+document.addEventListener('pointerdown',()=>AudioFX.unlock(),{once:true});
+
+/* =========================================================
+   🌐 CLASSIFICA "ONLINE"
+   ---------------------------------------------------------
+   Livello dati con firma asincrona (Promise) e latenza di rete
+   simulata. Per una classifica VERAMENTE online sostituisci i
+   due metodi qui sotto con il tuo backend mantenendo la firma:
+     • Firebase Firestore  (consigliato, gratuito)
+     • Supabase / Appwrite
+     • un tuo endpoint REST (fetch GET/POST)
+   ES:  fetch(){ return db.collection('scores').get() ... }
+   ========================================================= */
+const LB_KEY='sm_my_scores_v2', SIM_KEY='sm_global_sim_v1', NAME_KEY='sm_name', REC_KEY='sm_record';
+const loadJSON=(k,f)=>{try{const v=JSON.parse(localStorage.getItem(k));return v==null?f:v;}catch(e){return f;}};
+const saveJSON=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
+const record=()=>+localStorage.getItem(REC_KEY)||0;
+
+function simulatedGlobals(){
+  let sim=loadJSON(SIM_KEY,null);
+  if(!sim){
+    sim=['DragonKiller','xX_Slayer_Xx','NonnaPina','ProGamer2016','SchiacciaPro','Luca09','Martina✨',
+         'IlBossDeiBoss','Kekko99','Aurora🌸','ZioPeppe','NoobHunter','Giulia🍕','DarkPhoenix','Matteo',
+         'SuperMery','CiccioGamer','Valentina','MrSchiaccia','PixelPazzo']
+      .map(n=>({name:n,score:ri(250,9500),level:ri(2,10),ts:Date.now()-ri(0,6*86400000)}));
+  }else if(Math.random()<.7){ // gli altri "giocano": qualche punteggio sale
+    sim[ri(0,sim.length-1)].score+=ri(10,260);
+  }
+  saveJSON(SIM_KEY,sim);
+  return sim;
+}
+
+const LeaderboardAPI={
+  _net:()=>new Promise(r=>setTimeout(r,rand(350,900))), // latenza simulata
+  async fetch(){
+    await this._net();
+    return [...simulatedGlobals(),...loadJSON(LB_KEY,[])]
+      .sort((a,b)=>b.score-a.score).slice(0,50);
+  },
+  async submit(entry){
+    await this._net();
+    const mine=loadJSON(LB_KEY,[]);
+    /* 🐛 FIX DUPLICATI: deduplicazione per runId.
+       Anche se submit venisse chiamato due volte per la stessa
+       partita (es. flusso rinascita), l'entry viene SOSTITUITA,
+       mai duplicata. */
+    const i=mine.findIndex(e=>e.runId&&e.runId===entry.runId);
+    if(i>=0)mine[i]=entry;else mine.push(entry);
+    mine.sort((a,b)=>b.score-a.score);
+    saveJSON(LB_KEY,mine.slice(0,20));
+    const all=[...simulatedGlobals(),...mine].sort((a,b)=>b.score-a.score);
+    return{pos:all.findIndex(e=>e.runId===entry.runId)+1,total:all.length};
+  }
+};
+
+/* =============== TIPI DI MOSTRO =============== */
+const TYPES={
+  normal:{emoji:'👾',size:46,life:4.5,hp:1,pts:10},
+  bat:   {emoji:'🦇',size:38,life:2.6,hp:1,pts:25,move:130},
+  ghost: {emoji:'👻',size:46,life:4.2,hp:1,pts:30},
+  zombie:{emoji:'🧟',size:52,life:6.0,hp:3,pts:40},
+  virus: {emoji:'🦠',size:42,life:4.5,hp:1,pts:20},
+  ogre:  {emoji:'👹',size:54,life:6.5,hp:1,pts:60},
+  trap:  {emoji:'🎃',size:46,life:4.0,hp:1,pts:10},
+  boss:  {emoji:'👿',size:108,life:20,hp:18,pts:300,move:85}
+};
+
+/* =============== STATO =============== */
+let uid=0;
+const S={running:false,paused:false,score:0,level:1,lives:5,maxLives:5,combo:0,comboT:0,
+  smashed:0,monsters:[],spawnT:1.2,bossActive:false,bossIn:90,
+  rebirthUsed:false,runSubmitted:false,runId:newRunId()};
+function newRunId(){return 'r'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);}
+const levelFactor=()=>clamp(1-(S.level-1)*.045,.55,1);
+
+/* =============== REF HUD =============== */
+const scoreEl=$('#scoreEl'),recEl=$('#recEl'),lvlEl=$('#lvlEl'),heartsEl=$('#heartsEl'),
+      comboChip=$('#comboChip'),bossChip=$('#bossChip');
+function renderHearts(){heartsEl.textContent='❤️'.repeat(Math.max(0,S.lives))+'🖤'.repeat(Math.max(0,S.maxLives-S.lives));}
+function addScore(n){S.score=Math.max(0,S.score+n);scoreEl.textContent=S.score;if(S.score>record())recEl.textContent=S.score;}
+function setCombo(n){S.combo=n;S.comboT=n>0?3:0;
+  if(n>=3){comboChip.style.display='flex';comboChip.textContent='🔥 x'+n;}else comboChip.style.display='none';}
+function renderHUDAll(){scoreEl.textContent=0;recEl.textContent=record();lvlEl.textContent=1;renderHearts();
+  setCombo(0);bossChip.style.display='none';}
+
+/* =============== EFFETTI =============== */
+let bannerT=null;
+function banner(txt,cls){const b=$('#banner');b.textContent=txt;b.className='show '+(cls||'');
+  clearTimeout(bannerT);bannerT=setTimeout(()=>b.className='',1700);}
+function floatText(x,y,txt,cls){const d=document.createElement('div');d.className='ftext '+(cls||'');
+  d.textContent=txt;d.style.left=x+'px';d.style.top=(y-30)+'px';arena.appendChild(d);setTimeout(()=>d.remove(),850);}
+function particles(x,y,n){
+  const colors=['#7c4dff','#00e5ff','#39ff88','#ffd54a','#ff4d6d'];
+  for(let i=0;i<n;i++){const p=document.createElement('div');p.className='part';
+    p.style.left=x+'px';p.style.top=y+'px';p.style.background=colors[ri(0,colors.length-1)];
+    arena.appendChild(p);
+    const a=rand(0,Math.PI*2),d=rand(22,72);
+    p.animate([{transform:'translate(-50%,-50%)',opacity:1},
+      {transform:`translate(${Math.cos(a)*d-4}px,${Math.sin(a)*d-4}px) scale(.3)`,opacity:0}],
+      {duration:rand(300,560),easing:'ease-out'}).onfinish=()=>p.remove();}
+}
+function splat(x,y){const s=document.createElement('div');s.className='splat';s.textContent='💥';
+  s.style.left=x+'px';s.style.top=y+'px';s.style.fontSize='34px';arena.appendChild(s);setTimeout(()=>s.remove(),380);}
+function shake(){arena.classList.remove('shake');void arena.offsetWidth;arena.classList.add('shake');}
+function flashEl(m){m.el.classList.add('flash');setTimeout(()=>m.el.classList.remove('flash'),130);}
+
+/* =============== SPAWN =============== */
+function pickType(){
+  const L=S.level,w=[['normal',30],['bat',16]];
+  if(L>=2)w.push(['ghost',12],['zombie',11],['trap',8]);
+  if(L>=3
