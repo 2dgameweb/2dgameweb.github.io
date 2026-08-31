@@ -1,9 +1,1104 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="it">
 <head>
-<title>Coming soon...</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>Schiaccia i Mostri</title>
+
+  <style>
+    :root {
+      --bg1: #0f172a;
+      --bg2: #111827;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    html,
+    body {
+      height: 100%;
+      overflow: hidden;
+      background: #050810;
+      color: #fff;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    }
+
+    #app {
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 12px;
+      background: rgba(255, 255, 255, 0.06);
+      backdrop-filter: blur(8px);
+      z-index: 20;
+    }
+
+    .brand {
+      font-weight: 900;
+      letter-spacing: 0.3px;
+    }
+
+    .stats {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .stats .life {
+      color: #ff5964;
+      letter-spacing: 2px;
+    }
+
+    #gameArea {
+      position: relative;
+      flex: 1;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 50% 20%, #22315f 0%, #0f172a 45%, #050810 100%);
+      touch-action: manipulation;
+    }
+
+    #gameArea::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.06) 0 2px, transparent 2px),
+        radial-gradient(circle at 75% 65%, rgba(255, 255, 255, 0.05) 0 2px, transparent 2px),
+        radial-gradient(circle at 40% 80%, rgba(255, 255, 255, 0.05) 0 2px, transparent 2px);
+      background-size: 220px 220px, 260px 260px, 300px 300px;
+      pointer-events: none;
+      opacity: 0.7;
+    }
+
+    .monster {
+      position: absolute;
+      left: 0;
+      top: 0;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      z-index: 5;
+      will-change: transform;
+      touch-action: manipulation;
+    }
+
+    .monster .body {
+      width: 100%;
+      height: 100%;
+      display: grid;
+      place-items: center;
+      font-size: calc(var(--size) * 0.62);
+      line-height: 1;
+      animation: spawn 0.18s ease-out;
+      filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.35));
+      transition: transform 0.08s ease;
+    }
+
+    .monster.hit .body {
+      transform: scale(0.88);
+      filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.8));
+    }
+
+    .monster.wrong .body {
+      animation: shake 0.18s linear;
+      filter: drop-shadow(0 0 12px #ffd166);
+    }
+
+    .monster.killed .body {
+      animation: pop 0.28s ease-out forwards;
+    }
+
+    .monster.expired .body {
+      animation: expire 0.25s ease-in forwards;
+    }
+
+    .monster .timer {
+      position: absolute;
+      bottom: -12px;
+      left: 8%;
+      width: 84%;
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.14);
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .monster .timer i {
+      display: block;
+      height: 100%;
+      width: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #7cffcb, #ffd166, #ff5964);
+      animation: drain linear forwards;
+    }
+
+    .ghost .body {
+      opacity: 0.17;
+      animation: spawn 0.18s ease-out, ghostFlicker 0.72s infinite;
+    }
+
+    .ghost {
+      filter: blur(0.45px);
+    }
+
+    .runner .body {
+      transform: rotate(8deg);
+    }
+
+    .splitter .body {
+      animation: spawn 0.18s ease-out, wobble 0.55s infinite;
+    }
+
+    .timing .ring {
+      position: absolute;
+      inset: -12px;
+      border: 3px solid rgba(255, 255, 255, 0.45);
+      border-radius: 50%;
+      pointer-events: none;
+      animation: ringPulse 0.85s infinite;
+    }
+
+    .timing .body {
+      filter: drop-shadow(0 0 10px rgba(255, 89, 100, 0.35));
+    }
+
+    .timing.ready .ring {
+      border-color: #58ff72;
+      box-shadow: 0 0 24px rgba(88, 255, 114, 0.55);
+      animation: none;
+      transform: scale(1.04);
+    }
+
+    .timing.ready .body {
+      transform: scale(1.16);
+      filter: drop-shadow(0 0 16px rgba(88, 255, 114, 0.9));
+    }
+
+    .timing.ready::after {
+      content: "ORA!";
+      position: absolute;
+      top: -26px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 11px;
+      font-weight: 1000;
+      color: #58ff72;
+      text-shadow: 0 2px 0 rgba(0, 0, 0, 0.35);
+    }
+
+    .tank .hp {
+      position: absolute;
+      top: -14px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 3px;
+    }
+
+    .tank .hp i {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.22);
+    }
+
+    .tank .hp i.on {
+      background: #ff5964;
+      box-shadow: 0 0 8px rgba(255, 89, 100, 0.8);
+    }
+
+    .float {
+      position: absolute;
+      z-index: 35;
+      transform: translate(-50%, -50%);
+      font-weight: 1000;
+      font-size: 18px;
+      text-shadow: 0 2px 0 rgba(0, 0, 0, 0.35);
+      pointer-events: none;
+      animation: floatUp 0.7s ease-out forwards;
+    }
+
+    .overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 50;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+      background: rgba(0, 0, 0, 0.58);
+      backdrop-filter: blur(6px);
+      text-align: center;
+    }
+
+    .panel {
+      width: min(560px, 100%);
+      padding: 24px 20px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 22px;
+      background: rgba(15, 23, 42, 0.92);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+    }
+
+    .panel h1 {
+      font-size: 34px;
+      margin-bottom: 8px;
+    }
+
+    .panel p {
+      color: #dbe4ff;
+      line-height: 1.45;
+      margin: 8px 0 14px;
+    }
+
+    .big {
+      font-size: 28px;
+      font-weight: 1000;
+      margin: 10px 0;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 16px;
+      padding: 13px 18px;
+      font-size: 16px;
+      font-weight: 900;
+      cursor: pointer;
+      transition: transform 0.06s ease, opacity 0.15s ease;
+    }
+
+    button:active {
+      transform: scale(0.96);
+    }
+
+    button:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .primary {
+      background: linear-gradient(135deg, #7cffcb, #39c2ff);
+      color: #04101d;
+    }
+
+    .secondary {
+      background: rgba(255, 255, 255, 0.12);
+      color: #fff;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    #damageFlash {
+      position: absolute;
+      inset: 0;
+      z-index: 45;
+      background:
+        radial-gradient(circle, rgba(255, 0, 0, 0) 35%, rgba(255, 0, 0, 0.42) 100%);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.16s ease;
+    }
+
+    #adBanner {
+      min-height: 64px;
+      display: grid;
+      place-items: center;
+      background: rgba(255, 255, 255, 0.07);
+      color: #b7c3e8;
+      font-size: 13px;
+      padding: 8px 10px;
+      text-align: center;
+      z-index: 20;
+    }
+
+    @keyframes drain {
+      from {
+        width: 100%;
+      }
+
+      to {
+        width: 0%;
+      }
+    }
+
+    @keyframes spawn {
+      from {
+        transform: scale(0.25);
+        opacity: 0;
+      }
+
+      to {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    @keyframes pop {
+      0% {
+        transform: scale(1);
+        opacity: 1;
+      }
+
+      55% {
+        transform: scale(1.35) rotate(6deg);
+        opacity: 1;
+      }
+
+      100% {
+        transform: scale(0);
+        opacity: 0;
+      }
+    }
+
+    @keyframes expire {
+      to {
+        transform: scale(0.35) translateY(18px);
+        opacity: 0;
+      }
+    }
+
+    @keyframes ghostFlicker {
+      0%,
+      100% {
+        opacity: 0.12;
+      }
+
+      45% {
+        opacity: 0.36;
+      }
+
+      62% {
+        opacity: 0.16;
+      }
+
+      78% {
+        opacity: 0.32;
+      }
+    }
+
+    @keyframes wobble {
+      0%,
+      100% {
+        transform: scale(1) rotate(-4deg);
+      }
+
+      50% {
+        transform: scale(1.08) rotate(5deg);
+      }
+    }
+
+    @keyframes ringPulse {
+      0% {
+        transform: scale(1.28);
+        opacity: 0.22;
+      }
+
+      50% {
+        transform: scale(1);
+        opacity: 0.9;
+      }
+
+      100% {
+        transform: scale(0.76);
+        opacity: 0.22;
+      }
+    }
+
+    @keyframes shake {
+      0%,
+      100% {
+        transform: translateX(0);
+      }
+
+      25% {
+        transform: translateX(-5px);
+      }
+
+      75% {
+        transform: translateX(5px);
+      }
+    }
+
+    @keyframes floatUp {
+      from {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(0.8);
+      }
+
+      to {
+        opacity: 0;
+        transform: translate(-50%, -160%) scale(1.25);
+      }
+    }
+
+    @media (max-width: 600px) {
+      .panel h1 {
+        font-size: 28px;
+      }
+
+      .stats {
+        font-size: 12px;
+      }
+    }
+  </style>
 </head>
+
 <body>
-<h1>Coming soon...</h1>
+  <div id="app">
+    <header>
+      <div class="brand">👾 SCHIACCIA I MOSTRI</div>
+
+      <div class="stats">
+        <div>PUNTI: <span id="score">0</span></div>
+        <div>RECORD: <span id="record">0</span></div>
+        <div>LIVELLO: <span id="level">1</span></div>
+        <div class="life" id="lives">❤️❤️❤️❤️❤️</div>
+      </div>
+    </header>
+
+    <div id="gameArea">
+      <div id="damageFlash"></div>
+
+      <div id="startOverlay" class="overlay">
+        <div class="panel">
+          <h1>Schiaccia i mostri!</h1>
+          <p>
+            👾 normali • 🦇 veloci • 👻 quasi invisibili • 🧟 da colpire più volte<br />
+            🦠 si duplicano • 👹 colpiscili quando diventano verdi!<br /><br />
+            Se non li elimini in tempo, perdi vita.
+          </p>
+          <button class="primary" id="startBtn">GIOCA</button>
+        </div>
+      </div>
+
+      <div id="gameOverOverlay" class="overlay hidden">
+        <div class="panel">
+          <h1>GAME OVER</h1>
+
+          <div class="big">Punteggio: <span id="finalScore">0</span></div>
+          <div>Record: <span id="finalRecord">0</span></div>
+
+          <div class="buttons">
+            <button class="primary" id="restartBtn">RIPROVA</button>
+            <button class="secondary" id="reviveBtn">📺 Guarda pubblicità: +1 vita</button>
+          </div>
+
+          <p style="margin-top: 10px; font-size: 13px; opacity: 0.8;">
+            Il pulsante pubblicità qui è simulato: collega AdSense, AdInMo, Unity Ads o un altro provider.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!--
+      QUI PUOI INSERIRE IL TUO BANNER PUBBLICITARIO.
+      Esempio:
+      - Google AdSense
+      - AdInMo
+      - Unity Ads
+      - Proprietary banner
+    -->
+    <div id="adBanner">
+      📢 SPAZIO PUBBLICITÀ — sostituisci questo box con il tuo codice AdSense / AdInMo / banner.
+    </div>
+  </div>
+
+  <script>
+    const area = document.getElementById("gameArea");
+    const scoreEl = document.getElementById("score");
+    const recordEl = document.getElementById("record");
+    const livesEl = document.getElementById("lives");
+    const levelEl = document.getElementById("level");
+
+    const startOverlay = document.getElementById("startOverlay");
+    const gameOverOverlay = document.getElementById("gameOverOverlay");
+    const finalScoreEl = document.getElementById("finalScore");
+    const finalRecordEl = document.getElementById("finalRecord");
+
+    const startBtn = document.getElementById("startBtn");
+    const restartBtn = document.getElementById("restartBtn");
+    const reviveBtn = document.getElementById("reviveBtn");
+    const damageFlash = document.getElementById("damageFlash");
+
+    const STORAGE_KEY = "schiaccia_mostri_record";
+
+    const state = {
+      running: false,
+      score: 0,
+      lives: 5,
+      record: 0,
+      monsters: [],
+      startTime: 0,
+      elapsed: 0,
+      lastSpawn: 0,
+      spawnInterval: 1200,
+      reviveUsed: false
+    };
+
+    function loadRecord() {
+      try {
+        return Number(localStorage.getItem(STORAGE_KEY) || 0);
+      } catch (error) {
+        return 0;
+      }
+    }
+
+    function saveRecord(value) {
+      try {
+        localStorage.setItem(STORAGE_KEY, String(value));
+      } catch (error) {
+        // storage bloccato: ignora
+      }
+    }
+
+    state.record = loadRecord();
+    recordEl.textContent = state.record;
+
+    function rand(min, max) {
+      return Math.random() * (max - min) + min;
+    }
+
+    function randInt(min, max) {
+      return Math.floor(rand(min, max + 1));
+    }
+
+    function pick(arr) {
+      return arr[Math.floor(Math.random() * arr.length)];
+    }
+
+    function weightedPick(entries) {
+      const total = entries.reduce((sum, [, weight]) => sum + weight, 0);
+      let r = Math.random() * total;
+
+      for (const [value, weight] of entries) {
+        r -= weight;
+        if (r <= 0) return value;
+      }
+
+      return entries[0][0];
+    }
+
+    function updateHUD(level = 1) {
+      scoreEl.textContent = state.score;
+      recordEl.textContent = state.record;
+      livesEl.textContent = "❤️".repeat(Math.max(0, state.lives)) || "💀";
+      levelEl.textContent = level;
+    }
+
+    function currentLevel() {
+      return 1 + Math.floor(state.elapsed / 15000);
+    }
+
+    function flashDamage() {
+      damageFlash.style.opacity = "1";
+      setTimeout(() => {
+        damageFlash.style.opacity = "0";
+      }, 140);
+    }
+
+    function showFloat(x, y, text, color = "#fff") {
+      const el = document.createElement("div");
+      el.className = "float";
+      el.textContent = text;
+      el.style.left = `${x}px`;
+      el.style.top = `${y}px`;
+      el.style.color = color;
+      area.appendChild(el);
+
+      setTimeout(() => {
+        el.remove();
+      }, 720);
+    }
+
+    function getMonsterConfig(type, level) {
+      const difficultyLife = Math.max(0.55, 1 - level * 0.042);
+      const difficultySpeed = Math.min(2.6, 1 + level * 0.14);
+
+      const configs = {
+        blob: {
+          emoji: "👾",
+          size: randInt(58, 78),
+          hp: 1,
+          points: 10,
+          damage: 1,
+          lifetime: randInt(1800, 2300) * difficultyLife,
+          speed: 0
+        },
+
+        runner: {
+          emoji: "🦇",
+          size: randInt(46, 64),
+          hp: 1,
+          points: 16,
+          damage: 1,
+          lifetime: randInt(2400, 3000) * difficultyLife,
+          speed: rand(2.1, 3.4) * difficultySpeed
+        },
+
+        ghost: {
+          emoji: "👻",
+          size: randInt(54, 76),
+          hp: 1,
+          points: 22,
+          damage: 1,
+          lifetime: randInt(2100, 2600) * difficultyLife,
+          speed: rand(0.3, 0.9) * difficultySpeed
+        },
+
+        tank: {
+          emoji: "🧟",
+          size: randInt(72, 92),
+          hp: 3,
+          points: 32,
+          damage: 2,
+          lifetime: randInt(3100, 3700) * difficultyLife,
+          speed: rand(0.2, 0.65) * difficultySpeed
+        },
+
+        splitter: {
+          emoji: "🦠",
+          size: randInt(52, 70),
+          hp: 1,
+          points: 24,
+          damage: 1,
+          lifetime: randInt(2200, 2700) * difficultyLife,
+          speed: rand(0.5, 1.25) * difficultySpeed,
+          splitAt: randInt(750, 1150)
+        },
+
+        timing: {
+          emoji: "👹",
+          size: randInt(58, 80),
+          hp: 1,
+          points: 38,
+          damage: 1,
+          lifetime: randInt(2600, 3200) * difficultyLife,
+          speed: rand(0.25, 0.8) * difficultySpeed
+        },
+
+        mini: {
+          emoji: pick(["🦠", "👾", "🐛"]),
+          size: randInt(34, 48),
+          hp: 1,
+          points: 8,
+          damage: 1,
+          lifetime: randInt(1300, 1800) * difficultyLife,
+          speed: rand(1.4, 2.7) * difficultySpeed
+        }
+      };
+
+      return configs[type];
+    }
+
+    function pickMonsterType(level) {
+      return weightedPick([
+        ["blob", 28],
+        ["runner", 12 + level * 1.1],
+        ["ghost", 9 + level * 0.8],
+        ["tank", 6 + level * 0.7],
+        ["splitter", 9 + level * 0.9],
+        ["timing", 7 + level * 0.9]
+      ]);
+    }
+
+    function spawnMonster(level, forcedType = null, forcedX = null, forcedY = null) {
+      const rect = area.getBoundingClientRect();
+      const type = forcedType || pickMonsterType(level);
+      const config = getMonsterConfig(type, level);
+
+      const size = config.size;
+      const pad = 14;
+
+      const x = forcedX ?? rand(pad, Math.max(pad + 1, rect.width - size - pad));
+      const y = forcedY ?? rand(pad, Math.max(pad + 1, rect.height - size - pad));
+
+      const el = document.createElement("div");
+      el.className = `monster ${type}`;
+      el.style.setProperty("--size", `${size}px`);
+      el.style.width = `${size}px`;
+      el.style.height = `${size}px`;
+
+      el.innerHTML = `
+        <div class="body">${config.emoji}</div>
+        ${type === "timing" ? '<div class="ring"></div>' : ""}
+        ${type === "tank" ? '<div class="hp"></div>' : ""}
+        <div class="timer"><i style="animation-duration:${config.lifetime}ms"></i></div>
+      `;
+
+      const monster = {
+        id: `${Date.now()}_${Math.random().toString(36).slice(2)}`,
+        type,
+        el,
+        x,
+        y,
+        w: size,
+        h: size,
+        hp: config.hp,
+        maxHp: config.hp,
+        points: config.points,
+        damage: config.damage,
+        lifetime: config.lifetime,
+        bornAt: performance.now(),
+        dead: false,
+        vx: 0,
+        vy: 0,
+        hasSplit: false,
+        splitAt: config.splitAt || 0,
+        vulnerable: false,
+        nextVulnAt: performance.now() + randInt(420, 850),
+        vulnUntil: 0
+      };
+
+      if (config.speed) {
+        const angle = rand(0, Math.PI * 2);
+        monster.vx = Math.cos(angle) * config.speed;
+        monster.vy = Math.sin(angle) * config.speed;
+      }
+
+      if (type === "tank") {
+        monster.hpEl = el.querySelector(".hp");
+        renderHp(monster);
+      }
+
+      setTransform(monster);
+
+      el.addEventListener("pointerdown", (ev) => {
+        hitMonster(monster, ev);
+      });
+
+      area.appendChild(el);
+      state.monsters.push(monster);
+    }
+
+    function spawnSplit(monster, level) {
+      if (state.monsters.length > 22) return;
+
+      const rect = area.getBoundingClientRect();
+
+      const cloneX = Math.max(8, Math.min(rect.width - 60, monster.x + rand(-85, 85)));
+      const cloneY = Math.max(8, Math.min(rect.height - 60, monster.y + rand(-85, 85)));
+
+      spawnMonster(level, "mini", cloneX, cloneY);
+      showFloat(monster.x + monster.w / 2, monster.y, "DUPLICATO!", "#7cffcb");
+    }
+
+    function setTransform(m) {
+      m.el.style.transform = `translate3d(${m.x}px, ${m.y}px, 0)`;
+    }
+
+    function renderHp(m) {
+      if (!m.hpEl) return;
+
+      m.hpEl.innerHTML = "";
+
+      for (let i = 0; i < m.maxHp; i++) {
+        const dot = document.createElement("i");
+        if (i < m.hp) dot.className = "on";
+        m.hpEl.appendChild(dot);
+      }
+    }
+
+    function hitMonster(m, ev) {
+      if (!state.running || m.dead) return;
+
+      ev.preventDefault();
+      ev.stopPropagation();
+
+      if (m.type === "timing" && !m.vulnerable) {
+        m.el.classList.remove("wrong");
+        void m.el.offsetWidth;
+        m.el.classList.add("wrong");
+
+        setTimeout(() => {
+          m.el.classList.remove("wrong");
+        }, 200);
+
+        showFloat(m.x + m.w / 2, m.y - 12, "ASPETTA IL VERDE!", "#ffd166");
+        return;
+      }
+
+      m.hp -= 1;
+
+      m.el.classList.add("hit");
+      setTimeout(() => {
+        m.el.classList.remove("hit");
+      }, 90);
+
+      if (m.hp <= 0) {
+        killMonster(m);
+      } else if (m.type === "tank") {
+        renderHp(m);
+        showFloat(m.x + m.w / 2, m.y - 8, `COLPITO! ${m.hp}/${m.maxHp}`, "#ffffff");
+      }
+    }
+
+    function killMonster(m) {
+      if (m.dead) return;
+
+      m.dead = true;
+      removeMonsterFromArray(m);
+
+      state.score += m.points;
+
+      if (state.score > state.record) {
+        state.record = state.score;
+        saveRecord(state.record);
+      }
+
+      showFloat(m.x + m.w / 2, m.y + m.h / 2, `+${m.points}`, "#7cffcb");
+
+      m.el.classList.add("killed");
+
+      setTimeout(() => {
+        m.el.remove();
+      }, 280);
+
+      updateHUD(currentLevel());
+    }
+
+    function expireMonster(m) {
+      if (m.dead) return;
+
+      m.dead = true;
+      removeMonsterFromArray(m);
+
+      m.el.classList.add("expired");
+      showFloat(m.x + m.w / 2, m.y + m.h / 2, `-${m.damage} ❤️`, "#ff5964");
+
+      setTimeout(() => {
+        m.el.remove();
+      }, 260);
+
+      damagePlayer(m.damage);
+    }
+
+    function removeMonsterFromArray(m) {
+      const idx = state.monsters.indexOf(m);
+      if (idx !== -1) state.monsters.splice(idx, 1);
+    }
+
+    function damagePlayer(amount) {
+      state.lives -= amount;
+      flashDamage();
+      updateHUD(currentLevel());
+
+      if (state.lives <= 0) {
+        gameOver();
+      }
+    }
+
+    function startGame() {
+      state.running = true;
+      state.score = 0;
+      state.lives = 5;
+      state.startTime = performance.now();
+      state.elapsed = 0;
+      state.lastSpawn = 0;
+      state.spawnInterval = 1200;
+      state.reviveUsed = false;
+
+      state.monsters.forEach(m => m.el.remove());
+      state.monsters = [];
+
+      startOverlay.classList.add("hidden");
+      gameOverOverlay.classList.add("hidden");
+
+      reviveBtn.disabled = false;
+      reviveBtn.textContent = "📺 Guarda pubblicità: +1 vita";
+
+      updateHUD(1);
+    }
+
+    function gameOver() {
+      state.running = false;
+      state.lives = 0;
+
+      updateHUD(currentLevel());
+
+      finalScoreEl.textContent = state.score;
+      finalRecordEl.textContent = state.record;
+
+      gameOverOverlay.classList.remove("hidden");
+    }
+
+    function reviveAfterAd() {
+      /*
+        QUI COLLEGA IL TUO SISTEMA DI REWARDED ADS.
+
+        Esempio concettuale:
+
+        if (window.myAdSdk) {
+          window.myAdSdk.showRewardedAd()
+            .then(success => {
+              if (success) doRevive();
+            });
+        } else {
+          doRevive();
+        }
+      */
+
+      reviveBtn.disabled = true;
+      reviveBtn.textContent = "Pubblicità in corso...";
+
+      setTimeout(() => {
+        doRevive();
+      }, 1400);
+    }
+
+    function doRevive() {
+      state.running = true;
+      state.lives = 1;
+      state.reviveUsed = true;
+
+      state.monsters.forEach(m => m.el.remove());
+      state.monsters = [];
+
+      // Mantiene il livello raggiunto ma evita salti strani del tempo.
+      state.startTime = performance.now() - state.elapsed;
+      state.lastSpawn = performance.now();
+
+      gameOverOverlay.classList.add("hidden");
+
+      reviveBtn.disabled = true;
+      reviveBtn.textContent = "Pubblicità usata";
+
+      updateHUD(currentLevel());
+      showFloat(area.clientWidth / 2, area.clientHeight / 2, "RIVISCIUTO!", "#7cffcb");
+    }
+
+    let lastFrame = performance.now();
+
+    function loop(t) {
+      requestAnimationFrame(loop);
+
+      const dt = Math.min(34, t - lastFrame);
+      lastFrame = t;
+
+      if (!state.running) return;
+
+      state.elapsed = t - state.startTime;
+
+      const level = currentLevel();
+      levelEl.textContent = level;
+
+      state.spawnInterval = Math.max(430, 1180 - level * 58);
+
+      const maxMonsters = Math.min(19, 8 + level);
+
+      if (t - state.lastSpawn > state.spawnInterval && state.monsters.length < maxMonsters) {
+        spawnMonster(level);
+        state.lastSpawn = t;
+      }
+
+      const rect = area.getBoundingClientRect();
+
+      for (let i = state.monsters.length - 1; i >= 0; i--) {
+        const m = state.monsters[i];
+        if (m.dead) continue;
+
+        const age = t - m.bornAt;
+
+        // Movimento
+        if (m.vx || m.vy) {
+          m.x += (m.vx * dt) / 16;
+          m.y += (m.vy * dt) / 16;
+
+          if (m.x <= 0) {
+            m.x = 0;
+            m.vx *= -1;
+          }
+
+          if (m.y <= 0) {
+            m.y = 0;
+            m.vy *= -1;
+          }
+
+          if (m.x + m.w >= rect.width) {
+            m.x = rect.width - m.w;
+            m.vx *= -1;
+          }
+
+          if (m.y + m.h >= rect.height) {
+            m.y = rect.height - m.h;
+            m.vy *= -1;
+          }
+
+          setTransform(m);
+        }
+
+        // Mostro a tempo: devi cliccarlo quando diventa verde.
+        if (m.type === "timing") {
+          if (!m.vulnerable && t >= m.nextVulnAt) {
+            m.vulnerable = true;
+            m.el.classList.add("ready");
+            m.vulnUntil = t + randInt(360, 520);
+          }
+
+          if (m.vulnerable && t >= m.vulnUntil) {
+            m.vulnerable = false;
+            m.el.classList.remove("ready");
+            m.nextVulnAt = t + randInt(620, 980);
+          }
+        }
+
+        // Mostro che si duplica.
+        if (m.type === "splitter" && !m.hasSplit && age >= m.splitAt) {
+          m.hasSplit = true;
+          spawnSplit(m, level);
+        }
+
+        // Se il tempo finisce, il mostro fa danno.
+        if (age >= m.lifetime) {
+          expireMonster(m);
+
+          if (!state.running) break;
+        }
+      }
+    }
+
+    startBtn.addEventListener("click", startGame);
+    restartBtn.addEventListener("click", startGame);
+    reviveBtn.addEventListener("click", reviveAfterAd);
+
+    area.addEventListener("contextmenu", e => e.preventDefault());
+
+    window.addEventListener("resize", () => {
+      const rect = area.getBoundingClientRect();
+
+      state.monsters.forEach(m => {
+        m.x = Math.min(m.x, rect.width - m.w);
+        m.y = Math.min(m.y, rect.height - m.h);
+        setTransform(m);
+      });
+    });
+
+    requestAnimationFrame(loop);
+  </script>
 </body>
 </html>
