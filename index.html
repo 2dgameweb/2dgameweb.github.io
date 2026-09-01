@@ -38,7 +38,9 @@ body{
 @keyframes dmgFlash{0%{box-shadow:0 0 0 2px #ff4d6d,0 0 20px rgba(255,77,109,.9);transform:scale(1.06)}100%{}}
 #hpChip.low .hpbar i{animation:pulse .7s infinite}
 @keyframes pulse{50%{opacity:.55}}
-#comboChip{display:none;background:rgba(255,120,60,.16);border-color:rgba(255,150,80,.5);color:#ffc07c;font-weight:800}
+/* streak sempre visibile */
+#comboChip{background:rgba(255,120,60,.16);border-color:rgba(255,150,80,.5);color:#ffc07c;font-weight:800}
+#comboChip.hot{background:rgba(255,120,60,.4);box-shadow:0 0 14px rgba(255,140,60,.5)}
 #bossChip{display:none;color:#ffb3c1;border-color:rgba(255,90,120,.45);font-weight:700}
 #bossChip.urgent{animation:pulse .7s infinite}
 #modeChip{color:#9fd8ff;border-color:rgba(124,200,255,.45);font-weight:700}
@@ -54,12 +56,31 @@ body{
     radial-gradient(600px 300px at 50% 0%, rgba(124,77,255,.12), transparent 70%),
     radial-gradient(rgba(255,255,255,.06) 1px, transparent 1.6px);
   background-size:auto,26px 26px;box-shadow:inset 0 0 60px rgba(0,0,0,.45)}
-/* FIX MOBILE: nessun gesto del browser nel gioco… */
 #arena,#arena *{touch-action:none}
-/* …MA i menu devono restare scrollabili (specificità più alta!) */
 #arena .screen,#arena .screen *{touch-action:manipulation}
 #arena.shake{animation:shake .3s}
 @keyframes shake{25%{transform:translate(-6px,3px)}50%{transform:translate(5px,-4px)}75%{transform:translate(-3px,2px)}}
+
+/* ---------- TEMI SHOP ---------- */
+body[data-theme="ocean"]{background:radial-gradient(900px 520px at 15% -10%,rgba(0,140,255,.4),transparent 60%),radial-gradient(820px 520px at 110% 115%,rgba(0,255,210,.15),transparent 60%),linear-gradient(165deg,#052a45,#02121f)}
+body[data-theme="ocean"] #arena{background:radial-gradient(600px 300px at 50% 0%,rgba(0,140,255,.16),transparent 70%),radial-gradient(rgba(255,255,255,.07) 1px,transparent 1.6px);background-size:auto,26px 26px}
+body[data-theme="lava"]{background:radial-gradient(900px 520px at 15% -10%,rgba(255,90,0,.35),transparent 60%),radial-gradient(820px 520px at 110% 115%,rgba(255,200,0,.12),transparent 60%),linear-gradient(165deg,#2a0a05,#160401)}
+body[data-theme="lava"] #arena{background:radial-gradient(600px 300px at 50% 100%,rgba(255,90,0,.2),transparent 70%),radial-gradient(rgba(255,220,180,.06) 1px,transparent 1.6px);background-size:auto,26px 26px}
+body[data-theme="forest"]{background:radial-gradient(900px 520px at 15% -10%,rgba(40,200,90,.3),transparent 60%),linear-gradient(165deg,#07230f,#03120a)}
+body[data-theme="forest"] #arena{background:radial-gradient(600px 300px at 50% 0%,rgba(40,200,90,.14),transparent 70%),radial-gradient(rgba(255,255,255,.06) 1px,transparent 1.6px);background-size:auto,26px 26px}
+body[data-theme="space"]{background:radial-gradient(700px 400px at 80% 10%,rgba(120,80,255,.18),transparent 60%),linear-gradient(165deg,#050510,#010104)}
+body[data-theme="space"] #arena{background:radial-gradient(rgba(255,255,255,.22) 1px,transparent 1.4px),radial-gradient(rgba(255,255,255,.1) 1px,transparent 1.4px);background-size:34px 34px,19px 19px}
+body[data-theme="synth"]{background:linear-gradient(180deg,#12002e 0%,#3b0f4f 60%,#8a1e5a 130%)}
+body[data-theme="synth"] #arena{background:linear-gradient(rgba(255,0,200,.13) 1px,transparent 1px),linear-gradient(90deg,rgba(255,0,200,.13) 1px,transparent 1px),linear-gradient(180deg,rgba(60,10,90,.5),rgba(20,0,40,.7));background-size:30px 30px,30px 30px,auto}
+body[data-theme="gold"]{background:radial-gradient(900px 520px at 15% -10%,rgba(255,200,60,.28),transparent 60%),linear-gradient(165deg,#241804,#0f0a02)}
+body[data-theme="gold"] #arena{background:radial-gradient(600px 300px at 50% 0%,rgba(255,200,60,.13),transparent 70%),radial-gradient(rgba(255,230,150,.08) 1px,transparent 1.6px);background-size:auto,26px 26px}
+.prev-default{background:linear-gradient(165deg,#160a2e,#0d1b36)}
+.prev-ocean{background:linear-gradient(165deg,#0a4a75,#02121f)}
+.prev-lava{background:linear-gradient(165deg,#5c1a05,#160401)}
+.prev-forest{background:linear-gradient(165deg,#0d4a22,#03120a)}
+.prev-space{background:radial-gradient(rgba(255,255,255,.35) 1px,transparent 1.4px) 0 0/12px 12px,linear-gradient(165deg,#0a0a1c,#010104)}
+.prev-synth{background:linear-gradient(rgba(255,0,200,.3) 1px,transparent 1px) 0 0/8px 8px,linear-gradient(90deg,rgba(255,0,200,.3) 1px,transparent 1px) 0 0/8px 8px,linear-gradient(165deg,#3b0f4f,#12002e)}
+.prev-gold{background:linear-gradient(165deg,#8a6a1c,#241804)}
 
 /* ---------- MOSTRI ---------- */
 .monster{position:absolute;left:0;top:0;display:flex;flex-direction:column;align-items:center;gap:3px;
@@ -82,23 +103,25 @@ body{
 .monster.flash .m-body{filter:drop-shadow(0 0 12px #fff) brightness(2.2)}
 .monster.ogre.green .m-body{filter:drop-shadow(0 0 12px #3dff6e) hue-rotate(85deg) saturate(2.4) brightness(1.15)}
 .monster.ogre.red .m-body{filter:drop-shadow(0 0 9px rgba(255,60,60,.85))}
+/* 💣 bomba */
 .monster.trap .m-body{animation:wiggle .45s ease-in-out infinite}
-.monster.trap{filter:drop-shadow(0 0 10px rgba(255,140,0,.55))}
+.monster.trap{filter:drop-shadow(0 0 10px rgba(255,80,40,.6))}
 @keyframes wiggle{0%,100%{transform:rotate(-9deg)}50%{transform:rotate(9deg)}}
-.monster.boss .m-body{animation:bossBob .9s ease-in-out infinite}
+.monster.boss .m-body,.monster.bossBact .m-body,.monster.bossTele .m-body{animation:bossBob .9s ease-in-out infinite}
+.monster.bossBact .m-body{filter:drop-shadow(0 0 16px rgba(80,255,120,.55))}
+.monster.bossTele .m-body{filter:drop-shadow(0 0 14px rgba(180,120,255,.65))}
 @keyframes bossBob{0%,100%{transform:scale(1) rotate(-2deg)}50%{transform:scale(1.07) rotate(2deg)}}
-.monster.boss .m-bar{width:92px;height:6px}
+.monster.boss .m-bar,.monster.bossBact .m-bar,.monster.bossTele .m-bar{width:92px;height:6px}
 .monster.gem .m-body{animation:gemSpin 1.2s ease-in-out infinite;filter:drop-shadow(0 0 8px rgba(124,231,255,.8))}
 @keyframes gemSpin{0%,100%{transform:scale(1)}50%{transform:scale(1.25) rotate(8deg)}}
 .monster.crystal .m-body{animation:crysGlow 1.6s ease-in-out infinite}
 @keyframes crysGlow{0%,100%{filter:drop-shadow(0 0 6px rgba(0,229,255,.5))}50%{filter:drop-shadow(0 0 16px rgba(0,229,255,.95))}}
-/* 👽 effetto teletrasporto */
 .monster.tele .m-body{filter:drop-shadow(0 0 8px rgba(178,107,255,.75))}
 .monster.tp .m-body{animation:tele .3s ease}
 @keyframes tele{
   0%{opacity:0;transform:scale(.2) rotate(120deg);filter:drop-shadow(0 0 22px #b26bff) brightness(3)}
   60%{opacity:1;transform:scale(1.25) rotate(-8deg);filter:drop-shadow(0 0 14px #7ce7ff) brightness(1.6)}
-  100%{opacity:1;transform:scale(1) rotate(0);filter:drop-shadow(0 0 8px rgba(178,107,255,.75))}}
+  100%{opacity:1;transform:scale(1) rotate(0)}}
 .tp-echo{position:absolute;z-index:4;font-size:44px;pointer-events:none;
   transform:translate(-50%,-50%);filter:blur(1px) drop-shadow(0 0 14px #b26bff);
   animation:echoFade .45s forwards}
@@ -107,6 +130,10 @@ body{
 .tp-ring{position:absolute;z-index:4;width:14px;height:14px;border-radius:50%;pointer-events:none;
   border:3px solid #b26bff;transform:translate(-50%,-50%);animation:ringOut .4s forwards}
 @keyframes ringOut{from{opacity:.9;scale:.4}to{opacity:0;scale:4}}
+/* 💥 esplosione bomba */
+.boom{position:absolute;z-index:22;font-size:60px;pointer-events:none;animation:boomA .5s forwards}
+@keyframes boomA{from{transform:translate(-50%,-50%) scale(.3);opacity:1}
+  to{transform:translate(-50%,-50%) scale(2.3);opacity:0}}
 
 /* ---------- EFFETTI ---------- */
 .ftext{position:absolute;z-index:30;font-weight:800;font-size:16px;pointer-events:none;
@@ -132,7 +159,7 @@ body{
 .screen{position:absolute;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;
   background:rgba(8,4,20,.74);backdrop-filter:blur(6px);padding:14px}
 .card{background:linear-gradient(170deg,rgba(60,30,110,.6),rgba(15,25,55,.7));
-  border:1px solid rgba(255,255,255,.16);border-radius:22px;padding:18px;max-width:580px;width:100%;
+  border:1px solid rgba(255,255,255,.16);border-radius:22px;padding:18px;max-width:600px;width:100%;
   text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.5);max-height:100%;overflow:auto}
 .title{font-family:'Press Start 2P',monospace;font-size:clamp(14px,4vw,21px);color:#fff;
   text-shadow:0 0 18px rgba(124,77,255,.9);margin-bottom:8px}
@@ -165,7 +192,7 @@ body{
 #nameInput:focus{border-color:#ffd54a}
 .lb-status{font-size:13px;margin-top:9px;min-height:18px;color:#9fd8ff}
 
-/* ---------- MODALE CLASSIFICA ---------- */
+/* ---------- MODALI ---------- */
 .modal{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;
   background:rgba(5,2,15,.7);backdrop-filter:blur(5px);padding:14px}
 .modal-card{width:100%;max-width:470px;max-height:92dvh;display:flex;flex-direction:column;
@@ -198,6 +225,18 @@ body{
   border-top-color:#ffd54a;border-radius:50%;animation:spin .7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 
+/* ---------- SHOP ---------- */
+.shop-list{overflow:auto;display:flex;flex-direction:column;gap:8px}
+.shop-item{display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:10px}
+.shop-prev{width:66px;height:46px;border-radius:9px;flex:none;box-shadow:inset 0 0 0 1px rgba(255,255,255,.18)}
+.shop-name{flex:1;font-weight:700;font-size:14px}
+.shop-btn{border:none;border-radius:10px;padding:9px 12px;font-weight:800;cursor:pointer;font-size:13px}
+.shop-btn.buy{background:linear-gradient(180deg,#7ce7ff,#2f8fe0);color:#04121f}
+.shop-btn.buy.off{background:rgba(255,255,255,.12);color:rgba(255,255,255,.4);cursor:not-allowed}
+.shop-btn.equip{background:linear-gradient(180deg,#5dff9d,#19c96d);color:#08121f}
+.shop-btn.eq{background:transparent;border:1px solid #ffd54a;color:#ffd54a;cursor:default}
+
 /* ---------- AD ---------- */
 #adbar{border-radius:12px;border:1px dashed rgba(255,255,255,.25);background:rgba(255,255,255,.04);
   text-align:center;padding:8px;font-size:11.5px;opacity:.75}
@@ -226,10 +265,11 @@ body{
     <div class="chip" id="hpChip"><span class="lbl">HP</span>
       <div class="hpbar"><i id="hpFill"></i></div><b id="hpNum">100</b></div>
     <div class="chip">💎 <b id="diamEl">0</b></div>
-    <div class="chip" id="comboChip">🔥 x3</div>
+    <div class="chip" id="comboChip">🔥 x0</div>
     <div class="chip" id="bossChip">👿</div>
     <div class="chip" id="modeChip" hidden>📅</div>
     <div class="spacer"></div>
+    <button class="icon-btn" id="shopBtn" title="Shop sfondi">🛍️</button>
     <button class="icon-btn" id="lbBtn" title="Classifica">🏆</button>
     <button class="icon-btn" id="muteBtn" title="Audio">🔊</button>
     <button class="icon-btn" id="pauseBtn" title="Pausa">⏸️</button>
@@ -243,31 +283,31 @@ body{
       <div class="card">
         <div class="title">👾 SCHIACCIA I MOSTRI</div>
         <div class="subtitle">Schiacciali prima che la barretta scada:<br><b>ogni mostro che svanisce ti toglie HP!</b></div>
-        <!-- bottoni SUBITO visibili -->
         <div class="btn-row">
           <button class="big-btn" id="playBtn">▶ CLASSICA</button>
           <button class="big-btn daily" id="dailyBtn">📅 GIORNALIERA</button>
         </div>
         <div class="btn-row">
           <button class="big-btn alt" id="playLbBtn">🏆 CLASSIFICA</button>
+          <button class="big-btn ghost" id="playShopBtn">🛍️ SHOP</button>
         </div>
         <div class="subtitle" style="margin-top:12px">🏅 Record: <b id="startRec">0</b> &nbsp;•&nbsp; 💎 Diamanti: <b id="startDiam">0</b></div>
         <div class="legend">
           <div>👾 <b>Normale</b> — 1 colpo</div>
           <div>🦇 <b>Pipistrello</b> — veloce!</div>
           <div>👻 <b>Fantasma</b> <span class="lv">Lv.2</span></div>
-          <div>🎃 <b>Trappola</b> <span class="lv">Lv.2</span> — NON cliccarlo!</div>
+          <div>💣 <b>Bomba</b> <span class="lv">Lv.2</span> — NON toccarla: BOOM!</div>
           <div>🧟 <b>Zombie</b> <span class="lv">Lv.3</span> — 3 colpi</div>
           <div>🦠 <b>Virus</b> <span class="lv">Lv.4</span> — si divide 1 volta</div>
           <div>👽 <b>Alieno</b> <span class="lv">Lv.4</span> — si teletrasporta!</div>
           <div>👹 <b>Orco</b> <span class="lv">Lv.5</span> — solo se VERDE!</div>
           <div class="good">🔮 <b>Cristallo</b> — 8 colpi → +10 HP</div>
-          <div class="good">💎 <b>Diamanti</b> — toccali!</div>
-          <div>👿 <b>BOSS</b> — ogni 1–2 minuti</div>
+          <div class="good">💎 <b>Diamanti</b> — toccali! (compra sfondi 🛍️)</div>
+          <div>👿💀🦠 <b>3 BOSS in rotazione</b> — ogni 1–2 minuti</div>
           <div class="warn">⚠️ <b>Danno scadenza</b>: 👾🦇 -5 • 👻🧟👹👽 -10 • 👿 -30</div>
         </div>
-        <p class="lb-note">📅 La sfida giornaliera è identica per tutti e si azzera a mezzanotte!<br>
-        La difficoltà cresce con calma: i nuovi mostri arrivano un po' alla volta.</p>
+        <p class="lb-note">📅 La giornaliera è identica per tutti e si azzera a mezzanotte!<br>
+        💾 Tutti i tuoi dati (diamanti, sfondi, record, classifiche) restano salvati sul dispositivo.</p>
       </div>
     </div>
 
@@ -328,7 +368,21 @@ body{
     <div id="lbDailyInfo" hidden>📅 <span id="lbDate"></span> — finisce tra <b id="lbCountdown">--:--:--</b></div>
     <div class="lb-meta"><span id="lbOnline">🟢 …</span><button class="mini-btn" id="lbRefresh">🔄 Aggiorna</button></div>
     <div class="lb-list" id="lbList"></div>
-    <p class="lb-note">Per la classifica reale online segui la guida (Firebase / Supabase) e sostituisci <b>LeaderboardAPI</b>.</p>
+    <p class="lb-note">Per la classifica reale online collega Firebase / Supabase in <b>LeaderboardAPI</b>.</p>
+  </div>
+</div>
+
+<!-- MODALE SHOP -->
+<div class="modal" id="shopModal" hidden>
+  <div class="modal-card">
+    <div class="modal-head">
+      <h2>🛍️ SHOP SFONDI</h2>
+      <button class="icon-btn" id="shopClose">✖</button>
+    </div>
+    <div class="lb-meta"><span>💎 I tuoi diamanti: <b id="shopDiam">0</b></span></div>
+    <div class="shop-list" id="shopList"></div>
+    <p class="lb-note">Guadagna 💎 toccandoli in partita e con la rinascita (+3).<br>
+    Acquisti e sfondo scelto restano salvati per sempre su questo dispositivo. 💾</p>
   </div>
 </div>
 
@@ -346,13 +400,13 @@ body{
 <script>
 'use strict';
 /* ============================================================
-   SCHIACCIA I MOSTRI — v5
-   🐢 curva di difficoltà più dolce
-   📱 fix mobile: blocco touch solo durante il gioco
-   👽 effetto teletrasporto (eco viola + anello + particelle)
+   SCHIACCIA I MOSTRI — v6
+   💣 bomba con esplosione • arena dedicata al boss
+   👿🦠💀 3 boss in rotazione • streak sempre visibile
+   🛍️ shop sfondi (💎) • tutti i dati persistiti
    ============================================================ */
 
-/* ---------- RNG (seedato per la giornaliera) ---------- */
+/* ---------- RNG ---------- */
 let rng=Math.random;
 function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);
   t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
@@ -367,7 +421,6 @@ const ri=(a,b)=>Math.floor(rand(a,b+1));
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
-/* riferimenti DOM */
 const arena=document.getElementById('arena');
 const scoreEl=document.getElementById('scoreEl'), recEl=document.getElementById('recEl'),
       lvlEl=document.getElementById('lvlEl'),
@@ -389,6 +442,8 @@ const scoreEl=document.getElementById('scoreEl'), recEl=document.getElementById(
       tabClassic=document.getElementById('tabClassic'), tabDaily=document.getElementById('tabDaily'),
       lbDailyInfo=document.getElementById('lbDailyInfo'),
       lbDate=document.getElementById('lbDate'), lbCountdown=document.getElementById('lbCountdown'),
+      shopModal=document.getElementById('shopModal'), shopList=document.getElementById('shopList'),
+      shopDiam=document.getElementById('shopDiam'),
       adOverlay=document.getElementById('adOverlay'),
       adMsg=document.getElementById('adMsg'), adFill=document.getElementById('adFill');
 
@@ -411,9 +466,10 @@ const AudioFX=(()=>{
     squash(){beep({f:300,f2:80,dur:.09});},
     hit(){beep({f:160,f2:90,type:'triangle',dur:.07,vol:.15});},
     hurt(){beep({f:200,f2:60,type:'sawtooth',dur:.2,vol:.18});},
-    trap(){beep({f:120,f2:40,type:'sawtooth',dur:.3,vol:.2});},
+    boom(){beep({f:90,f2:25,type:'sawtooth',dur:.5,vol:.28});},
     coin(){beep({f:880,f2:1320,type:'sine',dur:.09,vol:.1});},
     gem(){beep({f:1046,f2:1760,type:'sine',dur:.12,vol:.12});},
+    buy(){[784,988,1318].forEach((f,i)=>beep({f,type:'sine',dur:.1,vol:.12,delay:i*.07}));},
     heal(){[659,784,1046].forEach((f,i)=>beep({f,type:'sine',dur:.1,vol:.12,delay:i*.08}));},
     tp(){beep({f:500,f2:1400,type:'sine',dur:.12,vol:.08});},
     level(){[523,659,784].forEach((f,i)=>beep({f,dur:.09,delay:i*.09}));},
@@ -423,12 +479,14 @@ const AudioFX=(()=>{
   };
 })();
 
-/* ---------- classifiche ---------- */
+/* ---------- persistenza ---------- */
 const LB_KEY='sm_my_scores_v2', SIM_KEY='sm_global_sim_v1',
       NAME_KEY='sm_name', REC_KEY='sm_record',
-      DAILY_KEY='sm_daily_v1', DIAM_KEY='sm_diamonds';
+      DAILY_KEY='sm_daily_v1', DIAM_KEY='sm_diamonds', SHOP_KEY='sm_shop_v1';
 function loadJSON(k,f){try{const v=JSON.parse(localStorage.getItem(k));return v==null?f:v;}catch(e){return f;}}
 function saveJSON(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
+
+/* ---------- classifiche ---------- */
 const SIM_NAMES=['DragonKiller','xX_Slayer_Xx','NonnaPina','ProGamer2016','SchiacciaPro','Luca09',
  'Martina✨','IlBossDeiBoss','Kekko99','Aurora','ZioPeppe','NoobHunter','Giulia🍕','DarkPhoenix',
  'Matteo','SuperMarta','CacciatoreDiMostri','PixelPazzo'];
@@ -488,7 +546,7 @@ const LeaderboardAPI={
   }
 };
 
-/* ---------- tipi di mostro ---------- */
+/* ---------- tipi ---------- */
 const TYPES={
   normal:{emoji:'👾',size:46,life:4.5,hp:1,pts:10},
   bat:{emoji:'🦇',size:38,life:2.8,hp:1,pts:25,move:130},
@@ -496,15 +554,37 @@ const TYPES={
   zombie:{emoji:'🧟',size:52,life:6,hp:3,pts:40},
   virus:{emoji:'🦠',size:42,life:4.5,hp:1,pts:20},
   ogre:{emoji:'👹',size:54,life:6.5,hp:1,pts:60},
-  trap:{emoji:'🎃',size:46,life:4,hp:1,pts:10},
+  trap:{emoji:'💣',size:44,life:4,hp:1,pts:10},
   tele:{emoji:'👽',size:44,life:6.5,hp:1,pts:35},
   crystal:{emoji:'🔮',size:52,life:Infinity,hp:8,pts:25},
   gem:{emoji:'💎',size:30,life:3.5,hp:1,pts:0},
-  boss:{emoji:'👿',size:104,life:20,hp:15,pts:300,move:85}
+  mini:{emoji:'🦠',size:24,life:4,hp:1,pts:8},
+  boss:{emoji:'👿',size:104,life:20,hp:15,pts:300,move:85},
+  bossBact:{emoji:'🦠',size:118,life:26,hp:20,pts:400,move:55},
+  bossTele:{emoji:'💀',size:96,life:24,hp:12,pts:350,move:0}
 };
-const DMG={normal:5,bat:5,ghost:10,zombie:10,virus:5,ogre:10,trap:0,tele:10,gem:0,crystal:0,boss:30};
-const TRAP_CLICK_DMG=15, REBIRTH_HEAL=50, REBIRTH_GEMS=3;
-const LEVEL_EVERY=18; /* 🐢 prima era 12: si sale di livello più lentamente */
+const DMG={normal:5,bat:5,ghost:10,zombie:10,virus:5,ogre:10,trap:0,tele:10,gem:0,crystal:0,
+  mini:5,boss:30,bossBact:35,bossTele:30};
+const TRAP_CLICK_DMG=15, REBIRTH_HEAL=50, REBIRTH_GEMS=3, LEVEL_EVERY=18;
+const BOSS_ORDER=['boss','bossBact','bossTele'];
+const BOSS_NAME={boss:'👿 BOSS DEMONE',bossBact:'🦠 MEGABATTERIO',bossTele:'💀 BOSS FANTASMA'};
+
+/* ---------- shop sfondi ---------- */
+const SHOP={
+  default:{name:'Classico',icon:'🌌',price:0},
+  ocean:{name:'Oceano',icon:'🌊',price:20},
+  forest:{name:'Foresta',icon:'🌲',price:30},
+  lava:{name:'Vulcano',icon:'🌋',price:35},
+  space:{name:'Spazio',icon:'✨',price:50},
+  synth:{name:'Synthwave',icon:'🌆',price:60},
+  gold:{name:'Oro Reale',icon:'👑',price:100}
+};
+let shop=loadJSON(SHOP_KEY,{owned:['default'],equipped:'default'});
+if(!Array.isArray(shop.owned))shop.owned=['default'];
+if(!shop.owned.includes('default'))shop.owned.push('default');
+if(!SHOP[shop.equipped])shop.equipped='default';
+function saveShop(){saveJSON(SHOP_KEY,shop);}
+function applyTheme(){document.body.dataset.theme=shop.equipped==='default'?'':shop.equipped;}
 
 /* ---------- stato ---------- */
 let uid=0,AW=0,AH=0;
@@ -513,12 +593,14 @@ function newRunId(){return 'r'+Date.now().toString(36)+Math.random().toString(36
 const S={running:false,paused:false,mode:'classic',score:0,level:1,
   hp:100,maxHp:100,runDiamonds:0,
   combo:0,comboT:0,smashed:0,monsters:[],spawnT:1.4,diamT:7,crysT:18,
-  bossActive:false,bossIn:90,mods:{speed:1,spawn:1,life:1},
+  bossActive:false,bossKind:'',bossIdx:0,bossIn:90,minionT:2,
+  mods:{speed:1,spawn:1,life:1},
   rebirthUsed:false,runSubmitted:false,runId:newRunId()};
 function record(){return +localStorage.getItem(REC_KEY)||0;}
 function measure(){const r=arena.getBoundingClientRect();AW=r.width;AH=r.height;}
-function levelFactor(){return clamp(1-(S.level-1)*0.03,.6,1);} /* 🐢 ridotta da .045 a .03 */
-function addDiamonds(n){totalDiamonds+=n;localStorage.setItem(DIAM_KEY,totalDiamonds);
+function levelFactor(){return clamp(1-(S.level-1)*0.03,.6,1);}
+function addDiamonds(n){totalDiamonds=Math.max(0,totalDiamonds+n);
+  localStorage.setItem(DIAM_KEY,totalDiamonds);
   diamEl.textContent=totalDiamonds;startDiam.textContent=totalDiamonds;}
 
 function dailyMods(){
@@ -546,10 +628,12 @@ function renderHP(hit){
 }
 function renderHUDAll(){scoreEl.textContent=0;recEl.textContent=record();lvlEl.textContent=1;
   renderHP(false);diamEl.textContent=totalDiamonds;startDiam.textContent=totalDiamonds;
-  startRec.textContent=record();}
-function setCombo(n){S.combo=n;S.comboT=n>0?3:0;
-  if(n>=3){comboChip.style.display='flex';comboChip.textContent='🔥 x'+n;}
-  else comboChip.style.display='none';}
+  startRec.textContent=record();setCombo(0);}
+function setCombo(n){ /* streak sempre visibile, anche a zero */
+  S.combo=n;S.comboT=n>0?3:0;
+  comboChip.textContent='🔥 x'+n;
+  comboChip.classList.toggle('hot',n>=5);
+}
 
 /* ---------- schermate ---------- */
 const SCREENS=['startScreen','rebirthScreen','overScreen','pauseOverlay'];
@@ -574,12 +658,18 @@ function particles(x,y,n,color){const cols=['#7c4dff','#00e5ff','#39ff88','#ffd5
       {duration:300+Math.random()*250,easing:'ease-out'}).onfinish=()=>p.remove();}}
 function splat(x,y){const d=document.createElement('div');d.className='splat';d.textContent='💥';
   d.style.left=x+'px';d.style.top=y+'px';arena.appendChild(d);setTimeout(()=>d.remove(),320);}
+function explode(x,y){ /* 💥 effetto bomba */
+  const b=document.createElement('div');b.className='boom';b.textContent='💥';
+  b.style.left=x+'px';b.style.top=y+'px';
+  arena.appendChild(b);setTimeout(()=>b.remove(),520);
+  particles(x,y,16,'#ff9d4d');particles(x,y,10,'#ff4d6d');particles(x,y,6,'#ffd54a');
+  shake();
+}
 function shake(){arena.classList.remove('shake');void arena.offsetWidth;arena.classList.add('shake');}
 function flashEl(m){m.el.classList.add('flash');setTimeout(()=>{if(m.el)m.el.classList.remove('flash');},130);}
-/* 👽 effetto teletrasporto: eco + anello + particelle */
-function tpFX(x,y,color){
-  const echo=document.createElement('div');echo.className='tp-echo';echo.textContent='👽';
-  echo.style.left=x+'px';echo.style.top=y+'px';
+function tpFX(x,y,color,emoji){
+  const echo=document.createElement('div');echo.className='tp-echo';echo.textContent=emoji||'👽';
+  echo.style.left=x+'px';echo.style.top=y+'px';echo.style.fontSize=(emoji==='💀'?'60px':'44px');
   arena.appendChild(echo);setTimeout(()=>echo.remove(),480);
   const ring=document.createElement('div');ring.className='tp-ring';
   ring.style.left=x+'px';ring.style.top=y+'px';ring.style.borderColor=color;
@@ -604,7 +694,6 @@ function damage(n,x,y){
 
 /* ---------- mostri ---------- */
 function pickType(){
-  /* 🐢 nuovi mostri scaglionati su più livelli */
   const L=S.level,w=[['normal',30],['bat',12]];
   if(L>=2)w.push(['ghost',10],['trap',7]);
   if(L>=3)w.push(['zombie',10]);
@@ -627,7 +716,7 @@ function buildEl(m){
     p.textContent='●'.repeat(m.hp);el.appendChild(p);m.pipsEl=p;}
   if(m.type==='crystal'){const p=document.createElement('div');p.className='m-pips';
     p.textContent='❤️+10 • 8 colpi';el.appendChild(p);}
-  if(m.type==='boss'){const hp=document.createElement('div');hp.className='m-hp';
+  if(m.type.indexOf('boss')===0){const hp=document.createElement('div');hp.className='m-hp';
     hp.innerHTML='<i></i>';el.appendChild(hp);m.hpEl=hp.firstElementChild;}
   const bar=document.createElement('div');bar.className='m-bar';bar.innerHTML='<i></i>';
   el.appendChild(bar);m.barEl=bar.firstElementChild;
@@ -638,7 +727,7 @@ function buildEl(m){
 }
 function spawnMonster(type,o){
   o=o||{};
-  if(S.monsters.length>=16&&type!=='boss')return null;
+  if(S.monsters.length>=16&&type.indexOf('boss')!==0)return null;
   const T=TYPES[type];
   const m={id:++uid,type:type,gen:o.gen||0,hp:o.hp!=null?o.hp:T.hp,
     x:o.x!=null?o.x:rand(T.size,Math.max(T.size+1,AW-T.size)),
@@ -649,28 +738,52 @@ function spawnMonster(type,o){
   m.life=m.maxLife;
   if(T.move){const s=T.move*(1+S.level*.03)*S.mods.speed,a=rand(0,Math.PI*2);
     m.vx=Math.cos(a)*s;m.vy=Math.sin(a)*s;}
-  if(type==='boss'){m.hp=T.hp+S.level*2;m.maxHp=m.hp;}
+  if(type.indexOf('boss')===0){m.hp=T.hp+S.level*2;m.maxHp=m.hp;}
   buildEl(m);S.monsters.push(m);return m;
 }
 function spawnBoss(){
-  S.bossActive=true;
-  spawnMonster('boss',{x:rand(AW*.3,AW*.7),y:rand(AH*.25,AH*.6),life:20+S.level});
-  banner('⚠️ È ARRIVATO IL BOSS! 👿','bad');AudioFX.bossIn();shake();
+  const kind=BOSS_ORDER[S.bossIdx++ % BOSS_ORDER.length]; /* 👿→🦠→💀 rotazione */
+  /* arena dedicata al boss: niente altri mostri finché vive */
+  for(const m of [...S.monsters])removeMonster(m);
+  S.bossActive=true;S.bossKind=kind;S.minionT=2;
+  spawnMonster(kind,{x:rand(AW*.3,AW*.7),y:rand(AH*.25,AH*.55),life:TYPES[kind].life+S.level});
+  const msg={boss:'⚠️ È ARRIVATO IL BOSS! 👿',
+    bossBact:'⚠️ MEGABATTERIO! 🦠 genera batteri piccoli!',
+    bossTele:'⚠️ BOSS FANTASMA! 💀 si teletrasporta!'}[kind];
+  banner(msg,'bad');AudioFX.bossIn();shake();
 }
 function scheduleBoss(){S.bossIn=rand(60,120);}
+function bossDefeated(){S.bossActive=false;S.bossKind='';scheduleBoss();S.spawnT=2;}
 function removeMonster(m){
   m.dead=true;
   const i=S.monsters.indexOf(m);if(i>=0)S.monsters.splice(i,1);
   if(m.el){m.el.classList.add('gone');const el=m.el;setTimeout(()=>el.remove(),300);}
 }
-function clearMonsters(){for(const m of S.monsters){m.dead=true;if(m.el)m.el.remove();}S.monsters.length=0;S.bossActive=false;}
+function clearMonsters(){for(const m of S.monsters){m.dead=true;if(m.el)m.el.remove();}
+  S.monsters.length=0;S.bossActive=false;S.bossKind='';}
 function teleport(m){
-  tpFX(m.x,m.y,'#b26bff');                    /* uscita: eco viola */
+  tpFX(m.x,m.y,'#b26bff','👽');
   const h=m.size*.6;
   m.x=rand(h,Math.max(h+1,AW-h));m.y=rand(h,Math.max(h+1,AH-h));
   m.el.classList.remove('tp');void m.el.offsetWidth;m.el.classList.add('tp');
-  particles(m.x,m.y,7,'#7ce7ff');             /* arrivo: lampi azzurri */
+  particles(m.x,m.y,7,'#7ce7ff');AudioFX.tp();
+}
+function teleportBoss(m){ /* 💀 teletrasporto frequente */
+  tpFX(m.x,m.y,'#ff6b8d','💀');
+  const h=m.size*.6;
+  m.x=rand(h,Math.max(h+1,AW-h));m.y=rand(h,Math.max(h+1,AH-h));
+  m.el.classList.remove('tp');void m.el.offsetWidth;m.el.classList.add('tp');
   AudioFX.tp();
+}
+function spawnMinions(){ /* 🦠 il megabatterio genera batteri */
+  const B=S.monsters.find(m=>m.type==='bossBact');
+  if(!B)return;
+  const n=ri(1,2);
+  for(let i=0;i<n;i++){
+    spawnMonster('mini',{
+      x:clamp(B.x+rand(-90,90),26,Math.max(60,AW-26)),
+      y:clamp(B.y+rand(-90,90),30,Math.max(64,AH-30))});
+  }
 }
 
 /* ---------- combattimento ---------- */
@@ -695,9 +808,12 @@ function hitMonster(m){
     }
     return;
   }
-  if(t==='trap'){
-    AudioFX.trap();shake();setCombo(0);
-    removeMonster(m);damage(TRAP_CLICK_DMG,m.x,m.y);
+  if(t==='trap'){ /* 💣 BOOM */
+    setCombo(0);
+    removeMonster(m);
+    explode(m.x,m.y);AudioFX.boom();
+    floatText(m.x,m.y,'💥 BOOM!','bad');
+    damage(TRAP_CLICK_DMG,m.x,m.y);
     return;
   }
   if(t==='ogre'){
@@ -705,7 +821,7 @@ function hitMonster(m){
     if(!green){addScore(-20);floatText(m.x,m.y,'❌ È ROSSO! -20','bad');
       AudioFX.hit();setCombo(0);flashEl(m);return;}
   }
-  if(t==='zombie'||t==='boss'){
+  if(t==='zombie'||t.indexOf('boss')===0){
     m.hp--;AudioFX.hit();flashEl(m);
     if(t==='zombie'){if(m.hp>0){m.pipsEl.textContent='●'.repeat(m.hp);return;}}
     else{m.hpEl.style.width=Math.max(0,m.hp/m.maxHp*100)+'%';if(m.hp>0)return;}
@@ -716,13 +832,15 @@ function killMonster(m){
   if(m.dead)return;
   const T=TYPES[m.type],x=m.x,y=m.y;
   removeMonster(m);
-  particles(x,y,m.type==='boss'?26:10);splat(x,y);
+  particles(x,y,m.type.indexOf('boss')===0?26:10);splat(x,y);
   setCombo(S.combo+1);
-  const base=m.type==='boss'?T.pts+S.level*50:T.pts;
+  const base=m.type.indexOf('boss')===0?T.pts+S.level*50:T.pts;
   const pts=Math.round(base*(1+Math.min(S.combo,25)*.04));
   addScore(pts);floatText(x,y,'+'+pts,'pts');
-  if(m.type==='boss'){AudioFX.bossDie();banner('🎉 BOSS SCONFITTO! +'+pts,'good');
-    S.bossActive=false;scheduleBoss();shake();}
+  if(m.type.indexOf('boss')===0){
+    AudioFX.bossDie();banner('🎉 '+(BOSS_NAME[m.type]||'BOSS')+' SCONFITTO! +'+pts,'good');
+    bossDefeated();shake();
+  }
   else AudioFX.squash();
   if(m.type==='virus'&&m.gen===0){
     floatText(x,y-22,'🦠 si divide!','info');
@@ -739,12 +857,14 @@ function killMonster(m){
 function escapeMonster(m){
   const x=m.x,y=m.y,type=m.type;
   removeMonster(m);
-  if(type==='trap'){addScore(10);floatText(x,y,'🎃 evitata +10','info');AudioFX.coin();return;}
+  if(type==='trap'){addScore(10);floatText(x,y,'💣 disinnescata +10','info');AudioFX.coin();return;}
   if(type==='gem'||type==='crystal')return;
   let d=DMG[type]||5;
-  if(type==='virus'&&m.gen>0)d=3;
-  if(type==='boss'){S.bossActive=false;scheduleBoss();
-    banner('💨 Il boss è fuggito! -'+d+' HP','bad');}
+  if(type==='virus'&&type!==''&&m.gen>0)d=3;
+  if(type.indexOf('boss')===0){
+    bossDefeated();
+    banner('💨 Il boss è fuggito! -'+d+' HP','bad');
+  }
   damage(d,x,y);
 }
 
@@ -802,10 +922,10 @@ function newRun(mode){
   clearMonsters();
   S.score=0;S.level=1;S.hp=S.maxHp;S.combo=0;S.comboT=0;S.smashed=0;S.runDiamonds=0;
   S.spawnT=1.4;S.diamT=rand(5,8);S.crysT=rand(14,22);
+  S.bossIdx=0;S.bossActive=false;S.bossKind='';scheduleBoss();
   S.rebirthUsed=false;S.runSubmitted=false;S.runId=newRunId();
-  S.bossActive=false;scheduleBoss();
   S.paused=false;document.getElementById('pauseBtn').textContent='⏸️';
-  bossChip.style.display='none';comboChip.style.display='none';
+  bossChip.style.display='none';
   renderHUDAll();hideScreens();measure();countdownGo();
   if(S.mode==='daily')setTimeout(()=>banner('📅 OGGI: '+modsDesc(S.mods),'good'),2400);
 }
@@ -820,35 +940,43 @@ function countdownGo(){
 
 /* ---------- loop ---------- */
 function update(dt){
-  S.spawnT-=dt;
-  if(S.spawnT<=0){
-    spawnMonster(pickType());
-    /* 🐢 doppio spawn solo da Lv.6 e più raro */
-    if(S.level>=6&&rng()<.25)spawnMonster(pickType());
-    const base=clamp(1.25-S.level*0.05,.5,1.25); /* 🐢 rallentato */
-    S.spawnT=base*S.mods.spawn*(S.bossActive?2.2:1)*rand(.75,1.3);
-  }
-  S.diamT-=dt;
-  if(S.diamT<=0){
-    if(S.monsters.length<14)spawnMonster('gem');
-    S.diamT=rand(6,10);
-  }
-  S.crysT-=dt;
-  if(S.crysT<=0){
-    if(!S.monsters.some(m=>m.type==='crystal'))spawnMonster('crystal');
-    S.crysT=rand(18,28);
-  }
   if(!S.bossActive){
+    S.spawnT-=dt;
+    if(S.spawnT<=0){
+      spawnMonster(pickType());
+      if(S.level>=6&&rng()<.25)spawnMonster(pickType());
+      const base=clamp(1.25-S.level*0.05,.5,1.25);
+      S.spawnT=base*S.mods.spawn*rand(.75,1.3);
+    }
+    S.diamT-=dt;
+    if(S.diamT<=0){
+      if(S.monsters.length<14)spawnMonster('gem');
+      S.diamT=rand(6,10);
+    }
+    S.crysT-=dt;
+    if(S.crysT<=0){
+      if(!S.monsters.some(m=>m.type==='crystal'))spawnMonster('crystal');
+      S.crysT=rand(18,28);
+    }
     S.bossIn-=dt;
     bossChip.style.display='flex';
     if(S.bossIn<=10){bossChip.textContent='👿 IN ARRIVO!';bossChip.classList.add('urgent');}
     else{bossChip.textContent='👿 '+Math.ceil(S.bossIn)+'s';bossChip.classList.remove('urgent');}
     if(S.bossIn<=0)spawnBoss();
-  }else{bossChip.style.display='flex';bossChip.textContent='👿 BOSS ATTIVO';bossChip.classList.add('urgent');}
+  }else{
+    /* durante il boss non spawna NIENT'ALTRO */
+    bossChip.style.display='flex';bossChip.classList.add('urgent');
+    bossChip.textContent=(BOSS_NAME[S.bossKind]||'👿 BOSS')+'!';
+    if(S.bossKind==='bossBact'){
+      S.minionT-=dt;
+      if(S.minionT<=0){spawnMinions();S.minionT=clamp(2.6-S.level*.05,1.6,2.6);}
+    }
+  }
   if(S.combo>0){S.comboT-=dt;if(S.comboT<=0)setCombo(0);}
   for(const m of [...S.monsters]){
     if(m.dead)continue;
     if(m.type==='tele'){m.teleT-=dt;if(m.teleT<=0){m.teleT=clamp(1.3-S.level*.02,.75,1.3);teleport(m);}}
+    if(m.type==='bossTele'){m.teleT-=dt;if(m.teleT<=0){m.teleT=clamp(1.5-S.level*.03,.9,1.5);teleportBoss(m);}}
     if(m.maxLife!==Infinity){
       m.life-=dt;
       if(m.life<=0){escapeMonster(m);continue;}
@@ -880,7 +1008,7 @@ function loop(t){
   requestAnimationFrame(loop);
 }
 
-/* ---------- classifica (modale con tab) ---------- */
+/* ---------- classifica ---------- */
 let lbTab='classic',lbTimer=null;
 function fmtCountdown(){const now=new Date();const mid=new Date(now);mid.setHours(24,0,0,0);
   let s=Math.max(0,Math.floor((mid-now)/1000));
@@ -896,6 +1024,7 @@ function renderRows(list){
   ).join('');
 }
 async function openLeaderboard(tab){
+  closeShop();
   lbTab=tab||lbTab||'classic';
   tabClassic.classList.toggle('active',lbTab==='classic');
   tabDaily.classList.toggle('active',lbTab==='daily');
@@ -913,6 +1042,40 @@ async function openLeaderboard(tab){
 }
 function closeLB(){lbModal.hidden=true;clearInterval(lbTimer);}
 
+/* ---------- shop ---------- */
+function openShop(){
+  closeLB();
+  shopModal.hidden=false;
+  renderShop();
+}
+function closeShop(){shopModal.hidden=true;}
+function renderShop(){
+  shopDiam.textContent=totalDiamonds;
+  shopList.innerHTML=Object.keys(SHOP).map(id=>{
+    const it=SHOP[id],owned=shop.owned.includes(id),eq=shop.equipped===id;
+    const btn=eq?'<button class="shop-btn eq" disabled>ATTIVO ✓</button>'
+      :owned?('<button class="shop-btn equip" data-id="'+id+'">EQUIPAGGIA</button>')
+      :('<button class="shop-btn buy '+(totalDiamonds>=it.price?'':'off')+'" data-id="'+id+'">🛒 '+it.price+' 💎</button>');
+    return '<div class="shop-item"><div class="shop-prev prev-'+id+'"></div>'+
+      '<div class="shop-name">'+it.icon+' '+it.name+'</div>'+btn+'</div>';
+  }).join('');
+  shopList.querySelectorAll('.buy').forEach(b=>b.addEventListener('click',()=>buyBg(b.dataset.id)));
+  shopList.querySelectorAll('.equip').forEach(b=>b.addEventListener('click',()=>equipBg(b.dataset.id)));
+}
+function buyBg(id){
+  const it=SHOP[id];
+  if(!it||shop.owned.includes(id))return;
+  if(totalDiamonds<it.price){banner('💎 Non hai abbastanza diamanti!','bad');return;}
+  addDiamonds(-it.price);
+  shop.owned.push(id);shop.equipped=id;saveShop();applyTheme();
+  AudioFX.buy();banner('🛍️ Sfondo "'+it.name+'" acquistato ed equipaggiato!','good');
+  renderShop();
+}
+function equipBg(id){
+  if(!shop.owned.includes(id))return;
+  shop.equipped=id;saveShop();applyTheme();renderShop();
+}
+
 /* ============================================================
    WIRING
    ============================================================ */
@@ -927,6 +1090,10 @@ document.getElementById('lbRefresh').addEventListener('click',()=>openLeaderboar
 tabClassic.addEventListener('click',()=>openLeaderboard('classic'));
 tabDaily.addEventListener('click',()=>openLeaderboard('daily'));
 lbModal.addEventListener('click',e=>{if(e.target===lbModal)closeLB();});
+document.getElementById('shopBtn').addEventListener('click',openShop);
+document.getElementById('playShopBtn').addEventListener('click',openShop);
+document.getElementById('shopClose').addEventListener('click',closeShop);
+shopModal.addEventListener('click',e=>{if(e.target===shopModal)closeShop();});
 document.getElementById('submitBtn').addEventListener('click',submitScore);
 document.getElementById('adBtn').addEventListener('click',()=>{
   showAdOverlay(()=>{
@@ -953,11 +1120,7 @@ document.addEventListener('pointerdown',()=>AudioFX.unlock(),{once:true});
 arena.addEventListener('contextmenu',e=>e.preventDefault());
 window.addEventListener('resize',measure);
 
-/* ============================================================
-   FIX ZOOM MOBILE — attivo SOLO mentre si gioca
-   (nei menu i tocchi devono restare liberi, altrimenti i
-   bottoni non si potevano premere/scrollare)
-   ============================================================ */
+/* FIX ZOOM MOBILE — solo durante il gioco */
 document.addEventListener('gesturestart',e=>e.preventDefault());
 document.addEventListener('gesturechange',e=>e.preventDefault());
 document.addEventListener('gestureend',e=>e.preventDefault());
@@ -965,7 +1128,7 @@ document.addEventListener('dblclick',e=>e.preventDefault());
 let lastTapEnd=0;
 const isUi=t=>t&&t.closest&&t.closest('button,input,a,.screen');
 arena.addEventListener('touchstart',e=>{
-  if(!S.running||S.paused)return;      /* menu → tocco libero */
+  if(!S.running||S.paused)return;
   if(isUi(e.target))return;
   if(e.touches.length>1){e.preventDefault();return;}
   e.preventDefault();
@@ -982,8 +1145,9 @@ arena.addEventListener('touchmove',e=>{
   if(!isUi(e.target))e.preventDefault();
 },{passive:false});
 
-/* boot */
+/* boot — ripristina tutti i dati salvati */
 if(AudioFX.muted)document.getElementById('muteBtn').textContent='🔇';
+applyTheme();
 measure();renderHUDAll();requestAnimationFrame(loop);
 </script>
 </body>
