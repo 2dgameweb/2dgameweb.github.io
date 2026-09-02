@@ -1,3 +1,4 @@
+<!-- SAVE AS: rocket-rise.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -24,8 +25,8 @@ body{font-family:Rubik,system-ui,sans-serif;color:#eaf6ff;overflow:hidden;user-s
 #altEl{color:#7cffb2}#bestEl{color:#ffd54a}#spdEl{color:#7ce7ff}#crysEl{color:#7ce7ff}
 #engChip.on{border-color:rgba(255,150,60,.7);color:#ffc07c;box-shadow:0 0 12px rgba(255,140,60,.35)}
 #engChip.boost{border-color:rgba(255,213,74,.8);color:#ffe08a;box-shadow:0 0 14px rgba(255,213,74,.5)}
-#offChip{border-color:rgba(255,77,109,.7);color:#ff8a9d;font-weight:800;animation:pulse .6s infinite}
-@keyframes pulse{50%{opacity:.5}}
+/* FIX: niente più blink/trasparenze — stile fisso e ben visibile */
+#offChip{border-color:rgba(255,77,109,.8);color:#ff8a9d;font-weight:800;box-shadow:0 0 12px rgba(255,77,109,.4)}
 .spacer{flex:1}
 .icon-btn{background:rgba(10,20,50,.7);border:1px solid rgba(0,229,255,.3);color:#fff;border-radius:10px;
   padding:7px 11px;font-size:16px;cursor:pointer}
@@ -55,8 +56,10 @@ canvas{width:100%;height:100%;display:block}
 .cover{width:100%;max-width:300px;border-radius:14px;margin:2px auto 12px;display:block;box-shadow:0 10px 30px rgba(0,0,0,.55)}
 .title{font-family:Orbitron,monospace;font-size:clamp(16px,4.5vw,24px);color:#fff;text-shadow:0 0 18px rgba(0,229,255,.8);margin-bottom:6px}
 .subtitle{opacity:.85;font-size:13px;margin-bottom:10px}
-.howto{display:flex;flex-direction:column;gap:6px;margin:12px 0;text-align:left}
-.howto div{background:rgba(0,229,255,.06);border:1px solid rgba(0,229,255,.18);border-radius:10px;padding:7px 9px;font-size:12px;line-height:1.35}
+/* HOW TO PLAY: testo semplice, senza emoji */
+.help-list{display:flex;flex-direction:column;gap:7px;margin:12px 0;text-align:left}
+.help-list div{background:rgba(0,229,255,.06);border:1px solid rgba(0,229,255,.18);border-radius:10px;
+  padding:8px 10px;font-size:12.5px;line-height:1.5}
 .btn-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:10px}
 .big-btn{font-family:Orbitron,monospace;font-size:13px;padding:13px 22px;border-radius:12px;border:none;cursor:pointer;
   color:#241200;background:linear-gradient(180deg,#ffb347,#ff7a1a);box-shadow:0 5px 0 #a34b00,0 10px 24px rgba(255,122,26,.35)}
@@ -70,7 +73,7 @@ canvas{width:100%;height:100%;display:block}
   display:flex;flex-direction:column;gap:2px}
 .stats b{font-family:Orbitron,monospace;font-size:22px;color:#7cffb2}
 
-/* RIPARAZIONE (sotto la pausa, sopra il gioco) */
+/* RIPARAZIONE */
 #repairOverlay{position:absolute;inset:0;z-index:45;background:rgba(0,0,10,.6);display:flex;align-items:center;justify-content:center;padding:14px}
 .rep-card{width:100%;max-width:340px;background:#0d1735;border:2px solid #ffd54a;border-radius:18px;padding:16px;text-align:center;
   box-shadow:0 0 40px rgba(255,213,74,.25)}
@@ -88,8 +91,37 @@ canvas{width:100%;height:100%;display:block}
    radial-gradient(44px 28px at 85% 20%,rgba(20,10,0,.85),transparent)}
 .whack-panel{position:relative;height:150px;border-radius:12px;background:linear-gradient(135deg,#28407a,#16244f);
   box-shadow:inset 0 0 0 2px rgba(0,229,255,.3)}
-.leak{position:absolute;font-size:36px;cursor:pointer;filter:drop-shadow(0 0 10px rgba(255,120,40,.9));animation:pulse .5s infinite}
+.leak{position:absolute;font-size:36px;cursor:pointer;filter:drop-shadow(0 0 10px rgba(255,120,40,.9));animation:throb .5s infinite}
+@keyframes throb{50%{transform:scale(1.18)}}
 #cabC{width:100%;max-width:320px;border-radius:12px;background:rgba(0,0,0,.3);touch-action:none}
+
+/* SHOP RAZZI */
+.modal{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;
+  background:rgba(5,2,15,.7);backdrop-filter:blur(5px);padding:14px}
+.modal-card{width:100%;max-width:440px;max-height:92dvh;display:flex;flex-direction:column;
+  background:linear-gradient(170deg,#12234d,#0a1228);border:1px solid rgba(0,229,255,.3);
+  border-radius:20px;padding:16px;box-shadow:0 24px 70px rgba(0,0,0,.6);animation:pop .22s}
+@keyframes pop{from{transform:scale(.92);opacity:0}}
+.modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.modal-head h2{font-family:Orbitron,monospace;font-size:13px;color:#7ce7ff;text-shadow:0 0 14px rgba(0,229,255,.5)}
+.lb-meta{display:flex;justify-content:space-between;align-items:center;font-size:12px;opacity:.9;margin-bottom:9px}
+.shop-list{overflow:auto;display:flex;flex-direction:column;gap:8px}
+.shop-item{display:flex;align-items:center;gap:12px;background:rgba(0,229,255,.05);
+  border:1px solid rgba(0,229,255,.15);border-radius:12px;padding:10px}
+.shop-prev{width:44px;height:44px;border-radius:50%;flex:none;box-shadow:inset 0 0 0 2px rgba(255,255,255,.25)}
+.prev-classic{background:linear-gradient(180deg,#ff4d4d 0 32%,#e8ecf5 32%)}
+.prev-crimson{background:linear-gradient(180deg,#8a1010 0 32%,#ff5a5a 32%)}
+.prev-aqua{background:linear-gradient(180deg,#0a5a8a 0 32%,#7ce7ff 32%)}
+.prev-gold{background:linear-gradient(180deg,#b26e00 0 32%,#ffd54a 32%)}
+.prev-void{background:linear-gradient(180deg,#b26bff 0 32%,#2a1750 32%)}
+.prev-neon{background:linear-gradient(180deg,#ff2fd6 0 32%,#39ff88 32%)}
+.shop-name{flex:1;font-weight:700;font-size:14px}
+.shop-btn{border:none;border-radius:10px;padding:9px 12px;font-weight:800;cursor:pointer;font-size:13px}
+.shop-btn.buy{background:linear-gradient(180deg,#7ce7ff,#2f8fe0);color:#04121f}
+.shop-btn.buy.off{background:rgba(255,255,255,.12);color:rgba(255,255,255,.4);cursor:not-allowed}
+.shop-btn.equip{background:linear-gradient(180deg,#5dff9d,#19c96d);color:#08121f}
+.shop-btn.eq{background:transparent;border:1px solid #ffd54a;color:#ffd54a;cursor:default}
+.lb-note{font-size:10.5px;opacity:.55;margin-top:10px;line-height:1.55}
 
 /* AD */
 #adbar{border-radius:12px;border:1px dashed rgba(0,229,255,.35);background:rgba(0,229,255,.05);
@@ -124,25 +156,41 @@ canvas{width:100%;height:100%;display:block}
     <div id="banner"></div>
     <div id="countdown" hidden></div>
 
-    <!-- MENU DEL GIOCO -->
+    <!-- MENU (senza spiegazioni) -->
     <div class="screen" id="startScreen">
       <div class="card">
         <img class="cover" src="cover-rocket.jpg" alt="Rocket Rise">
         <div class="title">🚀 ROCKET RISE</div>
         <div class="subtitle">Climb as high as you can!</div>
-        <div class="howto">
-          <div>🔥 <b>HOLD</b> the screen (or SPACE) = engine ON, fast climb</div>
-          <div>❄️ Engine <b>OFF</b> = slow climb… reignite within <b>10s</b> or you FALL!</div>
-          <div>⚠️ <b>FLAMMABLE zones</b>: cross them with the engine OFF</div>
-          <div>☄️ <b>METEOR storms</b> (rarer at start, harder later): drag / ← → to dodge</div>
-          <div>🔧 <b>FAILURES</b>: safe while you repair — nothing can hit you!</div>
-          <div>💠 <b>CRYSTALS</b>: touch to collect & save forever • ⚡ <b>BOOSTERS</b>: turbo + invincible ~2.5s</div>
-        </div>
         <div class="btn-row">
           <button class="big-btn" id="playBtn">▶ PLAY</button>
+          <button class="big-btn alt" id="howBtn">📖 HOW TO PLAY</button>
+        </div>
+        <div class="btn-row">
+          <button class="big-btn ghost" id="shopBtnR">🛍️ SHOP</button>
           <button class="big-btn ghost" id="homeBtn0">🏠 HOME</button>
         </div>
         <p class="note">🏅 Best: <b id="startBest">0</b> m &nbsp;•&nbsp; 💠 Crystals: <b id="startCrys">0</b></p>
+      </div>
+    </div>
+
+    <!-- HOW TO PLAY (testo, senza emoji) -->
+    <div class="screen" id="helpScreen" hidden>
+      <div class="card">
+        <div class="title">📖 HOW TO PLAY</div>
+        <div class="help-list">
+          <div>Hold the screen or press SPACE to ignite the engine and climb fast.</div>
+          <div>Moving left or right (drag, arrow keys or A/D) also ignites the engine.</div>
+          <div>With the engine off you climb slowly, but you must reignite within 10 seconds or you fall.</div>
+          <div>Flammable zones: cross them with the engine OFF and without moving. No asteroids inside them.</div>
+          <div>Asteroid storms: dodge by dragging or with the arrow keys. They get faster and more frequent as you climb.</div>
+          <div>Failures: a repair task appears with its OWN timer. The engine timer is paused while you repair. Fail the repair and you fall.</div>
+          <div>Crystals are collected by touching them and are saved forever. Spend them in the shop to unlock new rockets.</div>
+          <div>Boosters give a short turbo and make you invincible for a couple of seconds.</div>
+        </div>
+        <div class="btn-row">
+          <button class="big-btn" id="backHelpBtn">⬅ BACK</button>
+        </div>
       </div>
     </div>
 
@@ -190,28 +238,44 @@ canvas{width:100%;height:100%;display:block}
   <footer id="adbar">📢 AD SPACE — replace with AdSense / AdInMo / banners</footer>
 </div>
 
+<!-- SHOP RAZZI -->
+<div class="modal" id="rshopModal" hidden>
+  <div class="modal-card">
+    <div class="modal-head">
+      <h2>🛍️ ROCKET SHOP</h2>
+      <button class="icon-btn" id="rshopClose">✖</button>
+    </div>
+    <div class="lb-meta"><span>💠 Your crystals: <b id="shopCrys">0</b></span></div>
+    <div class="shop-list" id="rshopList"></div>
+    <p class="lb-note">Earn crystals by touching them in game. Purchases are saved forever on this device. 💾</p>
+  </div>
+</div>
+
 <div id="adOverlay" hidden>
   <div class="ad-card">
     <div class="ad-tag">📺 AD (SIMULATED)</div>
     <div class="ad-fake">🛰️ SAT-BOOST PRO<br>+50% thrust for everyone! 🚀<br><small>Install now (fake)</small></div>
     <div style="margin-top:12px;font-weight:800" id="adMsg">Reward in <span id="adCount">3</span>…</div>
     <div class="ad-progress"><i id="adFill"></i></div>
-    <p class="note">Plug AdSense / AdInMo / Unity Ads here</p>
+    <p class="lb-note">Plug AdSense / AdInMo / Unity Ads here</p>
   </div>
 </div>
 
 <script>
 'use strict';
 /* ============================================================
-   🚀 ROCKET RISE — v2
-   📈 difficoltà graduale • 🔧 riparazioni 100% sicure
-   💠 cristalli salvati • ⚡ propulsori (turbo + immunità)
-   📋 menu gioco + pausa con ritorno al menu • 🏠 home
+   🚀 ROCKET RISE — v3
+   🕹️ muoversi accende il motore • 🔒 niente trasparenze
+   🪨 asteroidi nuovi + assenti nelle zone infiammabili
+   ⏱️ timer task SEPARATO dal timer motore
+   📖 how-to-play a parte • 🛍️ shop razzi con cristalli
    ============================================================ */
 const $=id=>document.getElementById(id);
 const rand=(a,b)=>a+Math.random()*(b-a);
 const ri=(a,b)=>Math.floor(rand(a,b+1));
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+function loadJSON(k,f){try{const v=JSON.parse(localStorage.getItem(k));return v==null?f:v;}catch(e){return f;}}
+function saveJSON(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
 
 const cv=$('game'),ctx=cv.getContext('2d');
 let W=0,H=0,rocketY=0;
@@ -241,22 +305,38 @@ const AudioFX=(()=>{
     tap(){beep({f:300,f2:150,dur:.06,vol:.1});},
     zone(){beep({f:500,f2:900,type:'sine',dur:.15,vol:.1});},
     gem(){beep({f:1046,f2:1760,type:'sine',dur:.12,vol:.12});},
+    buy(){[784,988,1318].forEach((f,i)=>beep({f,type:'sine',dur:.1,vol:.12,delay:i*.07}));},
     boost(){[400,700,1100].forEach((f,i)=>beep({f,type:'square',dur:.09,vol:.12,delay:i*.06}));},
     over(){[400,300,200,120].forEach((f,i)=>beep({f,type:'triangle',dur:.18,vol:.15,delay:i*.15}));}
   };
 })();
 
-/* ---------- stato ---------- */
-const PPM=4,MAXSPD=85,BOOSTSPD=190,ACC=35,COAST=10,OFF_LIMIT=10;
-const REC_KEY='rr_record',CRYS_KEY='rr_crystals';
+/* ---------- stato / persistenza ---------- */
+const PPM=4,MAXSPD=85,BOOSTSPD=190,ACC=35,COAST=10,OFF_LIMIT=10,REPAIR_TIME=10; /* ⏱️ separati */
+const REC_KEY='rr_record',CRYS_KEY='rr_crystals',RSHOP_KEY='rr_shop';
 function record(){return +localStorage.getItem(REC_KEY)||0;}
 let totalCrys=+localStorage.getItem(CRYS_KEY)||0;
-function addCrys(n){totalCrys+=n;localStorage.setItem(CRYS_KEY,totalCrys);
-  $('crysEl').textContent=totalCrys;$('startCrys').textContent=totalCrys;}
+function refreshCrys(){$('crysEl').textContent=totalCrys;$('startCrys').textContent=totalCrys;$('shopCrys').textContent=totalCrys;}
+function addCrys(n){totalCrys+=n;localStorage.setItem(CRYS_KEY,totalCrys);refreshCrys();}
+
+/* ---------- shop razzi ---------- */
+const SKINS={
+  classic:{name:'Classic',price:0,body:'#e8ecf5',nose:'#ff4d4d',fin:'#ff4d4d',win:'#7ce7ff'},
+  crimson:{name:'Crimson',price:30,body:'#ff5a5a',nose:'#8a1010',fin:'#8a1010',win:'#ffd54a'},
+  aqua:{name:'Aqua',price:50,body:'#7ce7ff',nose:'#0a5a8a',fin:'#0a5a8a',win:'#ffffff'},
+  gold:{name:'Golden',price:80,body:'#ffd54a',nose:'#b26e00',fin:'#b26e00',win:'#fff6d8'},
+  void:{name:'Void',price:120,body:'#2a1750',nose:'#b26bff',fin:'#b26bff',win:'#7ce7ff'},
+  neon:{name:'Neon',price:150,body:'#39ff88',nose:'#ff2fd6',fin:'#ff2fd6',win:'#0b1026'}
+};
+let rshop=loadJSON(RSHOP_KEY,{owned:['classic'],equipped:'classic'});
+if(!Array.isArray(rshop.owned))rshop.owned=['classic'];
+if(!rshop.owned.includes('classic'))rshop.owned.push('classic');
+if(!SKINS[rshop.equipped])rshop.equipped='classic';
+function saveRshop(){saveJSON(RSHOP_KEY,rshop);}
 
 const S={state:'menu',paused:false,alt:0,spd:0,rx:0,tilt:0,engineOn:false,engineHeld:false,offT:0,
   zones:[],nextZone:120,meteors:[],meteorT:0,stars:[],picks:[],pickT:4,txts:[],
-  repair:null,boost:0,fallT:0,boom:false,overMsg:'',rebirthUsed:false,lastBeep:0};
+  repair:null,repT:0,boost:0,fallT:0,boom:false,overMsg:'',rebirthUsed:false,lastBeep:0};
 let targetX=null;const keys={};
 
 function initStars(){S.stars=[];for(let i=0;i<90;i++)S.stars.push({x:Math.random()*W,y:Math.random()*H,
@@ -281,41 +361,43 @@ function skyColors(alt){
 let bannerT=null;
 function banner(t,c){const b=$('banner');b.textContent=t;b.className='show '+(c||'');
   clearTimeout(bannerT);bannerT=setTimeout(()=>b.className='',2200);}
-const SCREENS=['startScreen','overScreen','pauseOverlay'];
+const SCREENS=['startScreen','overScreen','pauseOverlay','helpScreen'];
 function showScreen(id){for(const s of SCREENS)$(s).hidden=(s!==id);}
 function hideScreens(){showScreen(null);}
 
-/* ---------- zone (difficoltà graduale) ---------- */
+/* ---------- zone ---------- */
 function genZones(){
   while(S.nextZone<S.alt+H/PPM+150){
-    const d=clamp(S.nextZone/4000,0,1);           /* 0 → 1 con la quota */
+    const d=clamp(S.nextZone/4000,0,1);
     let type;
-    if(S.nextZone<400){type=Math.random()<.5?'fire':'fault';}   /* niente meteore all'inizio */
+    if(S.nextZone<400){type=Math.random()<.5?'fire':'fault';}
     else{
-      const r=Math.random(),mW=.18+.30*d;         /* meteore 18% → 48% */
+      const r=Math.random(),mW=.18+.30*d;
       if(r<.40)type='fire';else if(r<.40+mW)type='meteor';else type='fault';
     }
     const len=type==='fire'?rand(35,70):type==='meteor'?rand(70,120)*(1+.3*d):12;
     S.zones.push({type,start:S.nextZone,end:S.nextZone+len,triggered:false,warned:false});
-    S.nextZone+=len+rand(80,150)*(1-.3*d);        /* intervalli più stretti salendo */
+    S.nextZone+=len+rand(80,150)*(1-.3*d);
   }
   S.zones=S.zones.filter(z=>z.end>S.alt-60);
 }
 function zoneAt(a){return S.zones.find(z=>a>=z.start&&a<=z.end);}
 
-/* ---------- riparazioni (sicure: niente può colpirti) ---------- */
+/* ---------- riparazioni (timer PROPRIO, motore in pausa) ---------- */
 function startRepair(){
   S.engineHeld=false;S.engineOn=false;
-  S.meteors=[];                                    /* cielo pulito durante la riparazione */
+  S.meteors=[];
+  S.repT=REPAIR_TIME;
   const type=['wipe','cables','bolts'][ri(0,2)];
   S.repair={type};
   $('repTitle').textContent=type==='wipe'?'🔧 SOOT ON THE PANEL!':type==='cables'?'🔌 RECONNECT THE CABLES!':'🔨 HAMMER THE LEAK!';
   $('repBody').innerHTML='';
   if(type==='wipe')buildWipe();else if(type==='cables')buildCables();else buildBolts();
   $('repairOverlay').hidden=false;
-  banner('🔧 FAILURE! Safe while you repair!','bad');AudioFX.warn();
+  banner('🔧 FAILURE! Engine timer paused!','bad');AudioFX.warn();
 }
 function repairDone(){if(!S.repair)return;S.repair=null;$('repairOverlay').hidden=true;
+  S.offT=0; /* timer motore resettato dopo la riparazione */
   banner('✅ REPAIRED! Hold to ignite!','good');AudioFX.fix();}
 function buildWipe(){
   $('repBody').innerHTML='<div class="rep-hint">Swipe to wipe it clean!</div><div class="wipe-panel" id="wipeP"><div class="grime" id="grime"></div></div>';
@@ -397,7 +479,7 @@ function newRun(){
   S.state='count';S.paused=false;S.alt=0;S.spd=0;S.rx=W/2;S.tilt=0;
   S.engineOn=false;S.engineHeld=false;S.offT=0;S.zones=[];S.nextZone=120;
   S.meteors=[];S.meteorT=0;S.picks=[];S.pickT=rand(2.5,4);S.txts=[];
-  S.repair=null;S.boost=0;S.rebirthUsed=false;S.lastBeep=0;
+  S.repair=null;S.repT=0;S.boost=0;S.rebirthUsed=false;S.lastBeep=0;
   $('repairOverlay').hidden=true;$('pauseBtn').textContent='⏸️';
   hideScreens();
   const seq=['3','2','1','LIFT-OFF!'];let i=0;$('countdown').hidden=false;$('countdown').textContent=seq[0];
@@ -409,7 +491,7 @@ function toMenu(){
   S.state='menu';S.paused=false;S.engineOn=false;AudioFX.engine(false);
   if(S.repair){S.repair=null;$('repairOverlay').hidden=true;}
   $('pauseOverlay').hidden=true;$('pauseBtn').textContent='⏸️';
-  $('startBest').textContent=record();$('startCrys').textContent=totalCrys;
+  $('startBest').textContent=record();refreshCrys();
   showScreen('startScreen');
 }
 
@@ -417,35 +499,48 @@ function toMenu(){
 function update(dt){
   genZones();
   const zone=zoneAt(S.alt);
-  /* ⚡ propulsore: velocissimo + immune a tutto */
+  const inFire=zone&&zone.type==='fire';
+  /* ⚡ boost */
   if(S.boost>0){S.boost-=dt;S.spd=BOOSTSPD;S.offT=0;S.engineOn=false;}
   else{
-    S.engineOn=S.engineHeld&&!S.repair;
+    /* 🕹️ muoversi a destra/sinistra ACCENDE il motore */
+    const moving=keys.ArrowLeft||keys.ArrowRight||keys.KeyA||keys.KeyD;
+    S.engineOn=(S.engineHeld||moving)&&!S.repair;
     if(S.engineOn){S.spd=Math.min(MAXSPD,S.spd+ACC*dt);S.offT=0;}
-    else{S.spd+=(COAST-S.spd)*Math.min(1,dt*1.1);S.offT+=dt;}
+    else{S.spd+=(COAST-S.spd)*Math.min(1,dt*1.1);
+      if(!S.repair)S.offT+=dt;   /* ⏱️ timer motore in pausa durante la riparazione */
+    }
   }
-  if(S.boost<=0&&S.offT>=OFF_LIMIT){die('fall','The engine stayed off too long — you fell!');return;}
-  if(S.boost<=0&&S.offT>5){const s=Math.ceil(OFF_LIMIT-S.offT);if(s!==S.lastBeep){S.lastBeep=s;AudioFX.warn();}}
-  if(zone&&zone.type==='fire'&&S.engineOn&&S.boost<=0){die('fire','You entered a flammable zone with the engine ON!');return;}
+  if(S.boost<=0&&!S.repair&&S.offT>=OFF_LIMIT){die('fall','The engine stayed off too long — you fell!');return;}
+  if(S.boost<=0&&!S.repair&&S.offT>5){const s=Math.ceil(OFF_LIMIT-S.offT);if(s!==S.lastBeep){S.lastBeep=s;AudioFX.warn();}}
+  if(inFire&&S.engineOn&&S.boost<=0){die('fire','You entered a flammable zone with the engine ON!');return;}
+  if(inFire)S.meteors.length=0;  /* 🔥 niente asteroidi nelle zone infiammabili */
   if(zone&&zone.type==='fault'&&!zone.triggered&&S.boost<=0&&!S.repair){zone.triggered=true;startRepair();}
-  if(!S.repair){ /* niente avvisi mentre ripari */
+  if(!S.repair){
     for(const z of S.zones){
       if(!z.warned&&z.start>S.alt&&z.start-S.alt<60){z.warned=true;AudioFX.zone();
-        banner(z.type==='fire'?'⚠️ FLAMMABLE ZONE — ENGINE OFF!':z.type==='meteor'?'☄️ METEOR STORM AHEAD!':'🔧 MALFUNCTION AHEAD!','bad');}}
+        banner(z.type==='fire'?'⚠️ FLAMMABLE ZONE — ENGINE OFF, DON\'T MOVE!':z.type==='meteor'?'🪨 ASTEROID STORM AHEAD!':'🔧 MALFUNCTION AHEAD!','bad');}}
   }
-  /* ☄️ meteore: frequenza e velocità crescono con la quota; ferme durante le riparazioni */
+  /* ⏱️ timer PROPRIO della riparazione */
+  if(S.repair){
+    S.repT-=dt;
+    $('repFill').style.width=Math.max(0,S.repT/REPAIR_TIME*100)+'%';
+    $('repTime').textContent=Math.max(0,S.repT).toFixed(1)+'s';
+    if(S.repT<=0){die('fall','Repair failed — the rocket broke down!');return;}
+  }
+  /* 🪨 asteroidi: mai nelle zone infiammabili */
   const d=clamp(S.alt/4000,0,1);
   const mz=S.zones.find(z=>z.type==='meteor'&&z.end>S.alt-20&&z.start<S.alt+H/PPM);
-  if(mz&&!S.repair){S.meteorT-=dt;
+  if(mz&&!S.repair&&!inFire){S.meteorT-=dt;
     if(S.meteorT<=0){S.meteorT=rand(.55,1)*(1.5-.7*d);const L=Math.random()<.5;
-      S.meteors.push({x:L?-40:W+40,vx:(L?1:-1)*(rand(130,230)+d*120),a:S.alt+(rocketY+40)/PPM,flip:L});}}
+      S.meteors.push({x:L?-40:W+40,vx:(L?1:-1)*(rand(130,230)+d*120),a:S.alt+(rocketY+40)/PPM,flip:L,rot:rand(0,6.28)});}}
   for(const m of [...S.meteors]){
-    m.x+=m.vx*dt;
+    m.x+=m.vx*dt;m.rot+=dt*2;
     const y=rocketY-(m.a-S.alt)*PPM;
     if(m.x<-70||m.x>W+70||y>H+80){S.meteors.splice(S.meteors.indexOf(m),1);continue;}
     if(!S.repair&&S.boost<=0&&Math.abs(m.x-S.rx)<28&&Math.abs(y-rocketY)<30){
-      die('meteor','Smashed by a meteor!');return;}}
-  /* 💠⚡ pickups: si raccolgono solo al tocco */
+      die('meteor','Smashed by an asteroid!');return;}}
+  /* 💠⚡ pickups */
   S.pickT-=dt;
   if(S.pickT<=0){S.pickT=rand(3.5,6.5);
     S.picks.push({type:Math.random()<.72?'crys':'boost',x:rand(30,W-30),
@@ -466,18 +561,37 @@ function update(dt){
   S.rx=clamp(S.rx,26,W-26);
   S.tilt+=(((keys.ArrowLeft||keys.KeyA)?-.18:(keys.ArrowRight||keys.KeyD)?.18:0)-S.tilt)*Math.min(1,dt*8);
   S.alt+=S.spd*dt;
-  /* stelle + testi fluttuanti */
   for(const st of S.stars){st.y+=S.spd*PPM*dt*st.z;if(st.y>H){st.y-=H;st.x=Math.random()*W;}}
   for(const t of [...S.txts]){t.life-=dt;t.y-=30*dt;if(t.life<=0)S.txts.splice(S.txts.indexOf(t),1);}
-  /* timer riparazione = countdown 10s */
-  if(S.repair){$('repFill').style.width=Math.max(0,(1-S.offT/OFF_LIMIT)*100)+'%';
-    $('repTime').textContent=Math.max(0,OFF_LIMIT-S.offT).toFixed(1)+'s';}
+}
+
+/* ---------- razzo vettoriale (skin shop) ---------- */
+function drawRocket(x,y,rot){
+  const sk=SKINS[rshop.equipped]||SKINS.classic;
+  ctx.save();ctx.translate(x,y);ctx.rotate(rot);
+  ctx.fillStyle=sk.fin;                                   /* alette */
+  ctx.beginPath();ctx.moveTo(-7,4);ctx.lineTo(-15,20);ctx.lineTo(-7,16);ctx.closePath();ctx.fill();
+  ctx.beginPath();ctx.moveTo(7,4);ctx.lineTo(15,20);ctx.lineTo(7,16);ctx.closePath();ctx.fill();
+  ctx.fillStyle=sk.body;                                  /* corpo */
+  ctx.beginPath();ctx.moveTo(0,-26);
+  ctx.quadraticCurveTo(9,-14,8,2);ctx.quadraticCurveTo(8,12,5,16);
+  ctx.lineTo(-5,16);ctx.quadraticCurveTo(-8,12,-8,2);ctx.quadraticCurveTo(-9,-14,0,-26);
+  ctx.closePath();ctx.fill();
+  ctx.fillStyle=sk.nose;                                  /* punta */
+  ctx.beginPath();ctx.moveTo(0,-26);ctx.quadraticCurveTo(7,-17,8,-8);
+  ctx.lineTo(-8,-8);ctx.quadraticCurveTo(-7,-17,0,-26);ctx.closePath();ctx.fill();
+  ctx.fillStyle=sk.win;                                   /* oblò */
+  ctx.beginPath();ctx.arc(0,1,4.5,0,7);ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,.7)';ctx.lineWidth=1.5;ctx.stroke();
+  ctx.fillStyle=sk.fin;ctx.fillRect(-4,16,8,4);           /* ugello */
+  ctx.restore();
 }
 
 /* ---------- draw ---------- */
 function label(t,y){ctx.font='12px Orbitron, monospace';ctx.fillStyle='rgba(255,255,255,.9)';
   ctx.textAlign='center';ctx.fillText(t,W/2,clamp(y+18,14,H-8));}
 function draw(){
+  ctx.globalAlpha=1;ctx.shadowBlur=0; /* 🔒 niente trasparenze indesiderate */
   const[c1,c2]=skyColors(S.alt);
   const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,c1);g.addColorStop(1,c2);
   ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
@@ -494,10 +608,10 @@ function draw(){
       ctx.fillStyle='rgba(255,140,0,.55)';ctx.fillRect(0,y1,W,3);ctx.fillRect(0,y2-3,W,3);
       ctx.font='20px serif';
       for(let x=24;x<W;x+=72)ctx.fillText('🔥',x,y1+18+((x*13)%Math.max(24,y2-y1-30)));
-      label('⚠️ FLAMMABLE — ENGINE OFF!',y1);
+      label('⚠️ FLAMMABLE — ENGINE OFF, DON\'T MOVE!',y1);
     }else if(z.type==='meteor'){
       ctx.fillStyle='rgba(130,140,255,.09)';ctx.fillRect(0,y1,W,y2-y1);
-      label('☄️ METEOR STORM!',y1);
+      label('🪨 ASTEROID STORM!',y1);
     }else{
       ctx.fillStyle='rgba(255,213,74,.15)';ctx.fillRect(0,y1,W,y2-y1);
       ctx.font='22px serif';ctx.fillText('🔧',W/2,(y1+y2)/2);
@@ -507,43 +621,40 @@ function draw(){
   for(const p of S.picks){const y=rocketY-(p.a-S.alt)*PPM+Math.sin(performance.now()/300+p.ph)*4;
     ctx.save();ctx.font='26px serif';
     ctx.shadowColor=p.type==='crys'?'#7ce7ff':'#ffd54a';ctx.shadowBlur=14;
-    ctx.fillText(p.type==='crys'?'💠':'',p.x,y);ctx.restore();}
-  /* ☄️ meteore */
-  ctx.font='30px serif';
+    ctx.fillText(p.type==='crys'?'💠':'⚡',p.x,y);ctx.restore();}
+  /* 🪨 asteroidi */
   for(const m of S.meteors){const y=rocketY-(m.a-S.alt)*PPM;
-    ctx.save();ctx.translate(m.x,y);if(!m.flip)ctx.scale(-1,1);ctx.fillText('☄️',0,0);ctx.restore();}
-  /* 🚀 razzo */
+    ctx.save();ctx.translate(m.x,y);ctx.rotate(Math.sin(m.rot)*.4);ctx.font='30px serif';
+    ctx.fillText('🪨',0,0);ctx.restore();}
+  /* 🚀 */
   const ry=rocketY+(S.state==='fall'?S.fallT*S.fallT*320:0);
   if(S.boost>0||(S.engineOn&&S.state==='play')){
     const f=S.boost>0?22+Math.random()*16:8+Math.random()*12;
     ctx.fillStyle='rgba(255,150,40,.9)';
-    ctx.beginPath();ctx.moveTo(S.rx-8,ry+22);ctx.lineTo(S.rx+8,ry+22);ctx.lineTo(S.rx,ry+26+f+12);ctx.fill();
+    ctx.beginPath();ctx.moveTo(S.rx-8,ry+20);ctx.lineTo(S.rx+8,ry+20);ctx.lineTo(S.rx,ry+24+f+12);ctx.fill();
     ctx.fillStyle='rgba(255,230,120,.95)';
-    ctx.beginPath();ctx.moveTo(S.rx-4,ry+22);ctx.lineTo(S.rx+4,ry+22);ctx.lineTo(S.rx,ry+24+f);ctx.fill();
+    ctx.beginPath();ctx.moveTo(S.rx-4,ry+20);ctx.lineTo(S.rx+4,ry+20);ctx.lineTo(S.rx,ry+22+f);ctx.fill();
   }
-  ctx.save();ctx.translate(S.rx,ry);
-  ctx.rotate(S.tilt+(S.state==='fall'?S.fallT*5:0)-Math.PI/4);
-  ctx.font='46px serif';ctx.fillText('🚀',0,0);ctx.restore();
+  drawRocket(S.rx,ry,S.tilt+(S.state==='fall'?S.fallT*5:0));
   if(S.boost>0){ctx.strokeStyle='rgba(255,213,74,.9)';ctx.lineWidth=3;
     ctx.beginPath();ctx.arc(S.rx,ry,40,0,7);ctx.stroke();}
   if(S.boom&&S.state==='fall'&&S.fallT<.4){ctx.font='60px serif';ctx.fillText('💥',S.rx,ry);}
-  /* testi fluttuanti */
   for(const t of S.txts){ctx.globalAlpha=Math.max(0,t.life);
     ctx.font='800 16px Rubik, sans-serif';ctx.fillStyle='#7ce7ff';ctx.fillText(t.t,t.x,t.y);ctx.globalAlpha=1;}
   if(S.state==='play'&&S.alt<15){ctx.font='13px Orbitron, monospace';
-    ctx.fillStyle='rgba(255,255,255,.85)';ctx.fillText('HOLD SCREEN / SPACE = ENGINE ON',W/2,H*.4);}
+    ctx.fillStyle='rgba(255,255,255,.85)';ctx.fillText('HOLD / SPACE / MOVE = ENGINE ON',W/2,H*.4);}
 }
 function hud(){
   $('altEl').textContent=Math.floor(S.alt);
   $('bestEl').textContent=Math.max(record(),Math.floor(S.alt));
   $('spdEl').textContent=Math.round(S.spd);
-  $('crysEl').textContent=totalCrys;
+  refreshCrys();
   const e=$('engChip');
   if(S.boost>0){e.textContent='⚡ BOOST!';e.className='chip boost';}
   else{e.textContent=S.engineOn?'🔥 ENGINE ON':'❄️ ENGINE OFF';
     e.className='chip'+(S.engineOn?' on':'');}
   const o=$('offChip');
-  o.hidden=!(S.state==='play'&&S.offT>.15&&S.boost<=0);
+  o.hidden=!(S.state==='play'&&S.offT>.15&&S.boost<=0&&!S.repair);
   if(!o.hidden)o.textContent='⚠️ '+(OFF_LIMIT-S.offT).toFixed(1)+'s';
   AudioFX.engine(S.engineOn&&S.state==='play'&&!S.paused);
 }
@@ -572,9 +683,46 @@ window.addEventListener('keyup',e=>{
   if(e.code==='Space'||e.code==='ArrowUp')S.engineHeld=false;
   keys[e.code]=false;});
 
+/* ---------- shop razzI ---------- */
+function openShop(){
+  $('rshopModal').hidden=false;renderShop();
+}
+function closeShop(){$('rshopModal').hidden=true;}
+function renderShop(){
+  refreshCrys();
+  $('rshopList').innerHTML=Object.keys(SKINS).map(id=>{
+    const it=SKINS[id],owned=rshop.owned.includes(id),eq=rshop.equipped===id;
+    const btn=eq?'<button class="shop-btn eq" disabled>EQUIPPED ✓</button>'
+      :owned?('<button class="shop-btn equip" data-id="'+id+'">EQUIP</button>')
+      :('<button class="shop-btn buy '+(totalCrys>=it.price?'':'off')+'" data-id="'+id+'">🛒 '+it.price+' 💠</button>');
+    return '<div class="shop-item"><div class="shop-prev prev-'+id+'"></div>'+
+      '<div class="shop-name">'+it.name+'</div>'+btn+'</div>';
+  }).join('');
+  $('rshopList').querySelectorAll('.buy').forEach(b=>b.addEventListener('click',()=>buySkin(b.dataset.id)));
+  $('rshopList').querySelectorAll('.equip').forEach(b=>b.addEventListener('click',()=>equipSkin(b.dataset.id)));
+}
+function buySkin(id){
+  const it=SKINS[id];
+  if(!it||rshop.owned.includes(id))return;
+  if(totalCrys<it.price){banner('💠 Not enough crystals!','bad');return;}
+  totalCrys-=it.price;localStorage.setItem(CRYS_KEY,totalCrys);
+  rshop.owned.push(id);rshop.equipped=id;saveRshop();
+  AudioFX.buy();banner('🛍️ "'+it.name+'" rocket bought & equipped!','good');
+  renderShop();
+}
+function equipSkin(id){
+  if(!rshop.owned.includes(id))return;
+  rshop.equipped=id;saveRshop();renderShop();
+}
+
 /* ---------- pulsanti ---------- */
 $('playBtn').addEventListener('click',()=>{AudioFX.unlock();newRun();});
 $('retryBtn').addEventListener('click',()=>{AudioFX.unlock();newRun();});
+$('howBtn').addEventListener('click',()=>showScreen('helpScreen'));
+$('backHelpBtn').addEventListener('click',()=>showScreen('startScreen'));
+$('shopBtnR').addEventListener('click',openShop);
+$('rshopClose').addEventListener('click',closeShop);
+$('rshopModal').addEventListener('click',e=>{if(e.target===$('rshopModal'))closeShop();});
 $('reviveBtn').addEventListener('click',()=>showAd(()=>{
   S.rebirthUsed=true;S.state='play';S.shield=3;S.offT=0;S.spd=COAST;
   S.meteors=[];S.engineHeld=false;hideScreens();
@@ -600,8 +748,7 @@ document.addEventListener('dblclick',e=>e.preventDefault());
 
 /* boot */
 if(AudioFX.muted)$('muteBtn').textContent='🔇';
-resize();$('startBest').textContent=record();$('bestEl').textContent=record();
-$('startCrys').textContent=totalCrys;$('crysEl').textContent=totalCrys;
+resize();$('startBest').textContent=record();$('bestEl').textContent=record();refreshCrys();
 requestAnimationFrame(loop);
 </script>
 </body>
