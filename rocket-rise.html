@@ -22,17 +22,19 @@ body{font-family:Rubik,system-ui,sans-serif;color:#eaf6ff;overflow:hidden;user-s
 .chip b{font-family:Orbitron,monospace;font-weight:800;font-size:15px}
 .unit{opacity:.6;font-size:10px}
 .lbl{opacity:.6;font-size:10px;text-transform:uppercase;letter-spacing:.6px}
-#altEl{color:#7cffb2}#bestEl{color:#ffd54a}#spdEl{color:#7ce7ff}#crysEl{color:#7ce7ff}
+#altEl{color:#7cffb2;min-width:5ch}#bestEl{color:#ffd54a;min-width:5ch}
+#spdEl{color:#7ce7ff;min-width:3ch}#crysEl{color:#7ce7ff;min-width:4ch}
+/* FIX: spazio sempre riservato = lo schermo non si sposta più */
+#engChip{min-width:112px;justify-content:center;text-align:center}
 #engChip.on{border-color:rgba(255,150,60,.7);color:#ffc07c;box-shadow:0 0 12px rgba(255,140,60,.35)}
 #engChip.boost{border-color:rgba(255,213,74,.8);color:#ffe08a;box-shadow:0 0 14px rgba(255,213,74,.5)}
-#offChip{border-color:rgba(255,77,109,.8);color:#ff8a9d;font-weight:800;box-shadow:0 0 12px rgba(255,77,109,.4)}
+#offChip{visibility:hidden;min-width:104px;justify-content:center;text-align:center;
+  border-color:rgba(255,77,109,.8);color:#ff8a9d;font-weight:800;box-shadow:0 0 12px rgba(255,77,109,.4)}
 .spacer{flex:1}
 .icon-btn{background:rgba(10,20,50,.7);border:1px solid rgba(0,229,255,.3);color:#fff;border-radius:10px;
   padding:7px 11px;font-size:13px;font-weight:800;cursor:pointer;font-family:Orbitron,monospace}
-/* icone CSS (niente emoji) */
 .diam{display:inline-block;width:12px;height:12px;background:linear-gradient(135deg,#bff4ff,#38c3ff);
   clip-path:polygon(50% 0,100% 38%,50% 100%,0 38%);box-shadow:0 0 6px rgba(124,231,255,.8)}
-.diam.big{width:16px;height:16px}
 
 /* AREA */
 #wrap{flex:1;position:relative;overflow:hidden;border-radius:16px;border:1px solid rgba(0,229,255,.25);
@@ -150,7 +152,7 @@ canvas{width:100%;height:100%;display:block}
     <div class="chip"><span class="lbl">Spd</span><b id="spdEl">0</b></div>
     <div class="chip"><i class="diam"></i><b id="crysEl">0</b></div>
     <div class="chip" id="engChip">ENGINE OFF</div>
-    <div class="chip" id="offChip" hidden>FALL 10.0s</div>
+    <div class="chip" id="offChip">FALL 10.0s</div>
     <div class="spacer"></div>
     <button class="icon-btn" id="muteBtn" title="Sound">SND</button>
     <button class="icon-btn" id="pauseBtn" title="Pause">❚❚</button>
@@ -187,6 +189,8 @@ canvas{width:100%;height:100%;display:block}
           <div>With the engine off you climb slowly, but you must reignite within 10 seconds or you fall.</div>
           <div>Flammable zones: cross them with the engine OFF and without moving. Asteroids never enter them.</div>
           <div>Asteroid storms: dodge by dragging or with the arrow keys. They get faster and more frequent as you climb.</div>
+          <div>UFO zones appear higher up: their ships shoot at you, dodge the bolts.</div>
+          <div>Black holes pull you in when the engine is OFF. Keep the engine on to pass them safely.</div>
           <div>Failures: a repair task appears with its OWN timer. The engine timer is paused while you repair. Fail the repair and you fall.</div>
           <div>Crystals are collected by touching them and are saved forever. Spend them in the shop to unlock new rockets.</div>
           <div>Boosters give a short turbo and make you invincible for a couple of seconds.</div>
@@ -266,10 +270,10 @@ canvas{width:100%;height:100%;display:block}
 <script>
 'use strict';
 /* ============================================================
-   ROCKET RISE — v4 (full vector, zero emoji)
-   - razzi carini + asteroidi/gemme/fulmini/fiamme/esplosioni vettoriali
-   - zone infiammabili: gli asteroidi NON entrano mai
-   - fix blocco: loop protetto + logica morte robusta
+   ROCKET RISE — v5
+   - UFO che sparano (zone dedicate, più avanti)
+   - Buchi neri: risucchiano a motore SPENTO
+   - FIX HUD: timer motore con spazio riservato (niente shift)
    ============================================================ */
 const $=id=>document.getElementById(id);
 const rand=(a,b)=>a+Math.random()*(b-a);
@@ -305,6 +309,8 @@ const AudioFX=(()=>{
     fix(){[659,784,1046].forEach((f,i)=>beep({f,type:'sine',dur:.1,vol:.12,delay:i*.08}));},
     tap(){beep({f:300,f2:150,dur:.06,vol:.1});},
     zone(){beep({f:500,f2:900,type:'sine',dur:.15,vol:.1});},
+    zap(){beep({f:900,f2:250,type:'sawtooth',dur:.12,vol:.1});},
+    hole(){beep({f:200,f2:50,type:'sine',dur:.4,vol:.14});},
     gem(){beep({f:1046,f2:1760,type:'sine',dur:.12,vol:.12});},
     buy(){[784,988,1318].forEach((f,i)=>beep({f,type:'sine',dur:.1,vol:.12,delay:i*.07}));},
     boost(){[400,700,1100].forEach((f,i)=>beep({f,type:'square',dur:.09,vol:.12,delay:i*.06}));},
@@ -336,6 +342,7 @@ function saveRshop(){saveJSON(RSHOP_KEY,rshop);}
 
 const S={state:'menu',paused:false,alt:0,spd:0,rx:0,tilt:0,engineOn:false,engineHeld:false,offT:0,
   zones:[],nextZone:120,meteors:[],meteorT:0,stars:[],picks:[],pickT:4,txts:[],
+  shots:[],holes:[],holeT:12,suck:0,suckDir:0,
   repair:null,repT:0,boost:0,shield:0,fallT:0,boom:false,overMsg:'',rebirthUsed:false,lastBeep:0};
 let targetX=null;const keys={};
 
@@ -373,16 +380,20 @@ function genZones(){
     if(S.nextZone<400){type=Math.random()<.5?'fire':'fault';}
     else{
       const r=Math.random(),mW=.18+.30*d;
-      if(r<.40)type='fire';else if(r<.40+mW)type='meteor';else type='fault';
+      const uW=S.nextZone>1200? .16+.14*d : 0;   /* UFO più avanti */
+      if(r<.36)type='fire';
+      else if(r<.36+mW)type='meteor';
+      else if(r<.36+mW+uW)type='ufo';
+      else type='fault';
     }
-    const len=type==='fire'?rand(35,70):type==='meteor'?rand(70,120)*(1+.3*d):12;
-    S.zones.push({type,start:S.nextZone,end:S.nextZone+len,triggered:false,warned:false});
+    const len=type==='fire'?rand(35,70):type==='meteor'?rand(70,120)*(1+.3*d)
+      :type==='ufo'?rand(50,90):12;
+    S.zones.push({type,start:S.nextZone,end:S.nextZone+len,triggered:false,warned:false,ufos:null});
     S.nextZone+=len+rand(80,150)*(1-.3*d);
   }
   S.zones=S.zones.filter(z=>z.end>S.alt-60);
 }
 function zoneAt(a){return S.zones.find(z=>a>=z.start&&a<=z.end);}
-/* gli asteroidi non devono MAI stare/passare in una zona infiammabile */
 function inFireBand(a,margin){return S.zones.some(z=>z.type==='fire'&&a>=z.start-margin&&a<=z.end+margin);}
 
 /* ---------- riparazioni ---------- */
@@ -446,11 +457,11 @@ function buildBolts(){
     if(hits>=5)repairDone();else move();});
 }
 
-/* ---------- morte (robusta, niente blocchi) ---------- */
+/* ---------- morte ---------- */
 function die(kind,msg){
   if(S.state!=='play')return;
-  if(S.boost>0&&kind!=='fall')return;              // boost = immune a tutto
-  if(S.shield>0&&kind==='meteor')return;           // scudo revive solo vs asteroidi
+  if(S.boost>0&&kind!=='fall')return;
+  if(S.shield>0&&(kind==='meteor'||kind==='ufo'||kind==='hole'))return;
   S.state='fall';S.boom=kind!=='fall';S.overMsg=msg;S.fallT=0;
   S.engineOn=false;S.engineHeld=false;targetX=null;
   AudioFX.engine(false);AudioFX.boom();
@@ -483,6 +494,7 @@ function newRun(){
   S.state='count';S.paused=false;S.alt=0;S.spd=0;S.rx=W/2;S.tilt=0;
   S.engineOn=false;S.engineHeld=false;S.offT=0;S.zones=[];S.nextZone=120;
   S.meteors=[];S.meteorT=0;S.picks=[];S.pickT=rand(2.5,4);S.txts=[];
+  S.shots=[];S.holes=[];S.holeT=rand(9,13);S.suck=0;S.suckDir=0;
   S.repair=null;S.repT=0;S.boost=0;S.shield=0;S.rebirthUsed=false;S.lastBeep=0;
   $('repairOverlay').hidden=true;$('pauseBtn').textContent='❚❚';
   hideScreens();
@@ -519,7 +531,9 @@ function update(dt){
   if(!S.repair){
     for(const z of S.zones){
       if(!z.warned&&z.start>S.alt&&z.start-S.alt<60){z.warned=true;AudioFX.zone();
-        banner(z.type==='fire'?"FLAMMABLE ZONE - ENGINE OFF, DON'T MOVE!":z.type==='meteor'?'ASTEROID STORM AHEAD!':'MALFUNCTION AHEAD!','bad');}}
+        banner(z.type==='fire'?"FLAMMABLE ZONE - ENGINE OFF, DON'T MOVE!":
+          z.type==='meteor'?'ASTEROID STORM AHEAD!':
+          z.type==='ufo'?'UFO ATTACK AHEAD!':'MALFUNCTION AHEAD!','bad');}}
   }
   if(S.repair){
     S.repT-=dt;
@@ -527,7 +541,7 @@ function update(dt){
     $('repTime').textContent=Math.max(0,S.repT).toFixed(1)+'s';
     if(S.repT<=0){die('fall','Repair failed - the rocket broke down!');return;}
   }
-  /* asteroidi: mai dentro/attraverso zone infiammabili */
+  /* asteroidi mai nelle zone infiammabili */
   S.meteors=S.meteors.filter(m=>!inFireBand(m.a,20));
   const d=clamp(S.alt/4000,0,1);
   const mz=S.zones.find(z=>z.type==='meteor'&&z.end>S.alt-20&&z.start<S.alt+H/PPM);
@@ -542,6 +556,49 @@ function update(dt){
     if(m.x<-70||m.x>W+70||y>H+80){S.meteors.splice(S.meteors.indexOf(m),1);continue;}
     if(!S.repair&&S.boost<=0&&Math.abs(m.x-S.rx)<26&&Math.abs(y-rocketY)<28){
       die('meteor','Smashed by an asteroid!');return;}}
+  /* UFO che sparano */
+  if(zone&&zone.type==='ufo'&&!S.repair){
+    if(!zone.ufos){
+      const n=S.alt>2500?2:1;zone.ufos=[];
+      for(let i=0;i<n;i++)zone.ufos.push({t:rand(0,6),ph:rand(0,6.28),amp:W*.26+rand(0,W*.1),
+        spd:.8+rand(0,.6),fireT:rand(.6,1.4),x:W/2,y:H*.2});
+    }
+    for(const u of zone.ufos){
+      u.t+=dt;u.x=W/2+Math.sin(u.t*u.spd+u.ph)*u.amp;u.y=H*.2+Math.sin(u.t*1.7+u.ph)*10;
+      u.fireT-=dt;
+      if(u.fireT<=0){
+        u.fireT=Math.max(.7,rand(1.1,1.9)-d*.4);
+        const dx=S.rx-u.x,dy=rocketY-u.y,L=Math.hypot(dx,dy)||1,sp=240+d*160;
+        S.shots.push({x:u.x,y:u.y+10,vx:dx/L*sp,vy:dy/L*sp});
+        AudioFX.zap();
+      }
+    }
+  }
+  for(const s of [...S.shots]){
+    s.x+=s.vx*dt;s.y+=s.vy*dt;
+    if(s.y>H+40||s.x<-40||s.x>W+40){S.shots.splice(S.shots.indexOf(s),1);continue;}
+    if(!S.repair&&S.boost<=0&&Math.hypot(s.x-S.rx,s.y-rocketY)<22){
+      die('ufo','Shot down by a UFO!');return;}}
+  /* buchi neri (da ~900m) */
+  if(S.alt>900){S.holeT-=dt;
+    if(S.holeT<=0){S.holeT=rand(10,16);
+      const a=S.alt+(rocketY+60)/PPM;
+      if(!inFireBand(a,80))S.holes.push({x:rand(50,W-50),a,rot:rand(0,6),warned:false});}}
+  for(const h of [...S.holes]){
+    const hy=rocketY-(h.a-S.alt)*PPM;
+    if(hy>H+140){S.holes.splice(S.holes.indexOf(h),1);continue;}
+    if(!h.warned&&hy>-40){h.warned=true;banner('BLACK HOLE - KEEP ENGINE ON!','bad');AudioFX.hole();}
+    h.rot+=dt*2;
+    const dx=h.x-S.rx,dy=hy-rocketY,dist=Math.hypot(dx,dy);
+    const canPull=!S.engineOn&&S.boost<=0&&!S.repair&&!inFire;
+    if(canPull&&dist<150&&dist>1){
+      const p=(1-dist/150)*110+25;
+      S.rx+=dx/dist*p*dt;
+      S.alt-=p*dt*.35;
+      S.suck=clamp(S.suck+dt*3,0,1);S.suckDir=Math.sign(dx);
+      if(dist<26){die('hole','Swallowed by a black hole!');return;}
+    }else S.suck=Math.max(0,S.suck-dt*3);
+  }
   /* pickups */
   S.pickT-=dt;
   if(S.pickT<=0){S.pickT=rand(3.5,6.5);
@@ -571,28 +628,28 @@ function update(dt){
 function drawRocket(x,y,rot){
   const sk=SKINS[rshop.equipped]||SKINS.classic;
   ctx.save();ctx.translate(x,y);ctx.rotate(rot);
-  ctx.fillStyle=sk.fin;                                   /* alette morbide */
+  ctx.fillStyle=sk.fin;
   ctx.beginPath();ctx.moveTo(-8,2);ctx.quadraticCurveTo(-16,10,-13,19);ctx.quadraticCurveTo(-8,15,-7,11);ctx.closePath();ctx.fill();
   ctx.beginPath();ctx.moveTo(8,2);ctx.quadraticCurveTo(16,10,13,19);ctx.quadraticCurveTo(8,15,7,11);ctx.closePath();ctx.fill();
-  ctx.fillStyle=sk.body;                                  /* corpo paffuto */
+  ctx.fillStyle=sk.body;
   ctx.beginPath();ctx.moveTo(0,-24);
   ctx.bezierCurveTo(10,-20,11,-6,10,4);ctx.quadraticCurveTo(9,14,6,16);
   ctx.lineTo(-6,16);ctx.quadraticCurveTo(-9,14,-10,4);ctx.bezierCurveTo(-11,-6,-10,-20,0,-24);
   ctx.closePath();ctx.fill();
-  ctx.fillStyle=sk.nose;                                  /* fascia+punta */
+  ctx.fillStyle=sk.nose;
   ctx.fillRect(-8.5,7,17,3.5);
   ctx.beginPath();ctx.moveTo(0,-24);ctx.bezierCurveTo(7,-21,9,-16,9.5,-11);
   ctx.lineTo(-9.5,-11);ctx.bezierCurveTo(-9,-16,-7,-21,0,-24);ctx.closePath();ctx.fill();
-  ctx.fillStyle='#0b1026';ctx.beginPath();ctx.arc(0,-1,7,0,7);ctx.fill();   /* oblò grande */
+  ctx.fillStyle='#0b1026';ctx.beginPath();ctx.arc(0,-1,7,0,7);ctx.fill();
   ctx.fillStyle=sk.win;ctx.beginPath();ctx.arc(0,-1,5.2,0,7);ctx.fill();
   ctx.strokeStyle='rgba(255,255,255,.85)';ctx.lineWidth=1.6;
-  ctx.beginPath();ctx.arc(0,-1,3.4,-2.6,-1.2);ctx.stroke();                 /* riflesso = carino */
+  ctx.beginPath();ctx.arc(0,-1,3.4,-2.6,-1.2);ctx.stroke();
   ctx.fillStyle=sk.fin;
   ctx.beginPath();ctx.moveTo(-5,16);ctx.lineTo(5,16);ctx.lineTo(3.5,20);ctx.lineTo(-3.5,20);ctx.closePath();ctx.fill();
   ctx.restore();
 }
 function drawAsteroid(x,y,rot,dir){
-  const g=ctx.createLinearGradient(x-dir*36,y,x,y);      /* scia infuocata */
+  const g=ctx.createLinearGradient(x-dir*36,y,x,y);
   g.addColorStop(0,'rgba(255,120,40,0)');g.addColorStop(1,'rgba(255,160,60,.55)');
   ctx.fillStyle=g;
   ctx.beginPath();ctx.moveTo(x-dir*36,y-5);ctx.lineTo(x,y-9);ctx.lineTo(x,y+9);ctx.lineTo(x-dir*36,y+5);ctx.closePath();ctx.fill();
@@ -610,8 +667,8 @@ function drawAsteroid(x,y,rot,dir){
   ctx.beginPath();ctx.arc(-5,-7,2.2,0,7);ctx.fill();
   ctx.restore();
 }
-function drawGem(x,y,s,bob){
-  ctx.save();ctx.translate(x,y+bob);
+function drawGem(x,y,s){
+  ctx.save();ctx.translate(x,y);
   ctx.shadowColor='#7ce7ff';ctx.shadowBlur=12;
   ctx.fillStyle='#59d7ff';
   ctx.beginPath();ctx.moveTo(-s*.55,-s*.15);ctx.lineTo(-s*.28,-s*.48);ctx.lineTo(s*.28,-s*.48);
@@ -623,14 +680,50 @@ function drawGem(x,y,s,bob){
   ctx.beginPath();ctx.moveTo(-s*.55,-s*.15);ctx.lineTo(s*.55,-s*.15);ctx.moveTo(0,-s*.15);ctx.lineTo(0,s*.55);ctx.stroke();
   ctx.restore();
 }
-function drawBolt(x,y,s,bob){
-  ctx.save();ctx.translate(x,y+bob);
+function drawBolt(x,y,s){
+  ctx.save();ctx.translate(x,y);
   ctx.shadowColor='#ffd54a';ctx.shadowBlur=14;
   ctx.fillStyle='#ffd54a';
   ctx.beginPath();ctx.moveTo(s*.15,-s*.6);ctx.lineTo(-s*.35,s*.08);ctx.lineTo(-s*.05,s*.08);
   ctx.lineTo(-s*.15,s*.6);ctx.lineTo(s*.35,-s*.08);ctx.lineTo(s*.05,-s*.08);ctx.closePath();ctx.fill();
   ctx.shadowBlur=0;
   ctx.strokeStyle='rgba(255,255,255,.8)';ctx.lineWidth=1.2;ctx.stroke();
+  ctx.restore();
+}
+function drawUFO(u){
+  const x=u.x,y=u.y;
+  ctx.save();
+  ctx.fillStyle='rgba(124,231,255,.8)';
+  ctx.beginPath();ctx.arc(x,y-5,8,Math.PI,0);ctx.fill();
+  const g=ctx.createLinearGradient(x-20,y,x+20,y);
+  g.addColorStop(0,'#8f9bb3');g.addColorStop(.5,'#e8ecf5');g.addColorStop(1,'#8f9bb3');
+  ctx.fillStyle=g;
+  ctx.beginPath();ctx.ellipse(x,y,20,7.5,0,0,7);ctx.fill();
+  for(let i=-1;i<=1;i++){ctx.fillStyle=(Math.floor(u.t*4)+i+4)%2?'#ffd54a':'#ff2fd6';
+    ctx.beginPath();ctx.arc(x+i*10,y+2,2.2,0,7);ctx.fill();}
+  if(u.fireT<.3){ctx.fillStyle='rgba(255,47,214,.5)';ctx.beginPath();ctx.arc(x,y+9,5,0,7);ctx.fill();}
+  ctx.restore();
+}
+function drawShot(s){
+  ctx.save();
+  ctx.strokeStyle='rgba(255,47,214,.6)';ctx.lineWidth=3;
+  ctx.beginPath();ctx.moveTo(s.x-s.vx*.035,s.y-s.vy*.035);ctx.lineTo(s.x,s.y);ctx.stroke();
+  ctx.fillStyle='#ff2fd6';ctx.shadowColor='#ff2fd6';ctx.shadowBlur=8;
+  ctx.beginPath();ctx.arc(s.x,s.y,4,0,7);ctx.fill();
+  ctx.restore();
+}
+function drawHole(x,y,rot){
+  ctx.save();ctx.translate(x,y);
+  const g=ctx.createRadialGradient(0,0,4,0,0,46);
+  g.addColorStop(0,'rgba(0,0,0,1)');g.addColorStop(.55,'rgba(20,0,40,.9)');
+  g.addColorStop(.8,'rgba(178,107,255,.35)');g.addColorStop(1,'rgba(178,107,255,0)');
+  ctx.fillStyle=g;ctx.beginPath();ctx.arc(0,0,46,0,7);ctx.fill();
+  ctx.rotate(rot*.3);
+  ctx.strokeStyle='rgba(178,107,255,.7)';ctx.lineWidth=2;
+  for(let i=0;i<3;i++){ctx.beginPath();ctx.arc(0,0,18+i*8,i*2.1,i*2.1+4);ctx.stroke();}
+  ctx.rotate(-rot*.3);
+  ctx.fillStyle='#000';ctx.beginPath();ctx.arc(0,0,14,0,7);ctx.fill();
+  ctx.strokeStyle='rgba(255,255,255,.25)';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(0,0,14,0,7);ctx.stroke();
   ctx.restore();
 }
 function drawFlameIcon(x,y,s){
@@ -677,6 +770,7 @@ function draw(){
     for(const st of S.stars){ctx.globalAlpha=sa*st.z;ctx.beginPath();ctx.arc(st.x,st.y,st.r,0,7);ctx.fill();}
     ctx.globalAlpha=1;}
   ctx.textAlign='center';ctx.textBaseline='middle';
+  const zone=zoneAt(S.alt);
   for(const z of S.zones){
     const y1=rocketY-(z.end-S.alt)*PPM,y2=rocketY-(z.start-S.alt)*PPM;
     if(y2<-80||y1>H+80)continue;
@@ -688,14 +782,21 @@ function draw(){
     }else if(z.type==='meteor'){
       ctx.fillStyle='rgba(130,140,255,.09)';ctx.fillRect(0,y1,W,y2-y1);
       label('ASTEROID STORM!',y1);
+    }else if(z.type==='ufo'){
+      ctx.fillStyle='rgba(255,47,214,.08)';ctx.fillRect(0,y1,W,y2-y1);
+      label('UFO ATTACK!',y1);
     }else{
       ctx.fillStyle='rgba(255,213,74,.15)';ctx.fillRect(0,y1,W,y2-y1);
       drawGear(W/2,(y1+y2)/2,14);
     }
   }
+  for(const h of S.holes){const hy=rocketY-(h.a-S.alt)*PPM;
+    if(hy>-80&&hy<H+140)drawHole(h.x,hy,h.rot);}
   for(const p of S.picks){const y=rocketY-(p.a-S.alt)*PPM+Math.sin(performance.now()/300+p.ph)*4;
-    if(p.type==='crys')drawGem(p.x,y,26,0);else drawBolt(p.x,y,26,0);}
+    if(p.type==='crys')drawGem(p.x,y,26);else drawBolt(p.x,y,26);}
   for(const m of S.meteors){const y=rocketY-(m.a-S.alt)*PPM;drawAsteroid(m.x,y,m.rot,m.dir);}
+  if(zone&&zone.type==='ufo'&&zone.ufos)for(const u of zone.ufos)drawUFO(u);
+  for(const s of S.shots)drawShot(s);
   const ry=rocketY+(S.state==='fall'?S.fallT*S.fallT*320:0);
   if(S.boost>0||(S.engineOn&&S.state==='play')){
     const f=S.boost>0?22+Math.random()*16:8+Math.random()*12;
@@ -704,7 +805,7 @@ function draw(){
     ctx.fillStyle='rgba(255,230,120,.95)';
     ctx.beginPath();ctx.moveTo(S.rx-4,ry+20);ctx.lineTo(S.rx+4,ry+20);ctx.lineTo(S.rx,ry+22+f);ctx.fill();
   }
-  drawRocket(S.rx,ry,S.tilt+(S.state==='fall'?S.fallT*5:0));
+  drawRocket(S.rx,ry,S.tilt+(S.state==='fall'?S.fallT*5:0)+(S.suckDir||0)*S.suck*.4);
   if(S.boost>0){ctx.strokeStyle='rgba(255,213,74,.9)';ctx.lineWidth=3;
     ctx.beginPath();ctx.arc(S.rx,ry,40,0,7);ctx.stroke();}
   if(S.boom&&S.state==='fall'&&S.fallT<.45)drawBoom(S.rx,ry,S.fallT/.45);
@@ -723,12 +824,13 @@ function hud(){
   else{e.textContent=S.engineOn?'ENGINE ON':'ENGINE OFF';
     e.className='chip'+(S.engineOn?' on':'');}
   const o=$('offChip');
-  o.hidden=!(S.state==='play'&&S.offT>.15&&S.boost<=0&&!S.repair);
-  if(!o.hidden)o.textContent='FALL '+(OFF_LIMIT-S.offT).toFixed(1)+'s';
+  const showOff=S.state==='play'&&S.offT>.15&&S.boost<=0&&!S.repair;
+  o.style.visibility=showOff?'visible':'hidden';   /* FIX: niente shift di layout */
+  if(showOff)o.textContent='FALL '+(OFF_LIMIT-S.offT).toFixed(1)+'s';
   AudioFX.engine(S.engineOn&&S.state==='play'&&!S.paused);
 }
 
-/* ---------- loop PROTETTO (mai più blocchi) ---------- */
+/* ---------- loop protetto ---------- */
 let last=performance.now();
 function loop(t){
   const dt=Math.min((t-last)/1000,.05);last=t;
@@ -794,7 +896,7 @@ $('rshopClose').addEventListener('click',closeShop);
 $('rshopModal').addEventListener('click',e=>{if(e.target===$('rshopModal'))closeShop();});
 $('reviveBtn').addEventListener('click',()=>showAd(()=>{
   S.rebirthUsed=true;S.state='play';S.shield=3;S.offT=0;S.spd=COAST;
-  S.meteors=[];S.engineHeld=false;hideScreens();
+  S.meteors=[];S.shots=[];S.engineHeld=false;hideScreens();
   banner('REVIVED! Hold to ignite!','good');
 }));
 $('pauseBtn').addEventListener('click',()=>{
