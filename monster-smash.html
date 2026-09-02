@@ -1,4 +1,4 @@
-<!-- SALVA QUESTO FILE COME: monster-smash.html -->
+<!-- SAVE AS: monster-smash.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -28,7 +28,9 @@ body{
   padding:6px 11px;font-size:13px;display:flex;align-items:center;gap:6px}
 .chip b{font-weight:800;font-size:15px;font-variant-numeric:tabular-nums}
 .lbl{opacity:.6;font-size:10px;text-transform:uppercase;letter-spacing:.6px}
-#scoreEl{color:#7cffb2}#recEl{color:#ffd54a}#lvlEl{color:#7cc4ff}
+#scoreEl{color:#7cffb2;min-width:4ch}
+#recEl{color:#ffd54a;min-width:4ch}
+#lvlEl{color:#7cc4ff}
 #diamEl{color:#7ce7ff}
 .hpbar{width:100px;height:11px;border-radius:6px;background:rgba(0,0,0,.55);overflow:hidden;
   box-shadow:0 0 0 1px rgba(255,255,255,.22)}
@@ -39,10 +41,12 @@ body{
 @keyframes dmgFlash{0%{box-shadow:0 0 0 2px #ff4d6d,0 0 20px rgba(255,77,109,.9);transform:scale(1.06)}100%{}}
 #hpChip.low .hpbar i{animation:pulse .7s infinite}
 @keyframes pulse{50%{opacity:.55}}
-/* streak: visibile solo in partita */
-#comboChip{display:none;background:rgba(255,120,60,.16);border-color:rgba(255,150,80,.5);color:#ffc07c;font-weight:800}
+/* streak: visibile solo in partita (visibility = niente salti di layout) */
+#comboChip{visibility:hidden;background:rgba(255,120,60,.16);border-color:rgba(255,150,80,.5);color:#ffc07c;font-weight:800}
 #comboChip.hot{background:rgba(255,120,60,.4);box-shadow:0 0 14px rgba(255,140,60,.5)}
-#bossChip{display:none;color:#ffb3c1;border-color:rgba(255,90,120,.45);font-weight:700}
+/* boss chip: spazio RISERVATO + larghezza fissa = lo schermo non si sposta */
+#bossChip{visibility:hidden;min-width:118px;justify-content:center;text-align:center;
+  color:#ffb3c1;border-color:rgba(255,90,120,.45);font-weight:700}
 #bossChip.urgent{animation:pulse .7s infinite}
 #modeChip{color:#9fd8ff;border-color:rgba(124,200,255,.45);font-weight:700}
 .spacer{flex:1}
@@ -87,6 +91,7 @@ body[data-theme="gold"] #arena{background:radial-gradient(600px 300px at 50% 0%,
 .monster{position:absolute;left:0;top:0;display:flex;flex-direction:column;align-items:center;gap:3px;
   cursor:pointer;z-index:5;will-change:transform}
 .m-body{line-height:1;filter:drop-shadow(0 4px 10px rgba(0,0,0,.5));animation:bob 1.6s ease-in-out infinite}
+.m-body img{display:block;object-fit:contain}
 @keyframes bob{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-4px) rotate(3deg)}}
 .m-bar{width:36px;height:4px;border-radius:3px;background:rgba(0,0,0,.45);overflow:hidden;
   box-shadow:0 0 0 1px rgba(255,255,255,.14)}
@@ -160,6 +165,7 @@ body[data-theme="gold"] #arena{background:radial-gradient(600px 300px at 50% 0%,
 .card{background:linear-gradient(170deg,rgba(60,30,110,.6),rgba(15,25,55,.7));
   border:1px solid rgba(255,255,255,.16);border-radius:22px;padding:18px;max-width:600px;width:100%;
   text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.5);max-height:100%;overflow:auto}
+.cover{width:100%;max-width:320px;border-radius:14px;margin:4px auto 12px;display:block;box-shadow:0 10px 30px rgba(0,0,0,.5)}
 .title{font-family:'Press Start 2P',monospace;font-size:clamp(14px,4vw,21px);color:#fff;
   text-shadow:0 0 18px rgba(124,77,255,.9);margin-bottom:8px}
 .subtitle{opacity:.85;font-size:13px;margin-bottom:12px;line-height:1.55}
@@ -278,8 +284,10 @@ body[data-theme="gold"] #arena{background:radial-gradient(600px 300px at 50% 0%,
     <div id="banner"></div>
     <div id="countdown" hidden></div>
 
+    <!-- MENU -->
     <div class="screen" id="startScreen">
       <div class="card">
+        <img class="cover" src="cover-monsters.jpg" alt="Monster Smash">
         <div class="title">👾 MONSTER SMASH</div>
         <div class="subtitle">Squash them before their timer runs out:<br><b>every monster that vanishes costs you HP!</b></div>
         <div class="btn-row">
@@ -289,6 +297,7 @@ body[data-theme="gold"] #arena{background:radial-gradient(600px 300px at 50% 0%,
         <div class="btn-row">
           <button class="big-btn alt" id="playLbBtn">🏆 LEADERBOARD</button>
           <button class="big-btn ghost" id="playShopBtn">🛍️ SHOP</button>
+          <button class="big-btn ghost" id="homeBtn0">🏠 HOME</button>
         </div>
         <div class="subtitle" style="margin-top:12px">🏅 Best: <b id="startRec">0</b> &nbsp;•&nbsp; 💎 Gems: <b id="startDiam">0</b></div>
         <div class="legend">
@@ -302,7 +311,7 @@ body[data-theme="gold"] #arena{background:radial-gradient(600px 300px at 50% 0%,
           <div>👹 <b>Ogre</b> <span class="lv">Lv.5</span> — only when GREEN!</div>
           <div class="good">🔮 <b>Crystal</b> — 8 hits → +10 HP</div>
           <div class="good">💎 <b>Gems</b> — tap them! (buy backgrounds 🛍️)</div>
-          <div>👿💀🦠 <b>3 BOSSES rotate</b> — every 1–2 minutes</div>
+          <div>👿💀 <b>3 BOSSES rotate</b> — every 1–2 minutes</div>
           <div class="warn">⚠️ <b>Escape damage</b>: 👾🦇 -5 • 👻🧟👹👽 -10 • 👿 -30</div>
         </div>
         <p class="lb-note">📅 The daily challenge is the same for everyone and resets at midnight!<br>
@@ -342,12 +351,13 @@ body[data-theme="gold"] #arena{background:radial-gradient(600px 300px at 50% 0%,
       </div>
     </div>
 
+    <!-- PAUSA: resume oppure menu -->
     <div class="screen" id="pauseOverlay" hidden>
       <div class="card">
         <div class="title">⏸️ PAUSED</div>
         <div class="btn-row">
           <button class="big-btn" id="resumeBtn">▶ RESUME</button>
-          <button class="big-btn ghost" id="homeBtn">🏠 HOME</button>
+          <button class="big-btn ghost" id="menuBtn">📋 MENU</button>
         </div>
       </div>
     </div>
@@ -402,10 +412,10 @@ body[data-theme="gold"] #arena{background:radial-gradient(600px 300px at 50% 0%,
 <script>
 'use strict';
 /* ============================================================
-   MONSTER SMASH — v7 (English)
-   🔒 mostri sempre dentro l'arena
-   🔥 streak visibile solo in partita
-   🛍️ prezzi shop alzati • 🏠 tasto HOME nel menu di pausa
+   MONSTER SMASH — v8
+   📏 HUD stabile: nessun salto quando appare "boss in arrivo"
+   🔒 mostri sempre dentro l'arena (margini maggiori)
+   ⏸️ pausa: RESUME / MENU • 🏠 HOME nel menu
    ============================================================ */
 
 /* ---------- RNG ---------- */
@@ -571,7 +581,7 @@ const TRAP_CLICK_DMG=15, REBIRTH_HEAL=50, REBIRTH_GEMS=3, LEVEL_EVERY=18;
 const BOSS_ORDER=['boss','bossBact','bossTele'];
 const BOSS_NAME={boss:'👿 DEMON BOSS',bossBact:'🦠 MEGA BACTERIUM',bossTele:'💀 PHANTOM BOSS'};
 
-/* ---------- shop (prezzi alzati) ---------- */
+/* ---------- shop ---------- */
 const SHOP={
   default:{name:'Classic',icon:'🌌',price:0},
   ocean:{name:'Ocean',icon:'🌊',price:40},
@@ -605,10 +615,10 @@ function addDiamonds(n){totalDiamonds=Math.max(0,totalDiamonds+n);
   localStorage.setItem(DIAM_KEY,totalDiamonds);
   diamEl.textContent=totalDiamonds;startDiam.textContent=totalDiamonds;}
 
-/* 🔒 limiti arena: nessun mostro può uscire dal bordo */
+/* 🔒 limiti arena con margini di sicurezza maggiori */
 function arenaB(m){
   const s=(m&&m.size)||40;
-  const hw=s*0.55, hh=s*0.55+14; /* mezza larghezza emoji + spazio per la barretta */
+  const hw=s*0.6+2, hh=s*0.6+18;
   return {minX:hw,maxX:Math.max(hw+1,AW-hw),minY:hh,maxY:Math.max(hh+1,AH-hh)};
 }
 function clampToArena(m){
@@ -643,17 +653,27 @@ function renderHP(hit){
 function renderHUDAll(){scoreEl.textContent=0;recEl.textContent=record();lvlEl.textContent=1;
   renderHP(false);diamEl.textContent=totalDiamonds;startDiam.textContent=totalDiamonds;
   startRec.textContent=record();setCombo(0);}
-function setCombo(n){ /* 🔥 streak visibile SOLO durante la partita */
+function setCombo(n){ /* streak solo in partita, senza salti di layout */
   S.combo=n;S.comboT=n>0?3:0;
   comboChip.textContent='🔥 x'+n;
   comboChip.classList.toggle('hot',n>=5);
-  comboChip.style.display=S.running?'flex':'none';
+  comboChip.style.visibility=S.running?'visible':'hidden';
 }
 
 /* ---------- schermate ---------- */
 const SCREENS=['startScreen','rebirthScreen','overScreen','pauseOverlay'];
 function showScreen(id){for(const s of SCREENS)document.getElementById(s).hidden=(s!==id);}
 function hideScreens(){showScreen(null);}
+function toMenu(){ /* 📋 torna al menu del gioco */
+  S.running=false;S.paused=false;
+  clearMonsters();
+  comboChip.style.visibility='hidden';
+  bossChip.style.visibility='hidden';
+  document.getElementById('pauseOverlay').hidden=true;
+  document.getElementById('pauseBtn').textContent='⏸️';
+  renderHUDAll();
+  showScreen('startScreen');
+}
 
 /* ---------- effetti ---------- */
 let bannerT=null;
@@ -699,7 +719,7 @@ function damage(n,x,y){
   renderHP(true);AudioFX.hurt();
   if(x!=null)floatText(x,y,'-'+n+' HP','bad');
   if(S.hp<=0){
-    S.running=false;comboChip.style.display='none';AudioFX.over();
+    S.running=false;comboChip.style.visibility='hidden';AudioFX.over();
     if(S.score>record())localStorage.setItem(REC_KEY,S.score);
     recEl.textContent=record();clearMonsters();
     if(!S.rebirthUsed){rebirthScore.textContent=S.score;showScreen('rebirthScreen');}
@@ -723,7 +743,14 @@ function buildEl(m){
   const T=TYPES[m.type],el=document.createElement('div');
   el.className='monster '+m.type;
   const body=document.createElement('div');body.className='m-body';
-  body.textContent=T.emoji;body.style.fontSize=m.size+'px';
+  if(T.img){
+    const im=document.createElement('img');
+    im.src=T.img;im.alt='';im.draggable=false;
+    im.style.width=m.size+'px';im.style.height=m.size+'px';
+    body.appendChild(im);
+  }else{
+    body.textContent=T.emoji;body.style.fontSize=m.size+'px';
+  }
   if(m.type==='bat')body.style.animationDuration='.5s';
   if(m.type==='ghost')body.style.animationDuration='2.4s';
   el.appendChild(body);
@@ -749,13 +776,13 @@ function spawnMonster(type,o){
     maxLife:o.life!=null?o.life:T.life*levelFactor()*S.mods.life,
     vx:0,vy:0,phase:rand(0,6.28),teleT:1.2,hits:0,dead:false};
   m.life=m.maxLife;
-  /* 🔒 posizione sempre dentro i bordi */
   const b=arenaB(m);
   m.x=o.x!=null?clamp(o.x,b.minX,b.maxX):rand(b.minX,b.maxX);
   m.y=o.y!=null?clamp(o.y,b.minY,b.maxY):rand(b.minY,b.maxY);
   if(T.move){const s=T.move*(1+S.level*.03)*S.mods.speed,a=rand(0,Math.PI*2);
     m.vx=Math.cos(a)*s;m.vy=Math.sin(a)*s;}
   if(type.indexOf('boss')===0){m.hp=T.hp+S.level*2;m.maxHp=m.hp;}
+  clampToArena(m);
   buildEl(m);S.monsters.push(m);return m;
 }
 function spawnBoss(){
@@ -766,7 +793,7 @@ function spawnBoss(){
   const msg={boss:'⚠️ THE BOSS IS HERE! 👿',
     bossBact:'⚠️ MEGA BACTERIUM! 🦠 it spawns minions!',
     bossTele:'⚠️ PHANTOM BOSS! 💀 it teleports!'}[kind];
-  banner(msg,'bad');AudioFX.bossIn();shake();
+  banner(msg,'bad');AudioFX.bossIn(); /* niente shake: lo schermo resta fermo */
 }
 function scheduleBoss(){S.bossIn=rand(60,120);}
 function bossDefeated(){S.bossActive=false;S.bossKind='';scheduleBoss();S.spawnT=2;}
@@ -796,7 +823,7 @@ function spawnMinions(){
   if(!B)return;
   const n=ri(1,2);
   for(let i=0;i<n;i++){
-    spawnMonster('mini',{x:B.x+rand(-90,90),y:B.y+rand(-90,90)}); /* clamp automatico */
+    spawnMonster('mini',{x:B.x+rand(-90,90),y:B.y+rand(-90,90)});
   }
 }
 
@@ -822,7 +849,7 @@ function hitMonster(m){
     }
     return;
   }
-  if(t==='trap'){ /* 💣 BOOM */
+  if(t==='trap'){
     setCombo(0);
     removeMonster(m);
     explode(m.x,m.y);AudioFX.boom();
@@ -853,7 +880,7 @@ function killMonster(m){
   addScore(pts);floatText(x,y,'+'+pts,'pts');
   if(m.type.indexOf('boss')===0){
     AudioFX.bossDie();banner('🎉 '+(BOSS_NAME[m.type]||'BOSS')+' DEFEATED! +'+pts,'good');
-    bossDefeated();shake();
+    bossDefeated();
   }
   else AudioFX.squash();
   if(m.type==='virus'&&m.gen===0){
@@ -937,7 +964,7 @@ function newRun(mode){
   S.bossIdx=0;S.bossActive=false;S.bossKind='';scheduleBoss();
   S.rebirthUsed=false;S.runSubmitted=false;S.runId=newRunId();
   S.paused=false;document.getElementById('pauseBtn').textContent='⏸️';
-  bossChip.style.display='none';
+  bossChip.style.visibility='hidden';   /* spazio riservato, niente salti */
   renderHUDAll();hideScreens();measure();countdownGo();
   if(S.mode==='daily')setTimeout(()=>banner('📅 TODAY: '+modsDesc(S.mods),'good'),2400);
 }
@@ -947,7 +974,7 @@ function countdownGo(){
   const seq=['3','2','1','GO!'];let i=0;cdEl.textContent=seq[0];
   const iv=setInterval(()=>{i++;
     if(i>=seq.length){clearInterval(iv);cdEl.hidden=true;S.running=true;
-      comboChip.style.display='flex';return;} /* streak visibile da ora */
+      setCombo(0);return;}
     cdEl.textContent=seq[i];},650);
 }
 
@@ -972,12 +999,12 @@ function update(dt){
       S.crysT=rand(18,28);
     }
     S.bossIn-=dt;
-    bossChip.style.display='flex';
+    bossChip.style.visibility='visible';
     if(S.bossIn<=10){bossChip.textContent='👿 INCOMING!';bossChip.classList.add('urgent');}
     else{bossChip.textContent='👿 '+Math.ceil(S.bossIn)+'s';bossChip.classList.remove('urgent');}
     if(S.bossIn<=0)spawnBoss();
   }else{
-    bossChip.style.display='flex';bossChip.classList.add('urgent');
+    bossChip.style.visibility='visible';bossChip.classList.add('urgent');
     bossChip.textContent=(BOSS_NAME[S.bossKind]||'👿 BOSS')+'!';
     if(S.bossKind==='bossBact'){
       S.minionT-=dt;
@@ -995,14 +1022,13 @@ function update(dt){
     }
     if(m.vx||m.vy){
       m.x+=m.vx*dt;m.y+=m.vy*dt;
-      /* 🔒 rimbalzo esattamente sul bordo */
       const b=arenaB(m);
       if(m.x<=b.minX){m.x=b.minX;m.vx=Math.abs(m.vx);}
       else if(m.x>=b.maxX){m.x=b.maxX;m.vx=-Math.abs(m.vx);}
       if(m.y<=b.minY){m.y=b.minY;m.vy=Math.abs(m.vy);}
       else if(m.y>=b.maxY){m.y=b.maxY;m.vy=-Math.abs(m.vy);}
     }
-    clampToArena(m); /* 🔒 sicurezza extra (anche dopo resize) */
+    clampToArena(m); /* 🔒 mai fuori dal bordo, nemmeno sul fondo */
     if(m.type==='ghost'){m.phase+=dt*2.1;
       m.bodyEl.style.opacity=(0.12+0.7*(0.5+0.5*Math.sin(m.phase))).toFixed(2);}
     if(m.type==='ogre'){m.phase+=dt;const g=(m.phase%2.6)<1.3;
@@ -1019,8 +1045,10 @@ let last=performance.now();
 function loop(t){
   const dt=Math.min((t-last)/1000,.05);last=t;
   if(S.running&&!S.paused)update(dt);
+  draw();
   requestAnimationFrame(loop);
 }
+function draw(){ /* placeholder per compatibilità (non usato) */ }
 
 /* ---------- classifica ---------- */
 let lbTab='classic',lbTimer=null;
@@ -1029,7 +1057,7 @@ function fmtCountdown(){const now=new Date();const mid=new Date(now);mid.setHour
   const h=Math.floor(s/3600);s%=3600;const m=Math.floor(s/60);s%=60;
   return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');}
 function renderRows(list){
-  const medals=['🥇','🥈','🥉'];
+  const medals=['🥇','','🥉'];
   lbList.innerHTML=list.slice(0,20).map((e,i)=>
     '<div class="lb-row'+(e.me?' me':'')+'">'+
     '<span class="pos">'+(i<3?medals[i]:(i+1))+'</span>'+
@@ -1127,9 +1155,8 @@ document.getElementById('resumeBtn').addEventListener('click',()=>{
   S.paused=false;document.getElementById('pauseOverlay').hidden=true;
   document.getElementById('pauseBtn').textContent='⏸️';
 });
-document.getElementById('homeBtn').addEventListener('click',()=>{ /* 🏠 torna alla home */
-  location.href='index.html';
-});
+document.getElementById('menuBtn').addEventListener('click',toMenu);   /* 📋 pausa → menu */
+document.getElementById('homeBtn0').addEventListener('click',()=>location.href='index.html'); /* 🏠 menu → home */
 document.getElementById('muteBtn').addEventListener('click',function(){
   this.textContent=AudioFX.toggle()?'🔇':'🔊';
 });
