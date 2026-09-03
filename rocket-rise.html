@@ -32,6 +32,7 @@ body{font-family:Rubik,system-ui,sans-serif;color:#eaf6ff;overflow:hidden;user-s
 .spacer{flex:1}
 .icon-btn{background:rgba(10,20,50,.7);border:1px solid rgba(0,229,255,.3);color:#fff;border-radius:10px;
   padding:7px 11px;font-size:13px;font-weight:800;cursor:pointer;font-family:Orbitron,monospace}
+.icon-btn.off{opacity:.45}
 .diam{display:inline-block;width:12px;height:12px;background:linear-gradient(135deg,#bff4ff,#38c3ff);
   clip-path:polygon(50% 0,100% 38%,50% 100%,0 38%);box-shadow:0 0 6px rgba(124,231,255,.8)}
 
@@ -153,6 +154,7 @@ canvas{width:100%;height:100%;display:block}
     <div class="chip" id="engChip">ENGINE OFF</div>
     <div class="chip" id="offChip">FALL 10.0s</div>
     <div class="spacer"></div>
+    <button class="icon-btn" id="musBtn" title="Music">♪</button>
     <button class="icon-btn" id="muteBtn" title="Sound">SND</button>
     <button class="icon-btn" id="pauseBtn" title="Pause">❚❚</button>
   </header>
@@ -184,15 +186,14 @@ canvas{width:100%;height:100%;display:block}
         <div class="title">HOW TO PLAY</div>
         <div class="help-list">
           <div>Hold the screen or press SPACE to ignite the engine and climb fast.</div>
-          <div>Moving left or right (drag, arrow keys or A/D) also ignites the engine.</div>
+          <div>The ship drifts sideways at a fixed speed: drag or use the arrow keys / A D.</div>
           <div>With the engine off you climb slowly, but you must reignite within 10 seconds or you fall.</div>
-          <div>Flammable zones: cross them with the engine OFF and without moving. Asteroids never enter them.</div>
-          <div>Asteroid storms: dodge by dragging or with the arrow keys. They get faster and more frequent as you climb.</div>
-          <div>Alien ships appear higher up and shoot: they keep hunting you even after their zone, until they fly away.</div>
+          <div>Hazards unlock as you climb: asteroids first, then flammable zones, maintenance, black holes and alien ships.</div>
+          <div>Flammable zones: cross them with the engine OFF and without moving. Asteroids and enemy shots never reach them.</div>
+          <div>Alien ships fire a couple of shots and then fly away sideways.</div>
           <div>Black holes are huge and pull you in when the engine is OFF. Keep the engine on to pass them.</div>
-          <div>Maintenance zones (wrench sign): complete the repair task in time - wipe, cables, leak or valve.</div>
-          <div>Crystals are collected by touching them and are saved forever. Spend them in the shop to unlock new rockets.</div>
-          <div>Boosters give a short turbo and make you invincible for a couple of seconds.</div>
+          <div>Maintenance zones (wrench sign): finish the repair in time - wipe, cables, leak or valve.</div>
+          <div>Crystals are saved forever; spend them in the shop for new rockets. Boosters give turbo + invincibility.</div>
         </div>
         <div class="btn-row">
           <button class="big-btn" id="backHelpBtn">BACK</button>
@@ -219,7 +220,6 @@ canvas{width:100%;height:100%;display:block}
       </div>
     </div>
 
-    <!-- PAUSA: solo RESUME e MENU (HOME resta solo nel menu) -->
     <div class="screen" id="pauseOverlay" hidden>
       <div class="card">
         <div class="title">PAUSED</div>
@@ -268,13 +268,12 @@ canvas{width:100%;height:100%;display:block}
 <script>
 'use strict';
 /* ============================================================
-   ROCKET RISE — v6
-   - UFO persistenti: restano anche fuori dalla zona, poi volano via
-   - niente scritte in mezzo allo spazio (solo banner in alto)
-   - cavi più facili (3, nodi grandi) + nuova task VALVE
-   - segno guasti = CHIAVE INGLESE (manutenzione)
-   - buchi neri MOLTO più grandi e pericolosi
-   - HOME solo nel menu
+   ROCKET RISE — v7
+   - UFO: 2-3 colpi poi volano VIA DI LATO
+   - i colpi UFO si bruciano prima di entrare nel fuoco
+   - difficoltà GRADUALE (pericoli sbloccati a quote)
+   - movimento laterale a VELOCITÀ FISSA (niente teletrasporto)
+   - motore più morbido + MUSICHETTA chiptune (toggle ♪)
    ============================================================ */
 const $=id=>document.getElementById(id);
 const rand=(a,b)=>a+Math.random()*(b-a);
@@ -289,8 +288,10 @@ function resize(){W=cv.width=cv.clientWidth;H=cv.height=cv.clientHeight;rocketY=
 window.addEventListener('resize',resize);
 
 /* ---------- audio ---------- */
+let musicOn=localStorage.getItem('rr_music')!=='0';
 const AudioFX=(()=>{
-  let c=null,muted=localStorage.getItem('rr_muted')==='1',engOsc=null,engGain=null;
+  let c=null,muted=localStorage.getItem('rr_muted')==='1';
+  let engOsc=null,engOsc2=null,engGain=null;
   function ac(){if(!c)c=new (window.AudioContext||window.webkitAudioContext)();return c;}
   function beep(o){if(muted)return;try{const a=ac(),t=a.currentTime+(o.delay||0),os=a.createOscillator(),g=a.createGain();
     os.type=o.type||'square';os.frequency.setValueAtTime(o.f,t);
@@ -299,18 +300,27 @@ const AudioFX=(()=>{
     os.connect(g).connect(a.destination);os.start(t);os.stop(t+o.dur+.02);}catch(e){}}
   return{
     get muted(){return muted;},
+    ctx:ac,
     unlock(){try{const a=ac();if(a.state==='suspended')a.resume();}catch(e){}},
-    toggle(){muted=!muted;localStorage.setItem('rr_muted',muted?'1':'0');if(muted)this.engine(false);return muted;},
+    toggle(){muted=!muted;localStorage.setItem('sm_muted',muted?'1':'0');localStorage.setItem('rr_muted',muted?'1':'0');
+      if(muted)this.engine(false);return muted;},
+    /* motore MORBIDO: triangle+sine attraverso low-pass */
     engine(on){if(muted)on=false;try{const a=ac();
-      if(on&&!engOsc){engOsc=a.createOscillator();engGain=a.createGain();engOsc.type='sawtooth';
-        engOsc.frequency.value=70;engGain.gain.value=0;engOsc.connect(engGain).connect(a.destination);engOsc.start();}
-      if(engGain)engGain.gain.linearRampToValueAtTime(on?.05:0,a.currentTime+.12);}catch(e){}},
+      if(!engOsc){
+        engOsc=a.createOscillator();engOsc.type='triangle';engOsc.frequency.value=52;
+        engOsc2=a.createOscillator();engOsc2.type='sine';engOsc2.frequency.value=104;
+        engGain=a.createGain();engGain.gain.value=0;
+        const flt=a.createBiquadFilter();flt.type='lowpass';flt.frequency.value=240;
+        engOsc.connect(flt);engOsc2.connect(flt);flt.connect(engGain);engGain.connect(a.destination);
+        engOsc.start();engOsc2.start();
+      }
+      if(engGain)engGain.gain.linearRampToValueAtTime(on?.04:0,a.currentTime+.15);}catch(e){}},
     warn(){beep({f:600,f2:200,dur:.12,vol:.12});},
     boom(){beep({f:90,f2:25,type:'sawtooth',dur:.5,vol:.28});},
     fix(){[659,784,1046].forEach((f,i)=>beep({f,type:'sine',dur:.1,vol:.12,delay:i*.08}));},
     tap(){beep({f:300,f2:150,dur:.06,vol:.1});},
     zone(){beep({f:500,f2:900,type:'sine',dur:.15,vol:.1});},
-    zap(){beep({f:900,f2:250,type:'sawtooth',dur:.12,vol:.1});},
+    zap(){beep({f:900,f2:250,type:'sawtooth',dur:.12,vol:.08});},
     hole(){beep({f:200,f2:50,type:'sine',dur:.4,vol:.14});},
     gem(){beep({f:1046,f2:1760,type:'sine',dur:.12,vol:.12});},
     buy(){[784,988,1318].forEach((f,i)=>beep({f,type:'sine',dur:.1,vol:.12,delay:i*.07}));},
@@ -319,9 +329,38 @@ const AudioFX=(()=>{
   };
 })();
 
+/* ---------- musichetta chiptune ---------- */
+const Music=(()=>{
+  let timer=null,step=0,nextT=0;
+  const MEL=[0,3,5,7,10,7,5,3, 0,3,5,7,12,10,7,5];
+  const BASS=[0,0,0,0,-4,-4,-4,-4,-3,-3,-3,-3,-5,-5,-2,-2];
+  const BASE=220;
+  function note(f,t,dur,vol,type){
+    if(AudioFX.muted||!musicOn)return;
+    try{const c=AudioFX.ctx(),o=c.createOscillator(),g=c.createGain();
+      o.type=type;o.frequency.value=f;
+      g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol,t+.02);
+      g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+      o.connect(g).connect(c.destination);o.start(t);o.stop(t+dur+.05);}catch(e){}}
+  function tick(){
+    try{const c=AudioFX.ctx();
+      if(c.state==='suspended')return;
+      if(nextT<c.currentTime)nextT=c.currentTime+.05;
+      while(nextT<c.currentTime+.25){
+        const m=MEL[step%16],b=BASS[step%16];
+        note(BASE*Math.pow(2,m/12),nextT,.24,.035,'triangle');
+        if(step%2===0)note((BASE/2)*Math.pow(2,b/12),nextT,.4,.05,'sine');
+        step++;nextT+=.22;
+      }
+    }catch(e){}
+  }
+  return{start(){if(timer)return;nextT=0;timer=setInterval(tick,120);}};
+})();
+
 /* ---------- stato ---------- */
 const PPM=4,MAXSPD=85,BOOSTSPD=190,ACC=35,COAST=10,OFF_LIMIT=10,REPAIR_TIME=10;
-const HOLE_R=260,HOLE_KILL=40; /* buchi neri enormi */
+const HOLE_R=260,HOLE_KILL=40;
+const LAT=280; /* velocità laterale fissa */
 const REC_KEY='rr_record',CRYS_KEY='rr_crystals',RSHOP_KEY='rr_shop';
 function record(){return +localStorage.getItem(REC_KEY)||0;}
 let totalCrys=+localStorage.getItem(CRYS_KEY)||0;
@@ -374,24 +413,25 @@ const SCREENS=['startScreen','overScreen','pauseOverlay','helpScreen'];
 function showScreen(id){for(const s of SCREENS)$(s).hidden=(s!==id);}
 function hideScreens(){showScreen(null);}
 
-/* ---------- zone ---------- */
+/* ---------- zone (difficoltà GRADUALE) ---------- */
 function genZones(){
   while(S.nextZone<S.alt+H/PPM+150){
-    const d=clamp(S.nextZone/4000,0,1);
-    let type;
-    if(S.nextZone<400){type=Math.random()<.5?'fire':'fault';}
-    else{
-      const r=Math.random(),mW=.18+.30*d;
-      const uW=S.nextZone>1200? .16+.14*d : 0;
-      if(r<.36)type='fire';
-      else if(r<.36+mW)type='meteor';
-      else if(r<.36+mW+uW)type='ufo';
-      else type='fault';
-    }
+    const a=S.nextZone;
+    if(a<250){S.nextZone+=rand(70,110);continue;}          /* partenza tranquilla */
+    const d=clamp(a/4000,0,1);
+    const pool=[['meteor',.55]];                            /* prima solo asteroidi */
+    if(a>600)pool.push(['fire',.30]);                       /* poi il fuoco */
+    if(a>900)pool.push(['fault',.22]);                      /* poi la manutenzione */
+    if(a>1200)pool.push(['ufo',.16+.12*d]);                 /* poi gli alieni */
+    let tot=0;for(const x of pool)tot+=x[1];
+    let r=Math.random()*tot,type='meteor';
+    for(const[t,w]of pool){r-=w;if(r<=0){type=t;break;}}
     const len=type==='fire'?rand(35,70):type==='meteor'?rand(70,120)*(1+.3*d)
       :type==='ufo'?rand(50,90):12;
-    S.zones.push({type,start:S.nextZone,end:S.nextZone+len,triggered:false,warned:false,spawned:false});
-    S.nextZone+=len+rand(80,150)*(1-.3*d);
+    S.zones.push({type,start:a,end:a+len,triggered:false,warned:false,spawned:false});
+    let gap=rand(80,150)*(1-.3*d);
+    if(a<800)gap*=1.5;                                      /* più respiro all'inizio */
+    S.nextZone=a+len+gap;
   }
   S.zones=S.zones.filter(z=>z.end>S.alt-60);
 }
@@ -425,7 +465,6 @@ function buildWipe(){
     if(prog>=1)repairDone();});
   p.addEventListener('pointerup',()=>down=false);
 }
-/* CAVI PIÙ FACILI: 3 cavi, nodi grandi, aggancio generoso */
 function buildCables(){
   $('repBody').innerHTML='<div class="rep-hint">Drag each cable to the matching color!</div><canvas id="cabC" width="300" height="210"></canvas>';
   const c=$('cabC'),x=c.getContext('2d');
@@ -462,7 +501,6 @@ function buildBolts(){
   leak.addEventListener('pointerdown',e=>{e.stopPropagation();hits++;$('hitCt').textContent=hits;AudioFX.tap();
     if(hits>=5)repairDone();else move();});
 }
-/* NUOVA TASK: valvola a tempo */
 function buildValve(){
   $('repBody').innerHTML='<div class="rep-hint">Tap when the needle is in the green area! (<b id="valCt">0</b>/3)</div><canvas id="valC" width="300" height="170"></canvas>';
   const c=$('valC'),x=c.getContext('2d');
@@ -532,6 +570,7 @@ function newRun(){
   S.repair=null;S.repT=0;S.boost=0;S.shield=0;S.rebirthUsed=false;S.lastBeep=0;
   $('repairOverlay').hidden=true;$('pauseBtn').textContent='❚❚';
   hideScreens();
+  Music.start();
   setTimeout(()=>banner('HOLD / SPACE / MOVE = ENGINE ON','good'),2300);
   const seq=['3','2','1','LIFT-OFF!'];let i=0;$('countdown').hidden=false;$('countdown').textContent=seq[0];
   const iv=setInterval(()=>{i++;
@@ -576,7 +615,7 @@ function update(dt){
     $('repTime').textContent=Math.max(0,S.repT).toFixed(1)+'s';
     if(S.repT<=0){die('fall','Repair failed - the rocket broke down!');return;}
   }
-  /* asteroidi mai nelle zone infiammabili */
+  /* asteroidi mai nel fuoco */
   S.meteors=S.meteors.filter(m=>!inFireBand(m.a,20));
   const d=clamp(S.alt/4000,0,1);
   const mz=S.zones.find(z=>z.type==='meteor'&&z.end>S.alt-20&&z.start<S.alt+H/PPM);
@@ -591,37 +630,46 @@ function update(dt){
     if(m.x<-70||m.x>W+70||y>H+80){S.meteors.splice(S.meteors.indexOf(m),1);continue;}
     if(!S.repair&&S.boost<=0&&Math.abs(m.x-S.rx)<26&&Math.abs(y-rocketY)<28){
       die('meteor','Smashed by an asteroid!');return;}}
-  /* UFO: spawn nella zona ma PERSISTENTI (globali) */
+  /* UFO: spawn in zona, poi globali; 2-3 colpi e via DI LATO */
   if(zone&&zone.type==='ufo'&&!zone.spawned&&S.ufos.length<3){
     zone.spawned=true;
     const n=S.alt>2500?2:1;
     for(let i=0;i<n;i++)S.ufos.push({t:rand(0,6),ph:rand(0,6.28),amp:W*.26+rand(0,W*.1),
-      spd:.8+rand(0,.6),fireT:rand(.6,1.4),x:W/2,y:H*.2,life:rand(12,18),leave:false});
+      spd:.8+rand(0,.6),fireT:rand(.5,1),x:W/2,y:H*.2,life:rand(10,14),leave:false,exit:null,
+      exitDir:Math.random()<.5?-1:1,shots:2+ri(0,1)});
   }
   for(const u of [...S.ufos]){
     u.t+=dt;
-    if(u.leave){u.y-=150*dt;if(u.y<-60){S.ufos.splice(S.ufos.indexOf(u),1);continue;}}
-    else{
+    if(u.leave){
+      if(u.exit==='side'){u.x+=u.exitDir*280*dt;u.y-=20*dt;
+        if(u.x<-70||u.x>W+70){S.ufos.splice(S.ufos.indexOf(u),1);continue;}}
+      else{u.y-=150*dt;if(u.y<-60){S.ufos.splice(S.ufos.indexOf(u),1);continue;}}
+    }else{
       u.life-=dt;
-      if(u.life<=0){u.leave=true;continue;}
+      if(u.life<=0){u.leave=true;u.exit='up';continue;}
       u.x=W/2+Math.sin(u.t*u.spd+u.ph)*u.amp;
       u.y=H*.2+Math.sin(u.t*1.7+u.ph)*10;
       u.fireT-=dt;
-      if(u.fireT<=0&&!S.repair){
-        u.fireT=Math.max(.7,rand(1.1,1.9)-d*.4);
+      if(u.fireT<=0&&!S.repair&&!inFire&&u.shots>0){
+        u.shots--;
+        u.fireT=rand(.8,1.3);
         const dx=S.rx-u.x,dy=rocketY-u.y,L=Math.hypot(dx,dy)||1,sp=240+d*160;
         S.shots.push({x:u.x,y:u.y+10,vx:dx/L*sp,vy:dy/L*sp});
         AudioFX.zap();
+        if(u.shots<=0){u.leave=true;u.exit='side';}
       }
     }
   }
+  /* colpi: si bruciano prima di entrare nel fuoco */
   for(const s of [...S.shots]){
     s.x+=s.vx*dt;s.y+=s.vy*dt;
+    const sa=S.alt+(rocketY-s.y)/PPM;
+    if(inFireBand(sa,4)){S.shots.splice(S.shots.indexOf(s),1);continue;}
     if(s.y>H+40||s.x<-40||s.x>W+40){S.shots.splice(S.shots.indexOf(s),1);continue;}
-    if(!S.repair&&S.boost<=0&&Math.hypot(s.x-S.rx,s.y-rocketY)<22){
+    if(!S.repair&&S.boost<=0&&!inFire&&Math.hypot(s.x-S.rx,s.y-rocketY)<22){
       die('ufo','Shot down by an alien ship!');return;}}
-  /* BUCHI NERI GIGANTI */
-  if(S.alt>800){S.holeT-=dt;
+  /* buchi neri (da 1200m) */
+  if(S.alt>1200){S.holeT-=dt;
     if(S.holeT<=0){S.holeT=rand(8,13);
       const a=S.alt+(rocketY+60)/PPM;
       if(!inFireBand(a,120))S.holes.push({x:rand(60,W-60),a,rot:rand(0,6),warned:false});}}
@@ -630,7 +678,7 @@ function update(dt){
     if(hy>H+160){S.holes.splice(S.holes.indexOf(h),1);continue;}
     if(!h.warned&&hy>-60){h.warned=true;banner('BLACK HOLE - KEEP ENGINE ON!','bad');AudioFX.hole();}
     h.rot+=dt*2;
-    h.x+=clamp(S.rx-h.x,-18,18)*dt;   /* lento inseguimento */
+    h.x+=clamp(S.rx-h.x,-18,18)*dt;
     const dx=h.x-S.rx,dy=hy-rocketY,dist=Math.hypot(dx,dy);
     const canPull=!S.engineOn&&S.boost<=0&&!S.repair&&!inFire;
     if(canPull&&dist<HOLE_R&&dist>1){
@@ -655,11 +703,13 @@ function update(dt){
       else{S.boost=2.6;floatTxt('BOOST!',S.rx,rocketY-46,'#ffd54a');AudioFX.boost();}
     }
   }
-  if(keys.ArrowLeft||keys.KeyA)S.rx-=250*dt;
-  if(keys.ArrowRight||keys.KeyD)S.rx+=250*dt;
-  if(targetX!=null)S.rx+=(targetX-S.rx)*Math.min(1,dt*7);
-  S.rx=clamp(S.rx,26,W-26);
-  S.tilt+=(((keys.ArrowLeft||keys.KeyA)?-.18:(keys.ArrowRight||keys.KeyD)?.18:0)-S.tilt)*Math.min(1,dt*8);
+  /* movimento laterale a VELOCITÀ FISSA */
+  let dir=0;
+  if(keys.ArrowLeft||keys.KeyA)dir=-1;
+  else if(keys.ArrowRight||keys.KeyD)dir=1;
+  else if(targetX!=null&&Math.abs(targetX-S.rx)>4)dir=targetX>S.rx?1:-1;
+  S.rx=clamp(S.rx+dir*LAT*dt,26,W-26);
+  S.tilt+=(dir*.18-S.tilt)*Math.min(1,dt*8);
   S.alt+=S.spd*dt;
   S.shield=Math.max(0,S.shield-dt);
   for(const st of S.stars){st.y+=S.spd*PPM*dt*st.z;if(st.y>H){st.y-=H;st.x=Math.random()*W;}}
@@ -744,7 +794,7 @@ function drawUFO(u){
   ctx.beginPath();ctx.ellipse(x,y,20,7.5,0,0,7);ctx.fill();
   for(let i=-1;i<=1;i++){ctx.fillStyle=(Math.floor(u.t*4)+i+4)%2?'#ffd54a':'#ff2fd6';
     ctx.beginPath();ctx.arc(x+i*10,y+2,2.2,0,7);ctx.fill();}
-  if(!u.leave&&u.fireT<.3){ctx.fillStyle='rgba(255,47,214,.5)';ctx.beginPath();ctx.arc(x,y+9,5,0,7);ctx.fill();}
+  if(!u.leave&&u.fireT<.3&&u.shots>0){ctx.fillStyle='rgba(255,47,214,.5)';ctx.beginPath();ctx.arc(x,y+9,5,0,7);ctx.fill();}
   ctx.restore();
 }
 function drawShot(s){
@@ -755,7 +805,6 @@ function drawShot(s){
   ctx.beginPath();ctx.arc(s.x,s.y,4,0,7);ctx.fill();
   ctx.restore();
 }
-/* BUCHI NERI GIGANTI */
 function drawHole(x,y,rot){
   ctx.save();ctx.translate(x,y);
   const g=ctx.createRadialGradient(0,0,8,0,0,90);
@@ -770,7 +819,6 @@ function drawHole(x,y,rot){
   ctx.strokeStyle='rgba(255,255,255,.3)';ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,0,26,0,7);ctx.stroke();
   ctx.restore();
 }
-/* CHIAVE INGLESE = segno manutenzione */
 function drawWrench(x,y,s,rot){
   ctx.save();ctx.translate(x,y);ctx.rotate(rot);
   ctx.strokeStyle='rgba(255,213,74,.9)';
@@ -813,7 +861,6 @@ function draw(){
     for(const st of S.stars){ctx.globalAlpha=sa*st.z;ctx.beginPath();ctx.arc(st.x,st.y,st.r,0,7);ctx.fill();}
     ctx.globalAlpha=1;}
   ctx.textAlign='center';ctx.textBaseline='middle';
-  /* zone: solo tinte e icone, NIENTE scritte in mezzo allo spazio */
   for(const z of S.zones){
     const y1=rocketY-(z.end-S.alt)*PPM,y2=rocketY-(z.start-S.alt)*PPM;
     if(y2<-80||y1>H+80)continue;
@@ -925,8 +972,8 @@ function equipSkin(id){
 }
 
 /* ---------- pulsanti ---------- */
-$('playBtn').addEventListener('click',()=>{AudioFX.unlock();newRun();});
-$('retryBtn').addEventListener('click',()=>{AudioFX.unlock();newRun();});
+$('playBtn').addEventListener('click',()=>{AudioFX.unlock();Music.start();newRun();});
+$('retryBtn').addEventListener('click',()=>{AudioFX.unlock();Music.start();newRun();});
 $('howBtn').addEventListener('click',()=>showScreen('helpScreen'));
 $('backHelpBtn').addEventListener('click',()=>showScreen('startScreen'));
 $('shopBtnR').addEventListener('click',openShop);
@@ -946,8 +993,13 @@ $('pauseBtn').addEventListener('click',()=>{
 $('resumeBtn').addEventListener('click',()=>{S.paused=false;$('pauseOverlay').hidden=true;$('pauseBtn').textContent='❚❚';});
 $('menuBtn0').addEventListener('click',toMenu);
 $('menuBtn1').addEventListener('click',toMenu);
-$('homeBtn0').addEventListener('click',()=>location.href='index.html'); /* HOME solo nel menu */
+$('homeBtn0').addEventListener('click',()=>location.href='index.html');
 $('muteBtn').addEventListener('click',function(){this.textContent=AudioFX.toggle()?'MUT':'SND';});
+$('musBtn').addEventListener('click',function(){
+  musicOn=!musicOn;localStorage.setItem('rr_music',musicOn?'1':'0');
+  this.textContent=musicOn?'♪':'✕';this.classList.toggle('off',!musicOn);
+  if(musicOn)Music.start();
+});
 document.addEventListener('pointerdown',()=>AudioFX.unlock(),{once:true});
 
 /* fix zoom mobile */
@@ -957,6 +1009,7 @@ document.addEventListener('dblclick',e=>e.preventDefault());
 
 /* boot */
 if(AudioFX.muted)$('muteBtn').textContent='MUT';
+if(!musicOn){$('musBtn').textContent='✕';$('musBtn').classList.add('off');}
 resize();$('startBest').textContent=record();$('bestEl').textContent=record();refreshCrys();
 requestAnimationFrame(loop);
 </script>
