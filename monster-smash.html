@@ -22,7 +22,7 @@ body{
     radial-gradient(820px 520px at 110% 115%, rgba(0,229,255,.16), transparent 60%),
     linear-gradient(165deg,#160a2e 0%,#0d1b36 100%);
 }
-#app{height:100dvh;display:flex;flex-direction:column;padding:10px;gap:8px}
+#app{height:100dvh;display:flex;flex-direction:column;padding:8px;gap:6px}
 
 /* ---------- HUD ---------- */
 #hud{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
@@ -44,10 +44,8 @@ body{
 @keyframes dmgFlash{0%{box-shadow:0 0 0 2px #ff4d6d,0 0 20px rgba(255,77,109,.9);transform:scale(1.06)}100%{}}
 #hpChip.low .hpbar i{animation:pulse .7s infinite}
 @keyframes pulse{50%{opacity:.55}}
-/* streak: visibile solo in partita (visibility = niente salti di layout) */
 #comboChip{visibility:hidden;background:rgba(255,120,60,.16);border-color:rgba(255,150,80,.5);color:#ffc07c;font-weight:800}
 #comboChip.hot{background:rgba(255,120,60,.4);box-shadow:0 0 14px rgba(255,140,60,.5)}
-/* boss chip: spazio RISERVATO + larghezza fissa = lo schermo non si sposta */
 #bossChip{visibility:hidden;min-width:118px;justify-content:center;text-align:center;
   color:#ffb3c1;border-color:rgba(255,90,120,.45);font-weight:700}
 #bossChip.urgent{animation:pulse .7s infinite}
@@ -164,21 +162,28 @@ body[data-theme="gold"] #arena{background:radial-gradient(600px 300px at 50% 0%,
 
 /* ---------- SCHERMATE ---------- */
 .screen{position:absolute;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;
-  background:rgba(8,4,20,.74);backdrop-filter:blur(6px);padding:14px}
+  background:rgba(8,4,20,.74);backdrop-filter:blur(6px);padding:10px}
 .card{background:linear-gradient(170deg,rgba(60,30,110,.6),rgba(15,25,55,.7));
-  border:1px solid rgba(255,255,255,.16);border-radius:22px;padding:18px;max-width:600px;width:100%;
-  text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.5);max-height:100%;overflow:auto}
-.cover{width:100%;max-width:320px;border-radius:14px;margin:4px auto 12px;display:block;box-shadow:0 10px 30px rgba(0,0,0,.5)}
-.title{font-family:'Press Start 2P',monospace;font-size:clamp(14px,4vw,21px);color:#fff;
-  text-shadow:0 0 18px rgba(124,77,255,.9);margin-bottom:8px}
-.subtitle{opacity:.85;font-size:13px;margin-bottom:12px;line-height:1.55}
-.legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:6px;margin:12px 0;text-align:left}
-.legend div{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:10px;
-  padding:6px 8px;font-size:11.5px;line-height:1.3}
-.legend div.warn{background:rgba(255,77,109,.12);border-color:rgba(255,77,109,.45)}
-.legend div.good{background:rgba(57,255,136,.08);border-color:rgba(57,255,136,.35)}
-.legend .lv{opacity:.55;font-size:10px}
-.btn-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:10px}
+  border:1px solid rgba(255,255,255,.16);border-radius:22px;padding:14px;max-width:600px;width:100%;
+  text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.5);max-height:100%;overflow:hidden;
+  display:flex;flex-direction:column;gap:4px}
+.cover{width:110px;border-radius:12px;margin:0 auto 2px;display:block;box-shadow:0 8px 24px rgba(0,0,0,.5);flex:none}
+.title{font-family:'Press Start 2P',monospace;font-size:clamp(13px,3.6vw,19px);color:#fff;
+  text-shadow:0 0 18px rgba(124,77,255,.9);margin-bottom:2px}
+.subtitle{opacity:.85;font-size:12.5px;margin-bottom:4px;line-height:1.45}
+
+.btn-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:2px 0}
+.btn-grid.small{grid-template-columns:1fr 1fr}
+.sec-btn{font-weight:800;font-size:12px;padding:10px 8px;border-radius:12px;border:1px solid rgba(255,255,255,.28);
+  background:rgba(255,255,255,.10);color:#fff;cursor:pointer;transition:.15s;letter-spacing:.3px}
+.sec-btn:hover{background:rgba(255,255,255,.2)}
+.sec-btn.wide{grid-column:span 2}
+.stats-line{font-size:12px;opacity:.95;margin:2px 0 4px}
+.stats-line b{color:#ffd54a}
+.card-scroll{flex:1;min-height:0;overflow:auto;padding-right:4px;-webkit-overflow-scrolling:touch}
+.card-scroll::-webkit-scrollbar{width:6px}
+.card-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,.2);border-radius:3px}
+
 .big-btn{font-family:'Press Start 2P',monospace;font-size:13px;padding:14px 22px;border-radius:14px;
   border:none;cursor:pointer;color:#08121f;background:linear-gradient(180deg,#5dff9d,#19c96d);
   box-shadow:0 6px 0 #0d8a49,0 10px 24px rgba(25,201,109,.35);transition:transform .06s}
@@ -190,6 +195,15 @@ body[data-theme="gold"] #arena{background:radial-gradient(600px 300px at 50% 0%,
 .big-btn.daily:active{box-shadow:0 3px 0 #1b5d97}
 .big-btn.ghost{background:transparent;border:2px solid rgba(255,255,255,.35);color:#fff;box-shadow:none}
 .link-btn{background:none;border:none;color:#9fb4ff;text-decoration:underline;cursor:pointer;font-size:13px;margin-top:10px}
+
+.legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:5px;margin:6px 0;text-align:left}
+.legend div{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:9px;
+  padding:5px 7px;font-size:10.5px;line-height:1.3}
+.legend div.warn{background:rgba(255,77,109,.12);border-color:rgba(255,77,109,.45)}
+.legend div.good{background:rgba(57,255,136,.08);border-color:rgba(57,255,136,.35)}
+.legend .lv{opacity:.55;font-size:10px}
+.lb-note{font-size:10.5px;opacity:.55;margin-top:8px;line-height:1.5}
+
 .final-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}
 .final-grid div{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:12px;
   padding:9px 4px;display:flex;flex-direction:column;gap:3px}
@@ -228,7 +242,6 @@ body[data-theme="gold"] #arena{background:radial-gradient(600px 300px at 50% 0%,
 .lb-row .lvl{font-size:11px;opacity:.55}
 .lb-row b{font-variant-numeric:tabular-nums}
 .lb-row.me{border-color:#ffd54a;background:rgba(255,213,74,.1);box-shadow:0 0 14px rgba(255,213,74,.15)}
-.lb-note{font-size:10.5px;opacity:.55;margin-top:10px;line-height:1.55}
 .spinner{margin:30px auto;width:28px;height:28px;border:3px solid rgba(255,255,255,.2);
   border-top-color:#ffd54a;border-radius:50%;animation:spin .7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -245,9 +258,20 @@ body[data-theme="gold"] #arena{background:radial-gradient(600px 300px at 50% 0%,
 .shop-btn.equip{background:linear-gradient(180deg,#5dff9d,#19c96d);color:#08121f}
 .shop-btn.eq{background:transparent;border:1px solid #ffd54a;color:#ffd54a;cursor:default}
 
-/* ---------- AD ---------- */
-#adbar{border-radius:12px;border:1px dashed rgba(255,255,255,.25);background:rgba(255,255,255,.04);
-  text-align:center;padding:8px;font-size:11.5px;opacity:.75; min-height: 60px;}
+/* ---------- AD (meno invasivo e adattivo) ---------- */
+#adbar{border-radius:10px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.03);
+  text-align:center;padding:3px 6px;font-size:11px;opacity:.9;height:56px;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;flex:none}
+#adbar ins.adsbygoogle{display:block;width:100%;max-height:50px;margin:0 auto}
+@media(min-width:768px){
+  #adbar{height:96px}
+  #adbar ins.adsbygoogle{max-height:90px}
+}
+@media (max-height:640px){
+  .cover{display:none}
+  .title{margin-bottom:0}
+  .subtitle{font-size:11px;margin-bottom:2px}
+}
 #adOverlay{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.92);display:flex;
   align-items:center;justify-content:center;padding:16px}
 .ad-card{max-width:380px;width:100%;background:#1c1330;border:1px solid rgba(255,255,255,.2);
@@ -288,32 +312,37 @@ body[data-theme="gold"] #arena{background:radial-gradient(600px 300px at 50% 0%,
         <img class="cover" src="cover-monsters.jpg" alt="Monster Smash">
         <div class="title">👾 MONSTER SMASH</div>
         <div class="subtitle">Squash them before their timer runs out:<br><b>every monster that vanishes costs you HP!</b></div>
-        <div class="btn-row">
+
+        <div class="btn-grid">
           <button class="big-btn" id="playBtn">▶ PLAY</button>
           <button class="big-btn daily" id="dailyBtn">📅 DAILY</button>
         </div>
-        <div class="btn-row">
-          <button class="big-btn alt" id="playLbBtn">🏆 LEADERBOARD</button>
-          <button class="big-btn ghost" id="playShopBtn">🛍️ SHOP</button>
-          <button class="big-btn ghost" id="homeBtn0">🏠 HOME</button>
+        <div class="btn-grid small">
+          <button class="sec-btn" id="playLbBtn">🏆 LEADERBOARD</button>
+          <button class="sec-btn" id="playShopBtn">🛍️ SHOP</button>
+          <button class="sec-btn wide" id="homeBtn0">🏠 HOME</button>
         </div>
-        <div class="subtitle" style="margin-top:12px">🏅 Best: <b id="startRec">0</b> &nbsp;•&nbsp; 💎 Gems: <b id="startDiam">0</b></div>
-        <div class="legend">
-          <div>👾 <b>Normal</b> — 1 hit</div>
-          <div>🦇 <b>Bat</b> — fast!</div>
-          <div>👻 <b>Ghost</b> <span class="lv">Lv.2</span> — almost invisible</div>
-          <div>💣 <b>Bomb</b> <span class="lv">Lv.2</span> — DON'T touch: BOOM!</div>
-          <div>🧟 <b>Zombie</b> <span class="lv">Lv.3</span> — 3 hits</div>
-          <div>🦠 <b>Virus</b> <span class="lv">Lv.4</span> — splits once</div>
-          <div>👽 <b>Alien</b> <span class="lv">Lv.4</span> — teleports!</div>
-          <div>👹 <b>Ogre</b> <span class="lv">Lv.5</span> — only when GREEN!</div>
-          <div class="good">🔮 <b>Crystal</b> — 8 hits → +10 HP</div>
-          <div class="good">💎 <b>Gems</b> — tap them! (buy backgrounds 🛍️)</div>
-          <div>👿💀 <b>3 BOSSES rotate</b> — every 1–2 minutes</div>
-          <div class="warn">⚠️ <b>Escape damage</b>: 👾🦇 -5 • 👻🧟👹👽 -10 • 👿 -30</div>
+
+        <div class="stats-line">🏅 Best: <b id="startRec">0</b> &nbsp;•&nbsp; 💎 Gems: <b id="startDiam">0</b></div>
+
+        <div class="card-scroll">
+          <div class="legend">
+            <div>👾 <b>Normal</b> — 1 hit</div>
+            <div>🦇 <b>Bat</b> — fast!</div>
+            <div>👻 <b>Ghost</b> <span class="lv">Lv.2</span> — almost invisible</div>
+            <div>💣 <b>Bomb</b> <span class="lv">Lv.2</span> — DON'T touch: BOOM!</div>
+            <div>🧟 <b>Zombie</b> <span class="lv">Lv.3</span> — 3 hits</div>
+            <div>🦠 <b>Virus</b> <span class="lv">Lv.4</span> — splits once</div>
+            <div>👽 <b>Alien</b> <span class="lv">Lv.4</span> — teleports!</div>
+            <div>👹 <b>Ogre</b> <span class="lv">Lv.5</span> — only when GREEN!</div>
+            <div class="good">🔮 <b>Crystal</b> — 8 hits → +10 HP</div>
+            <div class="good">💎 <b>Gems</b> — tap them! (buy backgrounds 🛍️)</div>
+            <div>👿💀 <b>3 BOSSES rotate</b> — every 1–2 minutes</div>
+            <div class="warn">⚠️ <b>Escape damage</b>: 👾🦇 -5 • 👻🧟👹👽 -10 • 👿 -30</div>
+          </div>
+          <p class="lb-note">📅 The daily challenge is the same for everyone and resets at midnight!<br>
+          💾 All your data (gems, backgrounds, records, leaderboards) is saved on this device.</p>
         </div>
-        <p class="lb-note">📅 The daily challenge is the same for everyone and resets at midnight!<br>
-        💾 All your data (gems, backgrounds, records, leaderboards) is saved on this device.</p>
       </div>
     </div>
 
@@ -341,9 +370,9 @@ body[data-theme="gold"] #arena{background:radial-gradient(600px 300px at 50% 0%,
           <button class="big-btn alt" id="submitBtn">📤 SAVE</button>
         </div>
         <div class="lb-status" id="lbStatus"></div>
-        <div class="btn-row">
-          <button class="big-btn" id="retryBtn">🔄 RETRY</button>
-          <button class="big-btn ghost" id="overLbBtn">🏆 LEADERBOARD</button>
+        <div class="btn-grid small" style="margin-top:8px">
+          <button class="sec-btn" id="retryBtn">🔄 RETRY</button>
+          <button class="sec-btn" id="overLbBtn">🏆 LEADERBOARD</button>
         </div>
       </div>
     </div>
@@ -352,9 +381,9 @@ body[data-theme="gold"] #arena{background:radial-gradient(600px 300px at 50% 0%,
     <div class="screen" id="pauseOverlay" hidden>
       <div class="card">
         <div class="title">⏸️ PAUSED</div>
-        <div class="btn-row">
+        <div class="btn-grid">
           <button class="big-btn" id="resumeBtn">▶ RESUME</button>
-          <button class="big-btn ghost" id="menuBtn">📋 MENU</button>
+          <button class="sec-btn" id="menuBtn" style="align-self:center">📋 MENU</button>
         </div>
       </div>
     </div>
