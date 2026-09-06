@@ -11,7 +11,7 @@
 [hidden]{display:none!important}
 html,body{height:100%;overscroll-behavior:none}
 body{font-family:Rubik,system-ui,sans-serif;color:#eaf6ff;overflow:hidden;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;background:linear-gradient(180deg,#0b1026,#101a3a)}
-#app{height:100dvh;display:flex;flex-direction:column;padding:10px;gap:8px}
+#app{height:100dvh;display:flex;flex-direction:column;padding:8px;gap:6px}
 #hud{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
 .brand{font-family:Orbitron,monospace;font-size:11px;line-height:1.4;color:#7ce7ff;text-shadow:0 0 12px rgba(0,229,255,.7)}
 .chip{background:rgba(10,20,50,.7);border:1px solid rgba(0,229,255,.3);border-radius:10px;padding:6px 10px;font-size:13px;display:flex;align-items:center;gap:6px}
@@ -37,23 +37,42 @@ canvas{width:100%;height:100%;display:block}
 #banner.bad{border-color:#ff4d6d;color:#ffb3c1}
 #banner.good{border-color:#39ff88;color:#b6ffd9}
 #countdown{position:absolute;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;font-family:Orbitron,monospace;font-size:clamp(34px,9vw,56px);color:#fff;text-shadow:0 0 30px rgba(0,229,255,1);pointer-events:none}
-.screen{position:absolute;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;background:rgba(4,8,20,.78);backdrop-filter:blur(6px);padding:14px}
-.card{background:linear-gradient(170deg,rgba(16,30,70,.85),rgba(8,12,30,.9));border:1px solid rgba(0,229,255,.3);border-radius:20px;padding:18px;max-width:520px;width:100%;text-align:center;max-height:100%;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.6)}
-.cover{width:100%;max-width:300px;border-radius:14px;margin:2px auto 12px;display:block;box-shadow:0 10px 30px rgba(0,0,0,.55)}
-.title{font-family:Orbitron,monospace;font-size:clamp(16px,4.5vw,24px);color:#fff;text-shadow:0 0 18px rgba(0,229,255,.8);margin-bottom:6px}
-.subtitle{opacity:.85;font-size:13px;margin-bottom:10px}
-.help-list{display:flex;flex-direction:column;gap:7px;margin:12px 0;text-align:left}
-.help-list div{background:rgba(0,229,255,.06);border:1px solid rgba(0,229,255,.18);border-radius:10px;padding:8px 10px;font-size:12.5px;line-height:1.5}
-.btn-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:10px}
+.screen{position:absolute;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;background:rgba(4,8,20,.78);backdrop-filter:blur(6px);padding:10px}
+.card{background:linear-gradient(170deg,rgba(16,30,70,.85),rgba(8,12,30,.9));border:1px solid rgba(0,229,255,.3);border-radius:20px;padding:14px;max-width:520px;width:100%;text-align:center;max-height:100%;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.6);
+  display:flex;flex-direction:column;gap:4px}
+.cover{width:110px;border-radius:12px;margin:0 auto 2px;display:block;box-shadow:0 8px 24px rgba(0,0,0,.55);flex:none}
+.title{font-family:Orbitron,monospace;font-size:clamp(14px,3.8vw,22px);color:#fff;text-shadow:0 0 18px rgba(0,229,255,.8);margin-bottom:2px}
+.subtitle{opacity:.85;font-size:12.5px;margin-bottom:4px;line-height:1.45}
+
+/* Griglia pulsanti compatta sempre visibile */
+.btn-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:2px 0}
+.btn-grid.small{grid-template-columns:1fr 1fr}
+.sec-btn{font-family:Orbitron,monospace;font-weight:800;font-size:12px;padding:10px 8px;border-radius:12px;border:1px solid rgba(0,229,255,.4);
+  background:rgba(0,229,255,.10);color:#fff;cursor:pointer;transition:.15s;letter-spacing:.3px}
+.sec-btn:hover{background:rgba(0,229,255,.22)}
+.sec-btn.wide{grid-column:span 2}
+.stats-line{font-size:12px;opacity:.95;margin:2px 0 4px}
+.stats-line b{color:#7cffb2}
+
+.card-scroll{flex:1;min-height:0;overflow:auto;padding-right:4px;-webkit-overflow-scrolling:touch}
+.card-scroll::-webkit-scrollbar{width:6px}
+.card-scroll::-webkit-scrollbar-thumb{background:rgba(0,229,255,.25);border-radius:3px}
+
+.help-list{display:flex;flex-direction:column;gap:7px;margin:8px 0;text-align:left}
+.help-list div{background:rgba(0,229,255,.06);border:1px solid rgba(0,229,255,.18);border-radius:10px;padding:8px 10px;font-size:12px;line-height:1.5}
+
 .big-btn{font-family:Orbitron,monospace;font-size:13px;padding:13px 22px;border-radius:12px;border:none;cursor:pointer;color:#241200;background:linear-gradient(180deg,#ffb347,#ff7a1a);box-shadow:0 5px 0 #a34b00,0 10px 24px rgba(255,122,26,.35)}
 .big-btn:active{transform:translateY(3px);box-shadow:0 2px 0 #a34b00}
 .big-btn.alt{background:linear-gradient(180deg,#7ce7ff,#2f8fe0);color:#04121f;box-shadow:0 5px 0 #1b5d97}
 .big-btn.alt:active{box-shadow:0 2px 0 #1b5d97}
 .big-btn.ghost{background:transparent;border:2px solid rgba(0,229,255,.45);color:#7ce7ff;box-shadow:none}
-.note{font-size:11px;opacity:.65;margin-top:10px}
+.note{font-size:11px;opacity:.65;margin-top:6px}
+.btn-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:6px}
+
 .stats{display:flex;gap:10px;justify-content:center;margin:10px 0;flex-wrap:wrap}
 .stats div{background:rgba(0,229,255,.07);border:1px solid rgba(0,229,255,.2);border-radius:12px;padding:10px 18px;display:flex;flex-direction:column;gap:2px}
 .stats b{font-family:Orbitron,monospace;font-size:22px;color:#7cffb2}
+
 #repairOverlay{position:absolute;inset:0;z-index:45;background:rgba(0,0,10,.6);display:flex;align-items:center;justify-content:center;padding:14px}
 .rep-card{width:100%;max-width:340px;background:#0d1735;border:2px solid #ffd54a;border-radius:18px;padding:16px;text-align:center;box-shadow:0 0 40px rgba(255,213,74,.25)}
 .rep-title{font-family:Orbitron,monospace;font-size:14px;color:#ffd54a;margin-bottom:10px}
@@ -67,6 +86,7 @@ canvas{width:100%;height:100%;display:block}
 .leak{position:absolute;width:44px;height:44px;cursor:pointer;border-radius:50%;background:radial-gradient(circle,#fff6d8 0 12%,#ffd54a 30%,#ff7a1a 55%,rgba(255,60,20,.15) 75%,transparent 80%);filter:drop-shadow(0 0 10px rgba(255,120,40,.9));animation:throb .5s infinite}
 @keyframes throb{50%{transform:scale(1.18)}}
 #cabC,#valC{width:100%;max-width:320px;border-radius:12px;background:rgba(0,0,0,.3);touch-action:none}
+
 .modal{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;background:rgba(5,2,15,.7);backdrop-filter:blur(5px);padding:14px}
 .modal-card{width:100%;max-width:440px;max-height:92dvh;display:flex;flex-direction:column;background:linear-gradient(170deg,#12234d,#0a1228);border:1px solid rgba(0,229,255,.3);border-radius:20px;padding:16px;box-shadow:0 24px 70px rgba(0,0,0,.6);animation:pop .22s}
 @keyframes pop{from{transform:scale(.92);opacity:0}}
@@ -89,7 +109,23 @@ canvas{width:100%;height:100%;display:block}
 .shop-btn.equip{background:linear-gradient(180deg,#5dff9d,#19c96d);color:#08121f}
 .shop-btn.eq{background:transparent;border:1px solid #ffd54a;color:#ffd54a;cursor:default}
 .lb-note{font-size:10.5px;opacity:.55;margin-top:10px;line-height:1.55}
-#adbar{border-radius:12px;border:none;background:transparent;text-align:center;padding:8px;opacity:1;min-height:90px}
+
+/* BANNER AD MENO INVASIVO E ADATTIVO */
+#adbar{border-radius:10px;border:1px solid rgba(0,229,255,.15);background:rgba(0,229,255,.03);
+  text-align:center;padding:3px 6px;font-size:11px;opacity:.95;height:56px;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;flex:none}
+#adbar ins.adsbygoogle{display:block;width:100%;max-height:50px;margin:0 auto}
+@media(min-width:768px){
+  #adbar{height:96px}
+  #adbar ins.adsbygoogle{max-height:90px}
+}
+/* Nasconde cover su schermi piccoli per lasciare spazio ai pulsanti */
+@media (max-height:640px){
+  .cover{display:none}
+  .title{margin-bottom:0}
+  .subtitle{font-size:11px;margin-bottom:2px}
+}
+
 #adOverlay{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.95);display:flex;align-items:center;justify-content:center;padding:16px}
 .ad-card{max-width:560px;width:100%;background:#0a0614;border:1px solid rgba(255,255,255,.2);border-radius:18px;padding:14px;text-align:center}
 .ad-tag{font-size:10px;letter-spacing:2px;opacity:.6;margin-bottom:8px}
@@ -130,38 +166,43 @@ canvas{width:100%;height:100%;display:block}
     <div id="banner"></div>
     <div id="countdown" hidden></div>
 
+    <!-- MENU PRINCIPALE -->
     <div class="screen" id="startScreen">
       <div class="card">
         <img class="cover" src="cover-rocket.jpg" alt="Rocket Rise">
         <div class="title">ROCKET RISE</div>
-        <div class="subtitle">Climb as high as you can!</div>
-        <div class="btn-row">
+        <div class="subtitle">Climb as high as you can! Hold to ignite, avoid hazards, repair your ship.</div>
+
+        <div class="btn-grid">
           <button class="big-btn" id="playBtn">► PLAY</button>
-          <button class="big-btn alt" id="howBtn">HOW TO PLAY</button>
+          <button class="big-btn alt" id="howBtn">? HOW TO</button>
         </div>
-        <div class="btn-row">
-          <button class="big-btn ghost" id="shopBtnR">SHOP</button>
-          <button class="big-btn ghost" id="homeBtn0">HOME</button>
+        <div class="btn-grid small">
+          <button class="sec-btn" id="shopBtnR">🛒 SHOP</button>
+          <button class="sec-btn" id="homeBtn0">🏠 HOME</button>
         </div>
-        <p class="note">Best: <b id="startBest">0</b> m &nbsp;•&nbsp; Crystals: <b id="startCrys">0</b> <i class="diam"></i></p>
+
+        <div class="stats-line">🏅 Best: <b id="startBest">0</b> m &nbsp;•&nbsp; <i class="diam"></i> Crystals: <b id="startCrys">0</b></div>
       </div>
     </div>
 
     <div class="screen" id="helpScreen" hidden>
       <div class="card">
         <div class="title">HOW TO PLAY</div>
-        <div class="help-list">
-          <div>Hold the screen or press SPACE to ignite the engine and climb fast.</div>
-          <div>The ship drifts sideways at a fixed speed: drag or use arrow keys / A D.</div>
-          <div>With the engine off you climb slowly, but must reignite within 10s or fall.</div>
-          <div>Hazards unlock as you climb: asteroids first, then flammable zones, maintenance, black holes and aliens.</div>
-          <div>Flammable zones: cross with engine OFF and don't move. Asteroids and enemy shots never reach them.</div>
-          <div>Alien ships fire a couple of shots and then fly away sideways.</div>
-          <div>Black holes are huge and pull you in when the engine is OFF. Keep it on to pass safely.</div>
-          <div>Maintenance zones (wrench sign): finish the repair in time - wipe, cables, leak or valve.</div>
-          <div>Crystals are saved forever; spend them in the shop for new rockets. Boosters give turbo + invincibility.</div>
+        <div class="card-scroll">
+          <div class="help-list">
+            <div>Hold the screen or press SPACE to ignite the engine and climb fast.</div>
+            <div>The ship drifts sideways at a fixed speed: drag or use arrow keys / A D.</div>
+            <div>With the engine off you climb slowly, but must reignite within 10s or fall.</div>
+            <div>Hazards unlock as you climb: asteroids first, then flammable zones, maintenance, black holes and aliens.</div>
+            <div>Flammable zones: cross with engine OFF and don't move. Asteroids and enemy shots never reach them.</div>
+            <div>Alien ships fire a couple of shots and then fly away sideways.</div>
+            <div>Black holes are huge and pull you in when the engine is OFF. Keep it on to pass safely.</div>
+            <div>Maintenance zones (wrench sign): finish the repair in time - wipe, cables, leak or valve.</div>
+            <div>Crystals are saved forever; spend them in the shop for new rockets. Boosters give turbo + invincibility.</div>
+          </div>
         </div>
-        <div class="btn-row"><button class="big-btn" id="backHelpBtn">BACK</button></div>
+        <div class="btn-row"><button class="big-btn" id="backHelpBtn">← BACK</button></div>
       </div>
     </div>
 
@@ -175,9 +216,9 @@ canvas{width:100%;height:100%;display:block}
           <div><span class="lbl">Crystals</span><b id="overCrys">0</b></div>
         </div>
         <div class="btn-row"><button class="big-btn alt" id="reviveBtn">📺 WATCH VIDEO → REVIVE</button></div>
-        <div class="btn-row">
-          <button class="big-btn" id="retryBtn">RETRY</button>
-          <button class="big-btn ghost" id="menuBtn0">MENU</button>
+        <div class="btn-grid small" style="margin-top:8px">
+          <button class="sec-btn" id="retryBtn">🔄 RETRY</button>
+          <button class="sec-btn" id="menuBtn0">📋 MENU</button>
         </div>
       </div>
     </div>
@@ -185,9 +226,9 @@ canvas{width:100%;height:100%;display:block}
     <div class="screen" id="pauseOverlay" hidden>
       <div class="card">
         <div class="title">PAUSED</div>
-        <div class="btn-row">
-          <button class="big-btn" id="resumeBtn">RESUME</button>
-          <button class="big-btn ghost" id="menuBtn1">MENU</button>
+        <div class="btn-grid">
+          <button class="big-btn" id="resumeBtn">▶ RESUME</button>
+          <button class="sec-btn" id="menuBtn1" style="align-self:center">📋 MENU</button>
         </div>
       </div>
     </div>
@@ -203,7 +244,8 @@ canvas{width:100%;height:100%;display:block}
   </div>
 
   <footer id="adbar">
-    <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-6380006770259018" data-ad-slot="IL-TUO-SLOT-ID" data-ad-format="auto" data-full-width-responsive="true"></ins>
+    <!-- INSERISCI QUI IL TUO DATA-AD-SLOT PER IL BANNER -->
+    <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-6380006770259018" data-ad-slot="YOUR_BANNER_AD_SLOT_ID" data-ad-format="auto" data-full-width-responsive="true"></ins>
     <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
   </footer>
 </div>
@@ -706,7 +748,7 @@ document.addEventListener('dblclick',e=>e.preventDefault());
 if(AudioFX.muted)$('muteBtn').textContent='MUT';
 if(!musicOn){$('musBtn').textContent='✕';$('musBtn').classList.add('off');}
 
-// ✅ FIX: resize prima del loop, così il canvas ha dimensioni valide subito
+// ✅ FIX: resize prima del loop
 resize();
 $('startBest').textContent=record();$('bestEl').textContent=record();refreshCrys();
 requestAnimationFrame(loop);
