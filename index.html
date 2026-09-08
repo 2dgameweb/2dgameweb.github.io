@@ -33,6 +33,13 @@ h1{font-family:'Press Start 2P',monospace;font-size:clamp(18px,4vw,30px);
 .soon{opacity:.45}
 .soon .icon{font-size:52px;margin:40px 0 10px}
 
+/* NEW badge for recently added games */
+.new-badge{display:inline-block;margin-left:6px;padding:2px 8px;font-size:9px;
+  background:linear-gradient(180deg,#ff6b6b,#e63946);color:#fff;border-radius:6px;
+  font-family:'Press Start 2P',monospace;vertical-align:middle;
+  box-shadow:0 0 10px rgba(230,57,70,.6);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.7}}
+
 .about{width:100%;max-width:960px;margin-top:40px;
   background:linear-gradient(170deg,rgba(60,30,110,.5),rgba(15,25,55,.65));
   border:1px solid rgba(255,255,255,.14);border-radius:20px;padding:26px 24px;text-align:left}
@@ -78,6 +85,15 @@ footer .sep{opacity:.4;margin:0 4px}
       <p>Match 3+ symbols to clear the road! A monster is chasing you — complete levels before time runs out!</p>
       <span class="play">PLAY</span>
     </a>
+
+    <!-- ========== NUOVO GIOCO: COW ESCAPE ========== -->
+    <a class="card" href="cow-escape.html">
+      <img src="cover-cows.jpg" alt="Cow Escape">
+      <h2>COW ESCAPE <span class="new-badge">NEW</span></h2>
+      <p>Flee from angry cows through a procedural 3D forest maze! Sprint, jump over logs, dodge rocks, avoid mud traps, and reach one of the many escape flags. Click-to-move with smart pathfinding, mobile joystick, saved progress & increasing difficulty.</p>
+      <span class="play">PLAY</span>
+    </a>
+
     <div class="card soon">
       <div class="icon">🔒</div>
       <h2>COMING SOON</h2>
