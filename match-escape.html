@@ -19,7 +19,6 @@
     height: 100%;
     overflow: hidden;
     touch-action: manipulation;
-    -ms-touch-action: manipulation;
     user-select: none;
     -webkit-user-select: none;
     -webkit-text-size-adjust: 100%;
@@ -30,55 +29,51 @@
     background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
     display: flex;
     flex-direction: column;
-    align-items: center;
     color: #fff;
     overscroll-behavior: none;
     position: fixed;
     inset: 0;
   }
   
-  /* ===== LAYOUT PRINCIPALE ===== */
+  /* ===== LAYOUT ===== */
   .app {
     width: 100%;
     height: 100%;
     display: flex;
     flex-direction: column;
-    padding: 6px;
-    gap: 6px;
+    padding: 4px;
+    gap: 4px;
   }
   
-  /* ===== TOP BAR ===== */
+  /* ===== TOP BAR COMPATTA ===== */
   .top-bar {
     flex-shrink: 0;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 6px 10px;
-    background: rgba(0,0,0,0.4);
-    border-radius: 12px;
-    backdrop-filter: blur(10px);
+    padding: 5px 10px;
+    background: rgba(0,0,0,0.5);
+    border-radius: 10px;
     border: 1px solid rgba(255,255,255,0.1);
   }
   
   .back-btn {
     display: flex;
     align-items: center;
-    gap: 4px;
-    padding: 7px 12px;
+    padding: 6px 12px;
     background: linear-gradient(135deg, #4ecdc4, #44a3aa);
     color: #08121f;
     text-decoration: none;
     font-family: 'Press Start 2P', monospace;
-    font-size: 9px;
+    font-size: 8px;
     border-radius: 8px;
     box-shadow: 0 3px 0 #2d7a74;
-    transition: transform 0.1s;
   }
   .back-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 #2d7a74; }
   
   .game-title {
     font-family: 'Press Start 2P', monospace;
-    font-size: 10px;
+    font-size: 9px;
     color: #ffd93d;
     text-shadow: 0 0 8px rgba(255,217,61,0.6);
   }
@@ -87,31 +82,31 @@
     background: rgba(0,0,0,0.5);
     border: 2px solid rgba(255,255,255,0.3);
     color: white;
-    width: 38px;
-    height: 38px;
+    width: 34px;
+    height: 34px;
     border-radius: 50%;
     cursor: pointer;
-    font-size: 1em;
+    font-size: 0.9em;
     font-family: inherit;
   }
   .mute-btn:active { transform: scale(0.9); }
   
-  /* ===== CANVAS ===== */
+  /* ===== AREA GIOCO CENTRATA ===== */
   .canvas-wrapper {
     flex: 1;
     position: relative;
-    width: 100%;
     min-height: 0;
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 0 30px rgba(78, 205, 196, 0.25), 0 10px 30px rgba(0,0,0,0.7);
-    background: #1a1a2e;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
   
   #gameCanvas {
     display: block;
-    width: 100%;
-    height: 100%;
+    border-radius: 12px;
+    box-shadow: 0 0 30px rgba(78, 205, 196, 0.2), 0 10px 40px rgba(0,0,0,0.6);
+    background: #1a1a2e;
     cursor: pointer;
     touch-action: none;
   }
@@ -124,55 +119,47 @@
     transform: translate(-50%, -50%);
     background: rgba(26, 26, 46, 0.98);
     backdrop-filter: blur(15px);
-    border-radius: 18px;
-    padding: 18px;
+    border-radius: 16px;
+    padding: 16px;
     text-align: center;
-    border: 3px solid rgba(255,217,61,0.6);
-    box-shadow: 0 0 60px rgba(255,217,61,0.3), 0 15px 40px rgba(0,0,0,0.9);
+    border: 2px solid rgba(255,217,61,0.6);
+    box-shadow: 0 0 50px rgba(255,217,61,0.3), 0 15px 40px rgba(0,0,0,0.9);
     z-index: 10;
     width: 88%;
-    max-width: 380px;
-    max-height: 92%;
+    max-width: 340px;
+    max-height: 90%;
     overflow-y: auto;
-    animation: menuFloat 3s ease-in-out infinite;
-  }
-  
-  @keyframes menuFloat {
-    0%, 100% { transform: translate(-50%, -50%) translateY(0); }
-    50% { transform: translate(-50%, -50%) translateY(-6px); }
   }
   
   .menu-overlay h1 {
     color: #ffd93d;
     font-family: 'Press Start 2P', monospace;
-    font-size: clamp(13px, 3.8vw, 22px);
-    text-shadow: 0 0 15px #ffd93d, 2px 2px 0 #ff6b6b;
-    margin-bottom: 8px;
+    font-size: clamp(12px, 4vw, 20px);
+    text-shadow: 0 0 12px #ffd93d, 2px 2px 0 #ff6b6b;
+    margin-bottom: 6px;
     line-height: 1.3;
   }
   
   .menu-overlay .subtitle {
     color: #4ecdc4;
     font-family: 'Press Start 2P', monospace;
-    font-size: clamp(8px, 2.2vw, 11px);
-    margin-bottom: 14px;
-    text-shadow: 0 0 8px rgba(78,205,196,0.5);
+    font-size: clamp(7px, 2vw, 10px);
+    margin-bottom: 12px;
   }
   
   .instructions {
     background: rgba(0,0,0,0.5);
     border-radius: 10px;
-    padding: 12px;
-    margin-bottom: 14px;
-    border: 1px solid rgba(255,255,255,0.1);
+    padding: 10px;
+    margin-bottom: 12px;
     text-align: left;
   }
   
   .instructions h3 {
     color: #ffd93d;
     font-family: 'Press Start 2P', monospace;
-    font-size: clamp(8px, 2.2vw, 10px);
-    margin-bottom: 10px;
+    font-size: 8px;
+    margin-bottom: 8px;
     text-align: center;
   }
   
@@ -180,12 +167,11 @@
   
   .instructions li {
     color: #fff;
-    font-size: clamp(11px, 3vw, 13px);
-    margin: 6px 0;
-    padding-left: 20px;
+    font-size: 11px;
+    margin: 5px 0;
+    padding-left: 18px;
     position: relative;
     line-height: 1.4;
-    font-family: Rubik, sans-serif;
   }
   
   .instructions li::before {
@@ -193,13 +179,14 @@
     position: absolute;
     left: 2px;
     color: #4ecdc4;
+    font-size: 9px;
   }
   
   .btn {
     display: block;
     width: 100%;
-    padding: 13px 18px;
-    font-size: clamp(10px, 2.8vw, 13px);
+    padding: 12px 16px;
+    font-size: 10px;
     font-weight: bold;
     font-family: 'Press Start 2P', monospace;
     color: white;
@@ -207,60 +194,55 @@
     border: none;
     border-radius: 10px;
     cursor: pointer;
-    box-shadow: 0 5px 0 #c93d3d, 0 0 20px rgba(255,107,107,0.5);
-    transition: all 0.1s;
+    box-shadow: 0 4px 0 #c93d3d;
     margin-bottom: 8px;
-    text-shadow: 1px 1px 2px rgba(0,0,0,0.4);
     letter-spacing: 1px;
   }
   
   .btn:active {
     transform: translateY(3px);
-    box-shadow: 0 2px 0 #c93d3d, 0 0 15px rgba(255,107,107,0.4);
+    box-shadow: 0 1px 0 #c93d3d;
   }
   
   .btn.secondary {
     background: linear-gradient(135deg, #4ecdc4, #44a3aa);
-    box-shadow: 0 5px 0 #2d7a74, 0 0 20px rgba(78,205,196,0.5);
+    box-shadow: 0 4px 0 #2d7a74;
   }
   
   .btn.secondary:active {
-    box-shadow: 0 2px 0 #2d7a74, 0 0 15px rgba(78,205,196,0.4);
+    box-shadow: 0 1px 0 #2d7a74;
   }
   
   .hidden { display: none !important; }
   
-  /* ===== AD BANNER ===== */
+  /* ===== AD BANNER COMPATTO ===== */
   #adbar {
     flex-shrink: 0;
     width: 100%;
-    min-height: 50px;
-    background: rgba(0,0,0,0.2);
-    border-radius: 10px;
+    max-width: 320px;
+    height: 50px;
+    margin: 0 auto;
+    border-radius: 8px;
     overflow: hidden;
+    opacity: 0.85;
   }
   
-  /* ===== MOBILE - GIOCO PIÙ GRANDE ===== */
-  @media (max-width: 768px) {
-    .app { padding: 3px; gap: 3px; }
-    .top-bar { padding: 4px 8px; border-radius: 8px; }
-    .back-btn { padding: 5px 8px; font-size: 7px; }
-    .game-title { font-size: 8px; }
-    .mute-btn { width: 32px; height: 32px; font-size: 0.85em; }
-    #adbar { min-height: 50px; }
+  #adbar ins {
+    max-height: 50px;
   }
   
+  /* ===== MOBILE FIXES ===== */
   @media (max-width: 480px) {
     .game-title { display: none; }
-    #adbar { min-height: 45px; }
+    #adbar { max-width: 100%; }
   }
   
-  /* Landscape - canvas più grande */
-  @media (max-height: 500px) and (orientation: landscape) {
+  @media (max-height: 450px) and (orientation: landscape) {
     .top-bar { padding: 3px 8px; }
     .back-btn { padding: 4px 8px; font-size: 7px; }
-    #adbar { min-height: 30px; }
-    .app { padding: 2px; gap: 2px; }
+    .mute-btn { width: 28px; height: 28px; font-size: 0.8em; }
+    #adbar { height: 32px; }
+    #adbar ins { max-height: 32px; }
   }
 </style>
 </head>
@@ -298,14 +280,14 @@
     </div>
   </div>
 
-  <!-- ===== ADSENSE BANNER ===== -->
+  <!-- ===== ADSENSE COMPATTO ===== -->
   <div id="adbar">
     <ins class="adsbygoogle"
-         style="display:block"
+         style="display:block; height:50px;"
          data-ad-client="ca-pub-6380006770259018"
          data-ad-slot="IL-TUO-SLOT-ID"
-         data-ad-format="auto"
-         data-full-width-responsive="true"></ins>
+         data-ad-format="horizontal"
+         data-full-width-responsive="false"></ins>
     <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
   </div>
 </div>
@@ -366,15 +348,11 @@ class AudioSystem {
   }
   
   playSwap() {
-    [300, 400, 500].forEach((f, i) => {
-      setTimeout(() => this.playTone(f, 0.06, 'sine', 0.1), i * 30);
-    });
+    [300, 400, 500].forEach((f, i) => setTimeout(() => this.playTone(f, 0.06, 'sine', 0.1), i * 30));
   }
   
   playMatch() {
-    [523, 659, 784, 1047].forEach((f, i) => {
-      setTimeout(() => this.playTone(f, 0.15, 'sine', 0.15), i * 60);
-    });
+    [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => this.playTone(f, 0.15, 'sine', 0.15), i * 60));
   }
   
   playExplosion() {
@@ -406,21 +384,15 @@ class AudioSystem {
   }
   
   playLevelUp() {
-    [523, 659, 784, 1047, 1319].forEach((f, i) => {
-      setTimeout(() => this.playTone(f, 0.2, 'sine', 0.15), i * 100);
-    });
+    [523, 659, 784, 1047, 1319].forEach((f, i) => setTimeout(() => this.playTone(f, 0.2, 'sine', 0.15), i * 100));
   }
   
   playWin() {
-    [523, 659, 784, 1047, 784, 1047, 1319, 1568].forEach((f, i) => {
-      setTimeout(() => this.playTone(f, 0.25, 'sine', 0.12), i * 120);
-    });
+    [523, 659, 784, 1047, 784, 1047, 1319, 1568].forEach((f, i) => setTimeout(() => this.playTone(f, 0.25, 'sine', 0.12), i * 120));
   }
   
   playLose() {
-    [400, 350, 300, 250, 200].forEach((f, i) => {
-      setTimeout(() => this.playTone(f, 0.3, 'sawtooth', 0.08), i * 150);
-    });
+    [400, 350, 300, 250, 200].forEach((f, i) => setTimeout(() => this.playTone(f, 0.3, 'sawtooth', 0.08), i * 150));
   }
   
   toggleMute() {
@@ -477,20 +449,40 @@ const symbols = [
   { type: 'hexagon', color: '#74b9ff', glow: '#a8d5ff' }
 ];
 
-// ==================== RESPONSIVE RESIZE ====================
+// ==================== RESIZE CON ASPECT RATIO CORRETTO ====================
 function handleResize() {
   const wrapper = document.querySelector('.canvas-wrapper');
   const rect = wrapper.getBoundingClientRect();
+  
+  if (rect.width === 0 || rect.height === 0) return;
+  
+  const targetAspect = BASE_W / BASE_H;
+  const containerAspect = rect.width / rect.height;
+  
+  let displayWidth, displayHeight;
+  
+  if (containerAspect > targetAspect) {
+    displayHeight = rect.height;
+    displayWidth = displayHeight * targetAspect;
+  } else {
+    displayWidth = rect.width;
+    displayHeight = displayWidth / targetAspect;
+  }
+  
+  canvas.style.width = displayWidth + 'px';
+  canvas.style.height = displayHeight + 'px';
+  
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
-  canvas.width = rect.width * dpr;
-  canvas.height = rect.height * dpr;
-  ctx.setTransform(dpr * rect.width / BASE_W, 0, 0, dpr * rect.height / BASE_H, 0, 0);
+  canvas.width = Math.floor(displayWidth * dpr);
+  canvas.height = Math.floor(displayHeight * dpr);
+  
+  ctx.setTransform(canvas.width / BASE_W, 0, 0, canvas.height / BASE_H, 0, 0);
 }
 
 window.addEventListener('resize', handleResize);
-window.addEventListener('orientationchange', () => setTimeout(handleResize, 250));
+window.addEventListener('orientationchange', () => setTimeout(handleResize, 300));
 window.addEventListener('load', handleResize);
-setTimeout(handleResize, 100);
+setTimeout(handleResize, 150);
 
 // ==================== GAME FUNCTIONS ====================
 function startGame(diff) {
@@ -881,15 +873,12 @@ function drawPolygon(cx, cy, sides, radius) {
   ctx.closePath();
 }
 
-// ===== OMINO MIGLIORATO =====
 function drawHero(x, y) {
-  // Fase del ciclo di corsa (0-1)
   const phase = (runCycle % 1 + 1) % 1;
   const cycle = phase * Math.PI * 2;
   
-  // Movimento verticale del corpo (rimbalzo)
   const bodyBounce = Math.abs(Math.sin(cycle)) * 2;
-  const lean = 0.12; // inclinazione in avanti
+  const lean = 0.12;
   
   const monsterDistance = heroPos - monsterPos;
   const panic = Math.max(0, Math.min(1, (15 - monsterDistance) / 15));
@@ -897,7 +886,6 @@ function drawHero(x, y) {
   ctx.save();
   ctx.translate(x, y);
   
-  // Ombra sotto i piedi
   ctx.fillStyle = 'rgba(0,0,0,0.35)';
   ctx.beginPath();
   ctx.ellipse(0, 22, 14, 4, 0, 0, Math.PI * 2);
@@ -908,29 +896,23 @@ function drawHero(x, y) {
   ctx.shadowColor = '#4ecdc4';
   ctx.shadowBlur = 12;
   
-  // === GAMBE con animazione di corsa realistica ===
-  // Gamba sinistra
   const leftThigh = Math.sin(cycle) * 0.9;
   const leftKnee = Math.max(0, Math.sin(cycle - Math.PI/2)) * 1.2;
   drawLeg(-4, 5, leftThigh, leftKnee);
   
-  // Gamba destra (opposta)
   const rightThigh = Math.sin(cycle + Math.PI) * 0.9;
   const rightKnee = Math.max(0, Math.sin(cycle + Math.PI/2)) * 1.2;
   drawLeg(4, 5, rightThigh, rightKnee);
   
-  // === BRACCIA (opposte alle gambe) ===
   const leftArm = Math.sin(cycle + Math.PI) * 0.8;
   const rightArm = Math.sin(cycle) * 0.8;
   drawArm(-8, -13, leftArm);
   drawArm(8, -13, rightArm);
   
-  // === CORPO ===
   ctx.fillStyle = '#4ecdc4';
   ctx.strokeStyle = '#2d9a92';
   ctx.lineWidth = 2;
   
-  // Torso
   ctx.beginPath();
   ctx.moveTo(-9, -18 - bodyBounce);
   ctx.lineTo(9, -18 - bodyBounce);
@@ -940,11 +922,9 @@ function drawHero(x, y) {
   ctx.fill();
   ctx.stroke();
   
-  // Dettaglio maglietta
   ctx.fillStyle = '#3ab5ad';
   ctx.fillRect(-3, -14 - bodyBounce, 6, 8);
   
-  // === TESTA con espressione ===
   const headBounce = bodyBounce * 1.2;
   const headTilt = Math.sin(cycle * 2) * 0.05;
   
@@ -952,7 +932,6 @@ function drawHero(x, y) {
   ctx.translate(0, -28 - headBounce);
   ctx.rotate(headTilt);
   
-  // Testa
   ctx.fillStyle = '#ffd93d';
   ctx.strokeStyle = '#d4a017';
   ctx.lineWidth = 2;
@@ -961,7 +940,6 @@ function drawHero(x, y) {
   ctx.fill();
   ctx.stroke();
   
-  // Capelli
   ctx.fillStyle = '#8b4513';
   ctx.beginPath();
   ctx.arc(0, -3, 11, Math.PI, Math.PI * 2);
@@ -970,14 +948,12 @@ function drawHero(x, y) {
   ctx.fill();
   ctx.fillRect(-11, -4, 22, 3);
   
-  // Occhi - cambiano in base al panico
   ctx.fillStyle = '#fff';
   ctx.beginPath();
   ctx.ellipse(-4, -1, 3, panic > 0.5 ? 4 : 3, 0, 0, Math.PI * 2);
   ctx.ellipse(4, -1, 3, panic > 0.5 ? 4 : 3, 0, 0, Math.PI * 2);
   ctx.fill();
   
-  // Pupille (guardano indietro quando in panico)
   ctx.fillStyle = '#000';
   const pupilX = panic > 0.5 ? -1 : 1;
   ctx.beginPath();
@@ -985,18 +961,15 @@ function drawHero(x, y) {
   ctx.arc(4 + pupilX, -1, 1.5, 0, Math.PI * 2);
   ctx.fill();
   
-  // Sopracciglia
   ctx.strokeStyle = '#000';
   ctx.lineWidth = 1.5;
   ctx.beginPath();
   if (panic > 0.5) {
-    // Sopracciglia alzate (preoccupate)
     ctx.moveTo(-7, -6);
     ctx.lineTo(-2, -5);
     ctx.moveTo(7, -6);
     ctx.lineTo(2, -5);
   } else {
-    // Sopracciglia normali
     ctx.moveTo(-7, -5);
     ctx.lineTo(-2, -4);
     ctx.moveTo(7, -5);
@@ -1004,27 +977,22 @@ function drawHero(x, y) {
   }
   ctx.stroke();
   
-  // Bocca
   ctx.strokeStyle = '#000';
   ctx.lineWidth = 1.5;
   ctx.fillStyle = '#c93d3d';
   ctx.beginPath();
   if (panic > 0.7) {
-    // Bocca spalancata (molto spaventato)
     ctx.ellipse(0, 5, 3, 4, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
   } else if (panic > 0.3) {
-    // Bocca preoccupata
     ctx.arc(0, 6, 2, Math.PI, 0, false);
     ctx.stroke();
   } else {
-    // Sorriso
     ctx.arc(0, 3, 3, 0, Math.PI);
     ctx.stroke();
   }
   
-  // Gocce di sudore quando in panico
   if (panic > 0.4) {
     ctx.fillStyle = '#74b9ff';
     ctx.beginPath();
@@ -1035,9 +1003,8 @@ function drawHero(x, y) {
     ctx.fill();
   }
   
-  ctx.restore(); // testa
-  
-  ctx.restore(); // tutto l'omino
+  ctx.restore();
+  ctx.restore();
 }
 
 function drawLeg(hipX, hipY, thighAngle, kneeAngle) {
@@ -1048,7 +1015,6 @@ function drawLeg(hipX, hipY, thighAngle, kneeAngle) {
   ctx.translate(hipX, hipY);
   ctx.rotate(thighAngle);
   
-  // Coscia
   ctx.strokeStyle = '#2d7a74';
   ctx.lineWidth = 7;
   ctx.lineCap = 'round';
@@ -1057,7 +1023,6 @@ function drawLeg(hipX, hipY, thighAngle, kneeAngle) {
   ctx.lineTo(0, thighLength);
   ctx.stroke();
   
-  // Polpaccio
   ctx.translate(0, thighLength);
   ctx.rotate(kneeAngle);
   
@@ -1067,7 +1032,6 @@ function drawLeg(hipX, hipY, thighAngle, kneeAngle) {
   ctx.lineTo(0, shinLength);
   ctx.stroke();
   
-  // Scarpa
   ctx.fillStyle = '#ff6b6b';
   ctx.strokeStyle = '#c93d3d';
   ctx.lineWidth = 1.5;
@@ -1087,7 +1051,6 @@ function drawArm(shoulderX, shoulderY, angle) {
   ctx.translate(shoulderX, shoulderY);
   ctx.rotate(angle);
   
-  // Braccio
   ctx.strokeStyle = '#ffd93d';
   ctx.lineWidth = 5;
   ctx.lineCap = 'round';
@@ -1096,7 +1059,6 @@ function drawArm(shoulderX, shoulderY, angle) {
   ctx.lineTo(0, upperLength);
   ctx.stroke();
   
-  // Avambraccio (piegato)
   ctx.translate(0, upperLength);
   ctx.rotate(-1.2);
   ctx.strokeStyle = '#ffd93d';
@@ -1105,7 +1067,6 @@ function drawArm(shoulderX, shoulderY, angle) {
   ctx.lineTo(0, forearmLength);
   ctx.stroke();
   
-  // Mano
   ctx.fillStyle = '#ffd93d';
   ctx.beginPath();
   ctx.arc(0, forearmLength, 2.5, 0, Math.PI * 2);
@@ -1121,7 +1082,6 @@ function drawMonster(x, y) {
   ctx.shadowColor = '#ff6b6b';
   ctx.shadowBlur = 20;
   
-  // Ombra
   ctx.fillStyle = 'rgba(0,0,0,0.4)';
   ctx.beginPath();
   ctx.ellipse(x, y + 22, 18, 5, 0, 0, Math.PI * 2);
@@ -1149,7 +1109,6 @@ function drawMonster(x, y) {
   ctx.arc(x + 10, y - 22 + bounce, 3.5, 0, Math.PI * 2);
   ctx.fill();
   
-  // Sopracciglia arrabbiate
   ctx.strokeStyle = '#000';
   ctx.lineWidth = 2.5;
   ctx.beginPath();
@@ -1234,7 +1193,6 @@ function drawRoad() {
     }
   }
   
-  // Particelle di polvere dietro l'omino
   dustParticles.forEach(d => {
     ctx.fillStyle = `rgba(200, 180, 150, ${d.life * 0.6})`;
     ctx.beginPath();
@@ -1493,12 +1451,10 @@ function gameLoop(timestamp) {
     const monsterSpeed = difficulty === 1 ? 1 : 1.4;
     monsterPos = -15 + (1 - timeLeft / maxTime) * (heroPos + 12) * monsterSpeed;
     
-    // Aggiorna ciclo di corsa basato sul movimento
     const heroDelta = heroPos - prevHeroPos;
     if (heroDelta > 0.01) {
       runCycle += heroDelta * 0.15;
       
-      // Genera polvere e suoni dei passi
       if (timestamp - lastStepTime > 120) {
         const roadX = 40;
         const roadWidth = 620;
