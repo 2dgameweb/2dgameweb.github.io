@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
-<title>🐄 Fuga dalle Mucche — Deluxe</title>
+<title>🐄 Cow Escape</title>
 <style>
 :root{color-scheme:dark}
 *{margin:0;padding:0;box-sizing:border-box;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
 html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:'Segoe UI',Arial,sans-serif;touch-action:none}
-canvas.game{position:fixed;inset:0;display:block;z-index:0}
+canvas.game{position:fixed;inset:0;display:block;z-index:0;cursor:crosshair}
 #hud{position:fixed;top:12px;left:12px;z-index:30;pointer-events:none;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.7)}
 .hpanel{background:rgba(10,14,10,.55);border:1px solid rgba(255,255,255,.12);backdrop-filter:blur(10px);border-radius:14px;padding:12px 16px;min-width:210px}
 .hrow{display:flex;align-items:center;gap:8px;margin:5px 0;font-size:13px}
@@ -19,14 +19,15 @@ canvas.game{position:fixed;inset:0;display:block;z-index:0}
 #info{margin-top:6px;font-size:12px;opacity:.9;display:flex;gap:10px;flex-wrap:wrap}
 #minimap{position:fixed;top:12px;right:12px;width:150px;height:150px;z-index:30;pointer-events:none;border-radius:14px;border:1px solid rgba(255,255,255,.14);background:rgba(0,0,0,.3)}
 #damage{position:fixed;inset:0;z-index:20;pointer-events:none;opacity:0;background:radial-gradient(circle at center,transparent 30%,rgba(255,0,0,.5)100%)}
+#dangerIndicator{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;z-index:15;width:300px;height:300px;opacity:0;transition:opacity .2s}
 #touchUI{display:none;position:fixed;inset:0;z-index:35;pointer-events:none}
 @media(pointer:coarse){#touchUI{display:block}}
-#joystick{position:absolute;left:24px;bottom:26px;width:130px;height:130px;border-radius:50%;pointer-events:auto;touch-action:none;background:rgba(255,255,255,.1);border:2px solid rgba(255,255,255,.25)}
-#stick{position:absolute;left:50%;top:50%;width:54px;height:54px;margin:-27px 0 0 -27px;border-radius:50%;background:rgba(255,255,255,.4);border:2px solid rgba(255,255,255,.7)}
-.tbtn{position:absolute;width:78px;height:78px;border-radius:50%;pointer-events:auto;touch-action:none;display:grid;place-items:center;font-weight:800;font-size:11px;color:#fff;text-align:center;line-height:1.1;background:rgba(255,255,255,.15);border:2px solid rgba(255,255,255,.3)}
+.tbtn{position:absolute;width:82px;height:82px;border-radius:50%;pointer-events:auto;touch-action:none;display:grid;place-items:center;font-weight:800;font-size:11px;color:#fff;text-align:center;line-height:1.1;background:rgba(255,255,255,.15);border:2px solid rgba(255,255,255,.3)}
 .tbtn.active{transform:scale(.92);background:rgba(255,255,255,.3)}
+.tbtn.disabled{opacity:.4;filter:grayscale(.7)}
 #jumpBtn{right:24px;bottom:26px}
-#sprintBtn{right:24px;bottom:116px;background:rgba(255,180,0,.2);border-color:rgba(255,200,80,.4)}
+#sprintBtn{right:24px;bottom:120px;background:rgba(255,180,0,.2);border-color:rgba(255,200,80,.4)}
+#tapHint{position:fixed;bottom:26px;left:50%;transform:translateX(-50%);z-index:34;pointer-events:none;color:#fff;font-size:11px;opacity:.7;background:rgba(0,0,0,.4);padding:8px 14px;border-radius:12px;backdrop-filter:blur(6px)}
 #menuOverlay{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at 50% 80%,rgba(20,50,20,.4),rgba(0,0,0,.85));backdrop-filter:blur(3px)}
 #menuOverlay.hidden{display:none}
 .menuCard{background:rgba(12,18,12,.82);border:1px solid rgba(255,255,255,.1);border-radius:24px;padding:36px 32px;max-width:560px;width:92%;text-align:center;color:#fff;box-shadow:0 30px 80px rgba(0,0,0,.6);backdrop-filter:blur(12px)}
@@ -66,9 +67,10 @@ canvas.game{position:fixed;inset:0;display:block;z-index:0}
 </div></div>
 <canvas id="minimap" width="160" height="160"></canvas>
 <div id="damage"></div>
+<canvas id="dangerIndicator" width="300" height="300"></canvas>
 <button id="pauseBtn">⏸ PAUSA</button>
 <div id="touchUI">
-<div id="joystick"><div id="stick"></div></div>
+<div id="tapHint">👆 Tocca sul terreno per muoverti</div>
 <button class="tbtn" id="sprintBtn">⚡<br>SPRINT</button>
 <button class="tbtn" id="jumpBtn">⤒<br>SALTA</button>
 </div>
@@ -78,31 +80,33 @@ canvas.game{position:fixed;inset:0;display:block;z-index:0}
 <script>
 'use strict';
 
-// Controllo caricamento Three.js
 if(typeof THREE==='undefined'){
-  document.getElementById('menuOverlay').innerHTML='<div class="menuCard"><h1>⚠️ Errore</h1><p class="sub">Impossibile caricare Three.js. Controlla la connessione a Internet e ricarica la pagina.</p></div>';
-  throw new Error('Three.js non caricato');
+  document.getElementById('menuOverlay').innerHTML='<div class="menuCard"><h1>⚠️ Errore</h1><p class="sub">Three.js non caricato. Controlla la connessione e ricarica.</p></div>';
+  throw new Error('Three.js not loaded');
 }
 
-const SAVE_KEY='mucche_v3';
+const SAVE_KEY='cow_escape_v4';
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const rand=(a,b)=>a+Math.random()*(b-a);
+const lerp=(a,b,t)=>a+(b-a)*t;
 const damp=(a,b,l,dt)=>a+(b-a)*(1-Math.exp(-l*dt));
 function dampAngle(a,b,l,dt){let d=b-a;while(d>Math.PI)d-=Math.PI*2;while(d<-Math.PI)d+=Math.PI*2;return a+d*(1-Math.exp(-l*dt))}
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=(Math.random()*(i+1))|0;[a[i],a[j]]=[a[j],a[i]]}return a}
+function normalizeAngle(a){while(a>Math.PI)a-=Math.PI*2;while(a<-Math.PI)a+=Math.PI*2;return a}
 const isTouch=matchMedia('(pointer:coarse)').matches||'ontouchstart'in window;
 
-let settings={invertX:false,volume:0.7,autoJump:true};
+let settings={invertX:false,volume:0.7,autoJump:true,showDanger:true};
 function loadSave(){try{const d=JSON.parse(localStorage.getItem(SAVE_KEY));if(d&&d.maxLevel)return d}catch(e){}return{maxLevel:1,settings:{}}}
-function persistSave(){try{localStorage.setItem(SAVE_KEY,JSON.stringify({maxLevel:save.maxLevel,settings:settings}))}catch(e){}}
+function persistSave(){try{localStorage.setItem(SAVE_KEY,JSON.stringify({maxLevel:save.maxLevel,settings}))}catch(e){}}
 let save=loadSave();
 if(save.settings)Object.assign(settings,save.settings);
 
 const $=id=>document.getElementById(id);
 const hpFill=$('hpFill'),stFill=$('stFill'),lvlEl=$('lvlEl'),timeEl=$('timeEl'),distEl=$('distEl'),recEl=$('recEl');
 const damageEl=$('damage'),minimap=$('minimap'),mmCtx=minimap.getContext('2d');
-const joystick=$('joystick'),stick=$('stick'),jumpBtn=$('jumpBtn'),sprintBtn=$('sprintBtn');
-const menuOverlay=$('menuOverlay'),pauseBtn=$('pauseBtn');
+const dangerCanvas=$('dangerIndicator'),dangerCtx=dangerCanvas.getContext('2d');
+const jumpBtn=$('jumpBtn'),sprintBtn=$('sprintBtn');
+const menuOverlay=$('menuOverlay'),pauseBtn=$('pauseBtn'),tapHint=$('tapHint');
 
 const scene=new THREE.Scene();
 scene.background=new THREE.Color(0x1b2a1c);
@@ -165,12 +169,14 @@ let velX=0,velZ=0,vy=0,grounded=true,inputMoving=false,inMud=false;
 let viewYaw=.8,viewPitch=.46,heading=0,runPhase=0,autoOrbitYaw=.8,idleTimer=0;
 let jumpHeld=false,jumpBuffer=0,coyote=0;
 let stumble=0,invuln=0,elapsed=0,shake=0,damageAlpha=0;
-const keys={};const joy={x:0,y:0,id:null};
+let driftAngle=0; // angolo di "drift" per movimento più fluido
+const keys={};
 
 const raycaster=new THREE.Raycaster();
 const groundPlane=new THREE.Plane(new THREE.Vector3(0,1,0),0);
 let moveTargetActive=false,moveTarget={x:0,z:0},movePath=[],pointerDown=false,moveRepathTimer=0;
 let smoothPath=[],smoothPathT=0;
+let tapHintShown=false;
 
 const particles=[];
 function spawnParticles(x,y,z,color,count){
@@ -194,11 +200,23 @@ function updateParticles(dt){
  }
 }
 
+// ============= AUDIO =============
 const SFX={ctx:null,master:null,
- init(){if(this.ctx){this.ctx.resume&&this.ctx.resume();return}const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;this.ctx=new AC();this.master=this.ctx.createGain();this.master.gain.value=settings.volume;this.master.connect(this.ctx.destination)},
+ init(){if(this.ctx){try{this.ctx.resume()}catch(e){}return}
+  const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
+  this.ctx=new AC();this.master=this.ctx.createGain();this.master.gain.value=settings.volume;this.master.connect(this.ctx.destination)},
  setVol(v){settings.volume=v;if(this.master)this.master.gain.value=v},
- tone(f,d,type,vol,slide){type=type||'sine';vol=vol||.2;if(!this.ctx)return;const t=this.ctx.currentTime,o=this.ctx.createOscillator(),g=this.ctx.createGain();o.type=type;o.frequency.setValueAtTime(f,t);if(slide)o.frequency.exponentialRampToValueAtTime(slide,t+d);g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g);g.connect(this.master);o.start(t);o.stop(t+d+.03)},
- noise(d,vol,freq){vol=vol||.3;freq=freq||900;if(!this.ctx)return;const t=this.ctx.currentTime,len=Math.max(1,(this.ctx.sampleRate*d)|0),buf=this.ctx.createBuffer(1,len,this.ctx.sampleRate),data=buf.getChannelData(0);for(let i=0;i<len;i++)data[i]=(Math.random()*2-1)*Math.pow(1-i/len,2);const src=this.ctx.createBufferSource();src.buffer=buf;const f=this.ctx.createBiquadFilter();f.type='lowpass';f.frequency.value=freq;const g=this.ctx.createGain();g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.0001,t+d);src.connect(f);f.connect(g);g.connect(this.master);src.start()},
+ tone(f,d,type,vol,slide){type=type||'sine';vol=vol||.2;if(!this.ctx)return;
+  const t=this.ctx.currentTime,o=this.ctx.createOscillator(),g=this.ctx.createGain();
+  o.type=type;o.frequency.setValueAtTime(f,t);if(slide)o.frequency.exponentialRampToValueAtTime(slide,t+d);
+  g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.0001,t+d);
+  o.connect(g);g.connect(this.master);o.start(t);o.stop(t+d+.03)},
+ noise(d,vol,freq){vol=vol||.3;freq=freq||900;if(!this.ctx)return;
+  const t=this.ctx.currentTime,len=Math.max(1,(this.ctx.sampleRate*d)|0),buf=this.ctx.createBuffer(1,len,this.ctx.sampleRate),data=buf.getChannelData(0);
+  for(let i=0;i<len;i++)data[i]=(Math.random()*2-1)*Math.pow(1-i/len,2);
+  const src=this.ctx.createBufferSource();src.buffer=buf;const f=this.ctx.createBiquadFilter();f.type='lowpass';f.frequency.value=freq;
+  const g=this.ctx.createGain();g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.0001,t+d);
+  src.connect(f);f.connect(g);g.connect(this.master);src.start()},
  jump(){this.tone(180,.18,'sine',.22,430)},
  land(){this.noise(.08,.12,500)},
  trip(){this.noise(.2,.25,700);this.tone(120,.22,'sawtooth',.12,65)},
@@ -207,11 +225,25 @@ const SFX={ctx:null,master:null,
  click(){this.tone(520,.07,'triangle',.1,700)},
  vault(){this.tone(300,.15,'sine',.15,600)},
  mud(){this.noise(.15,.15,300)},
+ danger(){this.tone(80,.4,'sawtooth',.08,40)},
  win(){const notes=[523,659,784,1046];for(let i=0;i<notes.length;i++){const self=this;setTimeout(function(){self.tone(notes[i],.24,'triangle',.24)},i*115)}},
  lose(){const notes=[220,174,130,87];for(let i=0;i<notes.length;i++){const self=this;setTimeout(function(){self.tone(notes[i],.34,'sawtooth',.18)},i*175)}},
- moo(d){d=d||20;if(!this.ctx)return;const v=clamp(1-d/36,0,1)*.34;if(v<.01)return;const t=this.ctx.currentTime,o1=this.ctx.createOscillator(),o2=this.ctx.createOscillator(),g=this.ctx.createGain();o1.type='sawtooth';o2.type='triangle';o1.frequency.setValueAtTime(120,t);o1.frequency.linearRampToValueAtTime(82,t+.52);o2.frequency.setValueAtTime(180,t);o2.frequency.linearRampToValueAtTime(118,t+.52);g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(v,t+.06);g.gain.exponentialRampToValueAtTime(.0001,t+.68);o1.connect(g);o2.connect(g);g.connect(this.master);o1.start(t);o2.start(t);o1.stop(t+.72);o2.stop(t+.72)}
+ moo(dist,aggressive){
+  if(!this.ctx)return;
+  const v=clamp(1-dist/36,0,1)*(aggressive?.45:.3);
+  if(v<.01)return;
+  const t=this.ctx.currentTime,o1=this.ctx.createOscillator(),o2=this.ctx.createOscillator(),g=this.ctx.createGain();
+  o1.type='sawtooth';o2.type='triangle';
+  const baseF=aggressive?150:120, endF=aggressive?100:82;
+  o1.frequency.setValueAtTime(baseF,t);o1.frequency.linearRampToValueAtTime(endF,t+.52);
+  o2.frequency.setValueAtTime(baseF*1.5,t);o2.frequency.linearRampToValueAtTime(endF*1.44,t+.52);
+  g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(v,t+.06);g.gain.exponentialRampToValueAtTime(.0001,t+.68);
+  o1.connect(g);o2.connect(g);g.connect(this.master);
+  o1.start(t);o2.start(t);o1.stop(t+.72);o2.stop(t+.72);
+ }
 };
 
+// ============= MAZE =============
 function generateMaze(size,lvl){
  const g=[];
  for(let y=0;y<size;y++){g[y]=[];for(let x=0;x<size;x++)g[y][x]=true}
@@ -341,6 +373,8 @@ function pickGoals(openCells,startC,count){
  if(!chosen.length){const n=nearestOpenCell(MAZE_SIZE-2,MAZE_SIZE-2);if(n)chosen.push(cellCenter(n.x,n.z))}
  return chosen.slice(0,count);
 }
+
+// ============= COLLISIONS =============
 function resolveWalls(obj,r,iters){
  iters=iters||2;
  for(let it=0;it<iters;it++)for(let i=0;i<wallBoxes.length;i++){
@@ -409,6 +443,8 @@ function resolveObstacles(obj,r,isPlayer){
   }
  }
 }
+
+// ============= MESH =============
 function createPlayerMesh(){
  const g=new THREE.Group();
  const bm=new THREE.MeshStandardMaterial({color:0xff8a3d,roughness:.62});
@@ -426,29 +462,33 @@ function createPlayerMesh(){
  g.add(armL,armR,legL,legR);
  return{mesh:g,parts:{body:body,head:head,armL:armL,armR:armR,legL:legL,legR:legR}};
 }
-function createCowMesh(){
+function createCowMesh(personality){
  const g=new THREE.Group();
- const w=new THREE.MeshStandardMaterial({color:0xf8f8f8,roughness:.82});
- const b=new THREE.MeshStandardMaterial({color:0x181818,roughness:.85});
- const p=new THREE.MeshStandardMaterial({color:0xf6b0bd,roughness:.75});
- const em=new THREE.MeshStandardMaterial({color:0xff3300,emissive:0xff3300,emissiveIntensity:1.35,roughness:.2});
- const body=new THREE.Mesh(new THREE.BoxGeometry(.95,.9,1.55),w);body.position.y=.95;body.castShadow=true;g.add(body);
- for(let i=0;i<4;i++){const s=new THREE.Mesh(new THREE.SphereGeometry(rand(.16,.25),7,6),b);s.position.set(rand(-.35,.35),rand(.75,1.2),rand(-.55,.55));s.scale.set(1,.7,.45);g.add(s)}
- const head=new THREE.Mesh(new THREE.BoxGeometry(.5,.5,.55),w);head.position.set(0,1.1,.95);head.castShadow=true;g.add(head);
- const snout=new THREE.Mesh(new THREE.BoxGeometry(.34,.28,.3),p);snout.position.set(0,.98,1.25);g.add(snout);
+ const white=new THREE.MeshStandardMaterial({color:0xf8f8f8,roughness:.82});
+ const black=new THREE.MeshStandardMaterial({color:0x181818,roughness:.85});
+ const pink=new THREE.MeshStandardMaterial({color:0xf6b0bd,roughness:.75});
+ const eyeColor=personality==='tank'?0xff0000:(personality==='stalker'?0xff6600:0xff3300);
+ const em=new THREE.MeshStandardMaterial({color:eyeColor,emissive:eyeColor,emissiveIntensity:1.35,roughness:.2});
+ const scale=personality==='tank'?1.25:(personality==='runner'?0.85:1);
+ const body=new THREE.Mesh(new THREE.BoxGeometry(.95,.9,1.55),white);body.position.y=.95;body.castShadow=true;g.add(body);
+ for(let i=0;i<4;i++){const s=new THREE.Mesh(new THREE.SphereGeometry(rand(.16,.25),7,6),black);s.position.set(rand(-.35,.35),rand(.75,1.2),rand(-.55,.55));s.scale.set(1,.7,.45);g.add(s)}
+ const head=new THREE.Mesh(new THREE.BoxGeometry(.5,.5,.55),white);head.position.set(0,1.1,.95);head.castShadow=true;g.add(head);
+ const snout=new THREE.Mesh(new THREE.BoxGeometry(.34,.28,.3),pink);snout.position.set(0,.98,1.25);g.add(snout);
  const eL=new THREE.Mesh(new THREE.SphereGeometry(.065,6,6),em);eL.position.set(.15,1.2,1.15);g.add(eL);
  const eR=new THREE.Mesh(new THREE.SphereGeometry(.065,6,6),em);eR.position.set(-.15,1.2,1.15);g.add(eR);
  const hg=new THREE.ConeGeometry(.055,.24,6);
- const hL=new THREE.Mesh(hg,w);hL.position.set(.17,1.42,.85);hL.rotation.z=-.35;g.add(hL);
- const hR=new THREE.Mesh(hg,w);hR.position.set(-.17,1.42,.85);hR.rotation.z=.35;g.add(hR);
+ const hL=new THREE.Mesh(hg,white);hL.position.set(.17,1.42,.85);hL.rotation.z=-.35;g.add(hL);
+ const hR=new THREE.Mesh(hg,white);hR.position.set(-.17,1.42,.85);hR.rotation.z=.35;g.add(hR);
  const legs=[],lp=[[.3,.85,.45],[-.3,.85,.45],[.3,.85,-.45],[-.3,.85,-.45]];
  const clg=new THREE.CylinderGeometry(.09,.12,.85,7);clg.translate(0,-.425,0);
- for(let i=0;i<lp.length;i++){const l=new THREE.Mesh(clg,b);l.position.set(lp[i][0],lp[i][1],lp[i][2]);l.castShadow=true;g.add(l);legs.push(l)}
- const tail=new THREE.Mesh(new THREE.CylinderGeometry(.03,.05,.7,5),b);tail.position.set(0,1.2,-.85);tail.rotation.x=.7;g.add(tail);
- return{mesh:g,legs:legs,head:head,tail:tail};
+ for(let i=0;i<lp.length;i++){const l=new THREE.Mesh(clg,black);l.position.set(lp[i][0],lp[i][1],lp[i][2]);l.castShadow=true;g.add(l);legs.push(l)}
+ const tail=new THREE.Mesh(new THREE.CylinderGeometry(.03,.05,.7,5),black);tail.position.set(0,1.2,-.85);tail.rotation.x=.7;g.add(tail);
+ g.scale.setScalar(scale);
+ return{mesh:g,legs:legs,head:head,tail:tail,eyes:[eL,eR]};
 }
 function createGoalArrow(){const g=new THREE.Group();const c=new THREE.Mesh(new THREE.ConeGeometry(.17,.5,4),new THREE.MeshBasicMaterial({color:0xffd166}));c.rotation.x=Math.PI/2;g.add(c);g.visible=false;scene.add(g);return g}
 function createTargetMarker(){const g=new THREE.Group();const r=new THREE.Mesh(new THREE.RingGeometry(.35,.55,24),new THREE.MeshBasicMaterial({color:0x7fe3ff,transparent:true,opacity:.8,side:THREE.DoubleSide}));r.rotation.x=-Math.PI/2;g.add(r);const d=new THREE.Mesh(new THREE.CircleGeometry(.12,12),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.9,side:THREE.DoubleSide}));d.rotation.x=-Math.PI/2;d.position.y=.02;g.add(d);g.visible=false;scene.add(g);return g}
+
 function updateNearestGoal(){
  nearestGoal=null;nearestGoalDist=Infinity;
  for(let i=0;i<goals.length;i++){
@@ -490,6 +530,7 @@ function setMoveTargetFromPointer(e){
  moveTargetActive=true;moveRepathTimer=0;computeMovePath();
  if(targetMarker){targetMarker.position.set(moveTarget.x,.05,moveTarget.z);targetMarker.visible=true}
  SFX.click();
+ if(!tapHintShown&&isTouch){tapHintShown=true;setTimeout(function(){if(tapHint)tapHint.style.opacity='0'},3000)}
 }
 
 renderer.domElement.addEventListener('pointerdown',function(e){
@@ -599,7 +640,14 @@ function buildWorld(){
   goals.push({x:p.x,z:p.z,grp:grp,flag:flag,light:light,color:col});
  }
 
+ // ============= MUCHE CON PERSONALITÀ =============
  const cowCount=Math.min(2+level,7);
+ // Tipi di personalità:
+ // - chaser: insegue diretto, velocità media
+ // - runner: molto veloce ma meno intelligente
+ // - tank: lento ma resistente, blocca percorsi
+ // - stalker: cerca di anticipare il giocatore andando verso le uscite
+ const personalities=['chaser','chaser','runner','stalker','tank','stalker','runner'];
  let spawnCells=[];
  for(let i=0;i<openCells.length;i++){
   const c=openCells[i],p=cellCenter(c.cx,c.cz);
@@ -614,14 +662,52 @@ function buildWorld(){
  }
  shuffle(spawnCells);
  for(let i=0;i<cowCount&&i<spawnCells.length;i++){
-  const p=cellCenter(spawnCells[i].cx,spawnCells[i].cz),model=createCowMesh();
-  const cow={x:p.x,z:p.z,y:0,r:.68,speed:Math.min(6.5,4.3+level*.22+rand(0,.4)),mesh:model.mesh,legs:model.legs,head:model.head,tail:model.tail,path:[],repath:Math.random()*.25,stun:0,anim:rand(0,10),moo:rand(2.5,8)};
+  const p=cellCenter(spawnCells[i].cx,spawnCells[i].cz);
+  const personality=personalities[i%personalities.length];
+  const model=createCowMesh(personality);
+
+  let baseSpeed,aggroRadius,smartness;
+  switch(personality){
+   case 'runner':baseSpeed=7.2+level*.18;aggroRadius=35;smartness=.5;break;
+   case 'tank':baseSpeed=3.2+level*.1;aggroRadius=22;smartness=.7;break;
+   case 'stalker':baseSpeed=5.2+level*.15;aggroRadius=45;smartness=.9;break;
+   default:baseSpeed=4.8+level*.18;aggroRadius=30;smartness=.75;break;
+  }
+
+  const cow={
+   x:p.x,z:p.z,y:0,
+   r:.68*(personality==='tank'?1.25:(personality==='runner'?.85:1)),
+   baseSpeed:baseSpeed,
+   personality:personality,
+   aggroRadius:aggroRadius,
+   smartness:smartness,
+   state:'patrol',        // patrol, chase, search, stalk, idle
+   stateTimer:rand(2,5),
+   lastKnownPlayerX:p.x,
+   lastKnownPlayerZ:p.z,
+   sawPlayer:false,
+   targetX:p.x,targetZ:p.z,
+   patrolCell:spawnCells[i],
+   mesh:model.mesh,
+   legs:model.legs,
+   head:model.head,
+   tail:model.tail,
+   eyes:model.eyes,
+   path:[],
+   repath:Math.random()*.25,
+   stun:0,
+   anim:rand(0,10),
+   moo:rand(2.5,8),
+   headShake:0,
+   blocked:0,
+   lastVelX:0,lastVelZ:0
+  };
   cow.mesh.position.set(cow.x,0,cow.z);
   worldGroup.add(cow.mesh);
   cows.push(cow);
  }
  player.x=startC.x;player.z=startC.z;player.y=0;
- velX=0;velZ=0;vy=0;grounded=true;
+ velX=0;velZ=0;vy=0;grounded=true;driftAngle=0;
  cancelMoveTarget();updateNearestGoal();
  if(nearestGoal)viewYaw=Math.atan2(nearestGoal.x-player.x,nearestGoal.z-player.z);else viewYaw=.8;
  heading=viewYaw;autoOrbitYaw=viewYaw;idleTimer=0;
@@ -634,25 +720,6 @@ window.addEventListener('keydown',function(e){
  if(e.code==='Space'){jumpHeld=true;jumpBuffer=.15}
 });
 window.addEventListener('keyup',function(e){keys[e.code]=false;if(e.code==='Space')jumpHeld=false});
-
-function updateJoystick(e){
- const rect=joystick.getBoundingClientRect(),cx=rect.left+rect.width/2,cy=rect.top+rect.height/2;
- let dx=e.clientX-cx,dy=e.clientY-cy;
- const max=rect.width/2-24,d=Math.hypot(dx,dy);
- if(d>max){dx=dx/d*max;dy=dy/d*max}
- stick.style.transform='translate('+dx+'px,'+dy+'px)';
- joy.x=dx/max;joy.y=-dy/max;
-}
-function clearJoy(e){
- if(e.pointerId!==joy.id)return;
- joy.id=null;joy.x=0;joy.y=0;
- stick.style.transform='translate(0,0)';
-}
-joystick.addEventListener('pointerdown',function(e){e.preventDefault();e.stopPropagation();joy.id=e.pointerId;joystick.setPointerCapture(e.pointerId);updateJoystick(e)});
-joystick.addEventListener('pointermove',function(e){if(e.pointerId===joy.id)updateJoystick(e)});
-joystick.addEventListener('pointerup',clearJoy);
-joystick.addEventListener('pointercancel',clearJoy);
-joystick.addEventListener('lostpointercapture',clearJoy);
 
 function bindBtn(el,down,up){
  el.addEventListener('pointerdown',function(e){e.preventDefault();e.stopPropagation();el.setPointerCapture(e.pointerId);el.classList.add('active');down()});
@@ -703,12 +770,27 @@ function drawMinimap(){
   mmCtx.arc(((g.x-offsetX)/CELL)*cs,((g.z-offsetZ)/CELL)*cs,4,0,Math.PI*2);
   mmCtx.fill();
  }
- mmCtx.fillStyle='#ff5f5f';
+ // Mucche colorate per tipo
  for(let i=0;i<cows.length;i++){
   const c=cows[i];
+  const px=((c.x-offsetX)/CELL)*cs,pz=((c.z-offsetZ)/CELL)*cs;
+  if(c.personality==='runner')mmCtx.fillStyle='#ffaa00';
+  else if(c.personality==='tank')mmCtx.fillStyle='#9933ff';
+  else if(c.personality==='stalker')mmCtx.fillStyle='#00ffaa';
+  else mmCtx.fillStyle='#ff5f5f';
   mmCtx.beginPath();
-  mmCtx.arc(((c.x-offsetX)/CELL)*cs,((c.z-offsetZ)/CELL)*cs,3.2,0,Math.PI*2);
+  mmCtx.arc(px,pz,3.2,0,Math.PI*2);
   mmCtx.fill();
+  // Linea di vista se in chase
+  if(c.state==='chase'){
+   mmCtx.strokeStyle=mmCtx.fillStyle;
+   mmCtx.lineWidth=1;mmCtx.globalAlpha=.4;
+   mmCtx.beginPath();
+   mmCtx.moveTo(px,pz);
+   mmCtx.lineTo(((player.x-offsetX)/CELL)*cs,((player.z-offsetZ)/CELL)*cs);
+   mmCtx.stroke();
+   mmCtx.globalAlpha=1;
+  }
  }
  if(moveTargetActive&&smoothPath.length>1){
   mmCtx.strokeStyle='rgba(127,227,255,.8)';
@@ -740,11 +822,13 @@ function damagePlayer(amount,src){
  }
  if(hp<=0){hp=0;loseGame()}
 }
+
+// ============= MOVIMENTO GIOCATORE MIGLIORATO =============
 function updatePlayer(dt){
  const kf=(keys.KeyW||keys.ArrowUp?1:0)-(keys.KeyS||keys.ArrowDown?1:0);
  const krKeys=(keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0);
- const krJoy=joy.x*(settings.invertX?-1:1);
- let f=clamp(kf+joy.y,-1,1),r=clamp(krKeys+krJoy,-1,1);
+ const krJoy=krKeys*(settings.invertX?-1:1);
+ let f=clamp(kf,-1,1),r=clamp(krJoy,-1,1);
  const dead=.12;
  if(Math.abs(f)<dead)f=0;
  if(Math.abs(r)<dead)r=0;
@@ -752,6 +836,16 @@ function updatePlayer(dt){
  if(mag>1){f/=mag;r/=mag}
  const analogMag=Math.min(1,mag);
  const manual=mag>.08;
+
+ // Auto-sprint quando in pericolo
+ let nearestCowDist=Infinity;
+ for(let i=0;i<cows.length;i++){
+  const c=cows[i],d=Math.hypot(player.x-c.x,player.z-c.z);
+  if(d<nearestCowDist)nearestCowDist=d;
+ }
+ const autoSprint=nearestCowDist<8&&!sprintLocked&&stamina>20&&moveTargetActive;
+ const wantsSprint=sprintHeld||keys.ShiftLeft||keys.ShiftRight||autoSprint;
+
  let dirX=0,dirZ=0,followPath=false,cameraYawTarget=null;
  inputMoving=false;
 
@@ -774,7 +868,8 @@ function updatePlayer(dt){
    else{
     dirX=dx/(d||1);dirZ=dz/(d||1);
     inputMoving=true;followPath=true;
-    const lookIdx=Math.min(idx+6,smoothPath.length-1);
+    // Look-ahead per camera più stabile
+    const lookIdx=Math.min(idx+8,smoothPath.length-1);
     const look=smoothPath[lookIdx];
     const ldx=look.x-player.x,ldz=look.z-player.z,ld=Math.hypot(ldx,ldz);
     if(ld>.1)cameraYawTarget=Math.atan2(ldx,ldz);
@@ -786,7 +881,6 @@ function updatePlayer(dt){
   }
  }
 
- const wantsSprint=sprintHeld||keys.ShiftLeft||keys.ShiftRight;
  if(wantsSprint&&!sprintLocked&&stamina>0&&inputMoving&&stumble<=0){
   if(!sprintActive)SFX.sprint();
   sprintActive=true;stamina-=34*dt;sprintRegenDelay=.72;
@@ -799,13 +893,36 @@ function updatePlayer(dt){
 
  let speed=stumble>0?2.2:(sprintActive?11.2:6.5);
  if(inMud)speed*=.45;
+
+ // Drift: quando si cambia direzione rapidamente, aggiungi una leggera "scivolata"
+ if(inputMoving){
+  const targetHeading=Math.atan2(dirX,dirZ);
+  const headingDiff=normalizeAngle(targetHeading-heading);
+  // Accumula drift proporzionale alla differenza di angolo
+  driftAngle=damp(driftAngle,headingDiff*.15,4,dt);
+  // Ruota lentamente il personaggio verso la direzione desiderata
+  heading=dampAngle(heading,targetHeading,16,dt);
+ }else{
+  driftAngle=damp(driftAngle,0,8,dt);
+ }
+
  const targetX=dirX*speed,targetZ=dirZ*speed;
- if(inputMoving)heading=dampAngle(heading,Math.atan2(dirX,dirZ),18,dt);
  if(followPath&&cameraYawTarget!==null)autoOrbitYaw=dampAngle(autoOrbitYaw,cameraYawTarget,4,dt);
 
- const accel=grounded?(inputMoving?21:28):7;
+ // Accelerazione migliorata: più rapida in curva, più fluida in rettilineo
+ const currentSpeed=Math.hypot(velX,velZ);
+ const turning=Math.abs(driftAngle)>.1;
+ const accel=grounded?(inputMoving?(turning?26:21):28):7;
  velX=damp(velX,targetX,accel,dt);
  velZ=damp(velZ,targetZ,accel,dt);
+
+ // Applica drift: aggiunge un po' di slittamento laterale
+ if(grounded&&Math.abs(driftAngle)>.02){
+  const cosH=Math.cos(heading),sinH=Math.sin(heading);
+  const lateralVel=driftAngle*currentSpeed*.4;
+  velX+=cosH*lateralVel*dt*3;
+  velZ-=sinH*lateralVel*dt*3;
+ }
 
  jumpBuffer-=dt;
  coyote=grounded?.12:coyote-dt;
@@ -832,10 +949,14 @@ function updatePlayer(dt){
  const hSpeed=Math.hypot(velX,velZ);
  runPhase+=dt*(4+hSpeed*1.5);
  const swing=Math.sin(runPhase)*Math.min(1,hSpeed/6)*(grounded?.9:.3);
+ // Durante il drift, inclina il personaggio
+ const leanAngle=driftAngle*.3;
+ playerParts.body.rotation.z=leanAngle;
+ playerParts.head.rotation.z=leanAngle*.5;
  playerParts.legL.rotation.x=swing;
  playerParts.legR.rotation.x=-swing;
- playerParts.armL.rotation.x=-swing*.8;
- playerParts.armR.rotation.x=swing*.8;
+ playerParts.armL.rotation.x=-swing*.8+leanAngle*.4;
+ playerParts.armR.rotation.x=swing*.8-leanAngle*.4;
  playerParts.body.position.y=1.05+Math.abs(Math.sin(runPhase))*.05*Math.min(1,hSpeed/6);
  if(!grounded){
   playerParts.legL.rotation.x=-.45;playerParts.legR.rotation.x=.55;
@@ -845,50 +966,216 @@ function updatePlayer(dt){
  if(goalArrow)goalArrow.visible=!!nearestGoal;
  if(nearestGoal&&nearestGoalDist<1.75)winGame();
 }
+
+// ============= MUCHE MIGLIORATE =============
 function updateCows(dt){
+ // Calcola distanza di ogni mucca dal giocatore
+ let closestCow=null,closestDist=Infinity;
+ for(let i=0;i<cows.length;i++){
+  const c=cows[i];
+  const d=Math.hypot(player.x-c.x,player.z-c.z);
+  c.distToPlayer=d;
+  if(d<closestDist){closestDist=d;closestCow=c}
+ }
+
  for(let ci=0;ci<cows.length;ci++){
   const cow=cows[ci];
+
+  // Stato macchina per comportamento
+  cow.stateTimer-=dt;
+
+  // Transizioni di stato
+  const seesPlayer=cow.distToPlayer<cow.aggroRadius&&cow.state!=='stalk';
+  const canSeePlayer=cow.distToPlayer<15&&segmentClear(cow.x,cow.z,player.x,player.z,.6,6);
+
+  if(canSeePlayer){
+   cow.lastKnownPlayerX=player.x;
+   cow.lastKnownPlayerZ=player.z;
+   cow.sawPlayer=true;
+  }
+
+  if(cow.stateTimer<=0){
+   if(cow.personality==='stalker'&&cow.distToPlayer<30&&nearestGoal){
+    // Lo stalker cerca di andare verso l'uscita più vicina per intercettare
+    cow.state='stalk';
+    cow.stateTimer=rand(3,6);
+    // Scegli un'uscita come target
+    const goal=goals[(Math.random()*goals.length)|0];
+    cow.targetX=goal.x;cow.targetZ=goal.z;
+   }else if(canSeePlayer||cow.distToPlayer<cow.aggroRadius*.6){
+    cow.state='chase';
+    cow.stateTimer=rand(2,4);
+   }else if(cow.sawPlayer){
+    cow.state='search';
+    cow.stateTimer=rand(3,6);
+   }else{
+    cow.state='patrol';
+    cow.stateTimer=rand(4,8);
+    // Scegli una nuova cella da pattugliare
+    const cells=[];
+    for(let i=0;i<openCells.length;i++){
+     const c=openCells[i],p=cellCenter(c.cx,c.cz);
+     if(Math.hypot(p.x-cow.x,p.z-cow.z)<CELL*8)cells.push(p);
+    }
+    if(cells.length){
+     const pick=cells[(Math.random()*cells.length)|0];
+     cow.targetX=pick.x;cow.targetZ=pick.z;
+    }
+   }
+  }
+
+  // Determina target in base allo stato
+  let targetX,targetZ;
+  switch(cow.state){
+   case 'chase':
+    targetX=player.x;targetZ=player.z;
+    break;
+   case 'stalk':
+    // Anticipa il giocatore andando verso l'uscita
+    targetX=cow.targetX;targetZ=cow.targetZ;
+    // Se molto vicino al giocatore, cambia a chase
+    if(cow.distToPlayer<10){cow.state='chase';cow.stateTimer=3}
+    break;
+   case 'search':
+    // Va verso l'ultima posizione nota del giocatore
+    targetX=cow.lastKnownPlayerX;targetZ=cow.lastKnownPlayerZ;
+    if(Math.hypot(cow.x-targetX,cow.z-targetZ)<1.5){
+     // Ha raggiunto la posizione, torna a patrol
+     cow.state='patrol';cow.stateTimer=rand(2,4);cow.sawPlayer=false;
+    }
+    break;
+   default: // patrol
+    targetX=cow.targetX;targetZ=cow.targetZ;
+    if(Math.hypot(cow.x-targetX,cow.z-targetZ)<1.5){
+     cow.stateTimer=0; // forza cambio stato
+    }
+    break;
+  }
+
+  // Ricalcola path
   cow.repath-=dt;
   if(cow.repath<=0||cow.path.length===0){
-   cow.path=findPath(cow.x,cow.z,player.x,player.z);
-   cow.repath=.38+Math.random()*.22;
+   cow.path=findPath(cow.x,cow.z,targetX,targetZ);
+   cow.repath=.3+Math.random()*.2;
   }
-  let tx=player.x,tz=player.z;
+
+  // Segui il path
+  let pathTx=targetX,pathTz=targetZ;
   if(cow.path.length){
-   tx=cow.path[0].x;tz=cow.path[0].z;
-   if(Math.hypot(cow.x-tx,cow.z-tz)<.8)cow.path.shift();
+   pathTx=cow.path[0].x;pathTz=cow.path[0].z;
+   if(Math.hypot(cow.x-pathTx,cow.z-pathTz)<.8)cow.path.shift();
   }
-  let dx=tx-cow.x,dz=tz-cow.z,d=Math.hypot(dx,dz)||1;
+
+  let dx=pathTx-cow.x,dz=pathTz-cow.z,d=Math.hypot(dx,dz)||1;
   dx/=d;dz/=d;
-  const distP=Math.hypot(player.x-cow.x,player.z-cow.z);
-  let speed=cow.speed;
-  if(distP<7)speed+=.85;
-  if(cow.stun>0){cow.stun-=dt;speed=.45}
-  for(let oi=0;oi<cows.length;oi++){
-   const other=cows[oi];
-   if(other===cow)continue;
-   const sx=cow.x-other.x,sz=cow.z-other.z,sd=Math.hypot(sx,sz);
-   if(sd<1.4&&sd>.001){dx+=sx/sd*.82;dz+=sz/sd*.82}
+
+  // Velocità basata su stato e personalità
+  let speed=cow.baseSpeed;
+  if(cow.state==='chase'){
+   speed*=1.2;
+   if(cow.distToPlayer<7)speed+=.85;
+  }else if(cow.state==='stalk'){
+   speed*=1.1;
+  }else if(cow.state==='search'){
+   speed*=.8;
+  }else{
+   speed*=.5;
   }
+
+  if(cow.stun>0){cow.stun-=dt;speed=.45}
+  if(cow.blocked>0){cow.blocked-=dt;speed*=.5}
+
+  // Separazione dalle altre mucche (boids-like)
+  let sepX=0,sepZ=0;
+  for(let oi=0;oi<cows.length;oi++){
+   if(oi===ci)continue;
+   const other=cows[oi];
+   const sx=cow.x-other.x,sz=cow.z-other.z;
+   const sd=Math.hypot(sx,sz);
+   if(sd<1.8&&sd>.001){
+    const force=1/(sd*sd);
+    sepX+=sx/sd*force;
+    sepZ+=sz/sd*force;
+   }
+  }
+
+  // Coordinazione: alcune mucche provano a tagliare la strada al giocatore
+  if(cow.personality==='chaser'&&closestCow===cow&&cow.state==='chase'&&nearestGoal){
+   // La mucca "leader" prova ad andare verso l'uscita che il giocatore sta raggiungendo
+   // per bloccarlo (con probabilità)
+   if(Math.random()<.005){
+    const goalDir=Math.atan2(nearestGoal.x-player.x,nearestGoal.z-player.z);
+    const perpAngle=goalDir+Math.PI/2;
+    const interceptX=player.x+Math.cos(goalDir)*8+Math.cos(perpAngle)*4;
+    const interceptZ=player.z+Math.sin(goalDir)*8+Math.sin(perpAngle)*4;
+    const newPath=findPath(cow.x,cow.z,interceptX,interceptZ);
+    if(newPath.length>1)cow.path=newPath;
+   }
+  }
+
+  // Combina forze
+  const sepMag=Math.hypot(sepX,sepZ);
+  if(sepMag>.01){sepX/=sepMag;sepZ/=sepMag}
+  dx=dx+sepX*.8;
+  dz=dz+sepZ*.8;
+
   const dm=Math.hypot(dx,dz)||1;
   dx/=dm;dz/=dm;
+
+  const prevX=cow.x,prevZ=cow.z;
   cow.x+=dx*speed*dt;cow.z+=dz*speed*dt;
   resolveWalls(cow,cow.r,2);
+
+  // Se si è mossa molto poco (bloccata), aumenta blocked timer
+  if(Math.hypot(cow.x-prevX,cow.z-prevZ)<speed*dt*.2){
+   cow.blocked=Math.min(cow.blocked+dt*2,3);
+  }else{
+   cow.blocked=Math.max(0,cow.blocked-dt);
+  }
+
   cow.mesh.position.set(cow.x,0,cow.z);
-  if(speed>.2)cow.mesh.rotation.y=dampAngle(cow.mesh.rotation.y,Math.atan2(dx,dz),10,dt);
-  cow.anim+=dt*speed*1.8;
+
+  // Rotazione fluido verso direzione di movimento
+  const movingSpeed=Math.hypot(cow.x-prevX,cow.z-prevZ)/dt;
+  if(movingSpeed>.2){
+   const targetAngle=Math.atan2(dx,dz);
+   cow.mesh.rotation.y=dampAngle(cow.mesh.rotation.y,targetAngle,10,dt);
+  }
+
+  cow.anim+=dt*Math.max(.5,movingSpeed*.3);
   for(let li=0;li<cow.legs.length;li++){
-   cow.legs[li].rotation.x=Math.sin(cow.anim+li*Math.PI/2)*.72;
+   cow.legs[li].rotation.x=Math.sin(cow.anim+li*Math.PI/2)*.72*Math.min(1,movingSpeed/3);
+  }
+
+  // Head shake quando perde il giocatore
+  if(cow.state==='search'){
+   cow.headShake+=dt*8;
+   cow.head.rotation.y=Math.sin(cow.headShake)*.3;
+  }else{
+   cow.head.rotation.y*=.9;
   }
   cow.head.position.y=1.1+Math.sin(cow.anim*.7)*.035;
   cow.tail.rotation.x=.7+Math.sin(cow.anim*.9)*.42;
+
+  // Muggiti contestuali
   cow.moo-=dt;
-  if(cow.moo<=0){if(distP<34)SFX.moo(distP);cow.moo=rand(3.5,9)}
-  if(distP<cow.r+player.r+.28&&invuln<=0&&cow.stun<=0){
-   damagePlayer(22,cow);cow.stun=.55;cow.path=[];
+  if(cow.moo<=0){
+   if(cow.distToPlayer<34){
+    SFX.moo(cow.distToPlayer,cow.state==='chase');
+   }
+   cow.moo=cow.state==='chase'?rand(2,4):rand(4,9);
+  }
+
+  // Danni al giocatore
+  if(cow.distToPlayer<cow.r+player.r+.28&&invuln<=0&&cow.stun<=0){
+   const dmg=cow.personality==='tank'?30:22;
+   damagePlayer(dmg,cow);cow.stun=.55;cow.path=[];
+   cow.state='chase';cow.stateTimer=3;
   }
  }
 }
+
+// ============= CAMERA =============
 function updateCamera(dt){
  const hSpeed=Math.hypot(velX,velZ),moving=inputMoving||hSpeed>.55;
  let targetYaw;
@@ -931,6 +1218,41 @@ function updateCamera(dt){
  }
  camera.lookAt(lx,player.y+1.35,lz);
 }
+
+// ============= DANGER INDICATOR =============
+function drawDangerIndicator(){
+ if(!settings.showDanger){dangerCanvas.style.opacity='0';return}
+ const W=300,H=300,cx=150,cy=150;
+ dangerCtx.clearRect(0,0,W,H);
+ let anyDanger=false;
+ for(let i=0;i<cows.length;i++){
+  const c=cows[i];
+  const dx=c.x-player.x,dz=c.z-player.z;
+  const d=Math.hypot(dx,dz);
+  if(d>25)continue;
+  anyDanger=true;
+  // Angolo relativo alla camera
+  const worldAngle=Math.atan2(dx,dz);
+  const screenAngle=worldAngle-viewYaw+Math.PI;
+  const intensity=clamp(1-d/25,0,1);
+  const radius=120;
+  const px=cx+Math.sin(screenAngle)*radius;
+  const py=cy-Math.cos(screenAngle)*radius;
+  dangerCtx.save();
+  dangerCtx.translate(px,py);
+  dangerCtx.rotate(screenAngle);
+  dangerCtx.fillStyle=`rgba(255,60,60,${intensity*.8})`;
+  dangerCtx.beginPath();
+  dangerCtx.moveTo(0,-12);
+  dangerCtx.lineTo(8,10);
+  dangerCtx.lineTo(-8,10);
+  dangerCtx.closePath();
+  dangerCtx.fill();
+  dangerCtx.restore();
+ }
+ dangerCanvas.style.opacity=anyDanger?'1':'0';
+}
+
 function updateWorldFX(dt){
  for(let i=0;i<goals.length;i++){
   const g=goals[i];
@@ -951,8 +1273,10 @@ function updateWorldFX(dt){
  damageEl.style.opacity=damageAlpha;
  shake=Math.max(0,shake-dt*1.8);
  updateParticles(dt);
+ drawDangerIndicator();
 }
 
+// ============= MENU =============
 function showMainMenu(){
  gameState='menu';
  menuOverlay.classList.remove('hidden');
@@ -964,8 +1288,8 @@ function showMainMenu(){
   lvlBtns+='<button class="lvlBtn '+cls+'" onclick="startLevel('+i+')">'+(locked?'🔒':i)+'</button>';
  }
  menuOverlay.innerHTML='<div class="menuCard">'+
-  '<h1>🐄 Fuga dalle Mucche</h1>'+
-  '<p class="sub">Sopravvivi nel labirinto · raggiungi le bandiere · evita le mucche</p>'+
+  '<h1>🐄 Cow Escape</h1>'+
+  '<p class="sub">Scappa dalle mucche in un labirinto 3D procedurale</p>'+
   '<div class="tabRow">'+
   '<button class="tabBtn active" onclick="switchTab(\'play\',this)">▶ Gioca</button>'+
   '<button class="tabBtn" onclick="switchTab(\'settings\',this)">⚙️ Opzioni</button>'+
@@ -979,18 +1303,22 @@ function showMainMenu(){
   '<div id="tab-settings" class="tabContent">'+
   '<div class="settingsRow"><span>Inverti asse X</span><div class="toggle '+(settings.invertX?'on':'')+'" onclick="toggleSetting(\'invertX\',this)"></div></div>'+
   '<div class="settingsRow"><span>Auto-salto tronchi</span><div class="toggle '+(settings.autoJump?'on':'')+'" onclick="toggleSetting(\'autoJump\',this)"></div></div>'+
+  '<div class="settingsRow"><span>Indicatore pericolo</span><div class="toggle '+(settings.showDanger?'on':'')+'" onclick="toggleSetting(\'showDanger\',this)"></div></div>'+
   '<div class="settingsRow"><span>Volume</span><input type="range" min="0" max="1" step=".1" value="'+settings.volume+'" style="width:100px" oninput="setVolume(this.value)"></div>'+
   '</div>'+
   '<div id="tab-help" class="tabContent">'+
   '<p style="font-size:13px;line-height:1.7;text-align:left">'+
-  '🖱️ <b>Clicca/trascina</b> sul terreno per muoverti (o WASD/frecce/joystick)<br>'+
-  '⚡ <b>SHIFT</b> o pulsante per lo sprint<br>'+
+  '🖱️ <b>Clicca/trascina</b> sul terreno per muoverti<br>'+
+  '⌨️ <b>WASD/frecce</b> per muoverti direttamente<br>'+
+  '⚡ <b>SHIFT</b> o pulsante per lo sprint (auto quando sei in pericolo!)<br>'+
   '⤒ <b>SPAZIO</b> per saltare (o auto-salto sui tronchi se attivo)<br>'+
-  '🪵 <b>Tronchi</b>: saltali o inciampi<br>'+
-  '🪨 <b>Rocce</b>: bloccano, rimbalzano se colpiti forte<br>'+
-  '🟤 <b>Fango</b>: ti rallenta molto<br>'+
-  '🚩 Raggiungi una bandiera per vincere<br>'+
-  '🐄 Le mucche ti inseguono: non farti toccare!'+
+  '<br><b>Tipi di mucca:</b><br>'+
+  '🔴 <b>Chaser</b>: ti insegue diretta<br>'+
+  '🟠 <b>Runner</b>: velocissima ma poco furba<br>'+
+  '🟢 <b>Stalker</b>: cerca di anticiparti alle uscite<br>'+
+  '🟣 <b>Tank</b>: lenta ma fa più danni<br>'+
+  '<br>🪵 Tronchi · 🪨 Rocce · 🟤 Fango<br>'+
+  '🚩 Raggiungi una bandiera per vincere!'+
   '</p></div></div>';
 }
 window.switchTab=function(id,btn){
@@ -1043,7 +1371,7 @@ window.startLevel=function(l){
  hp=100;stamina=100;
  sprintLocked=false;sprintActive=false;sprintHeld=false;sprintRegenDelay=0;
  stumble=0;invuln=0;elapsed=0;damageAlpha=0;shake=0;
- jumpBuffer=0;coyote=0;viewPitch=.46;
+ jumpBuffer=0;coyote=0;viewPitch=.46;driftAngle=0;
  if(!playerMesh){const p=createPlayerMesh();playerMesh=p.mesh;playerParts=p.parts;scene.add(playerMesh)}
  if(!goalArrow)goalArrow=createGoalArrow();
  if(!targetMarker)targetMarker=createTargetMarker();
