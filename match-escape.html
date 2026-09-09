@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Match & Escape - Mini Games Arcade</title>
 
 <!-- ===== GOOGLE ADSENSE ===== -->
@@ -12,12 +12,17 @@
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Rubik:wght@400;700;800&display=swap" rel="stylesheet">
 
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   
   html, body {
     width: 100%;
-    min-height: 100vh;
-    overflow-x: hidden;
+    height: 100%;
+    overflow: hidden;
+    touch-action: manipulation;
+    -ms-touch-action: manipulation;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-text-size-adjust: 100%;
   }
   
   body {
@@ -26,20 +31,30 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 10px;
     color: #fff;
+    overscroll-behavior: none;
+    position: fixed;
+    inset: 0;
+  }
+  
+  /* ===== LAYOUT PRINCIPALE ===== */
+  .app {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: 6px;
+    gap: 6px;
   }
   
   /* ===== TOP BAR ===== */
   .top-bar {
-    width: 100%;
-    max-width: 700px;
+    flex-shrink: 0;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 8px 12px;
-    margin-bottom: 10px;
-    background: rgba(0,0,0,0.3);
+    padding: 6px 10px;
+    background: rgba(0,0,0,0.4);
     border-radius: 12px;
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255,255,255,0.1);
@@ -48,53 +63,48 @@
   .back-btn {
     display: flex;
     align-items: center;
-    gap: 6px;
-    padding: 8px 14px;
+    gap: 4px;
+    padding: 7px 12px;
     background: linear-gradient(135deg, #4ecdc4, #44a3aa);
     color: #08121f;
     text-decoration: none;
     font-family: 'Press Start 2P', monospace;
-    font-size: 10px;
-    border-radius: 10px;
-    box-shadow: 0 4px 0 #2d7a74;
-    transition: transform 0.15s;
+    font-size: 9px;
+    border-radius: 8px;
+    box-shadow: 0 3px 0 #2d7a74;
+    transition: transform 0.1s;
   }
-  .back-btn:hover { transform: translateY(-2px); }
-  .back-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #2d7a74; }
+  .back-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 #2d7a74; }
   
   .game-title {
     font-family: 'Press Start 2P', monospace;
-    font-size: 11px;
+    font-size: 10px;
     color: #ffd93d;
-    text-shadow: 0 0 10px rgba(255,217,61,0.6);
+    text-shadow: 0 0 8px rgba(255,217,61,0.6);
   }
   
   .mute-btn {
     background: rgba(0,0,0,0.5);
     border: 2px solid rgba(255,255,255,0.3);
     color: white;
-    width: 40px;
-    height: 40px;
+    width: 38px;
+    height: 38px;
     border-radius: 50%;
     cursor: pointer;
-    font-size: 1.1em;
-    transition: all 0.2s;
+    font-size: 1em;
     font-family: inherit;
   }
-  .mute-btn:hover {
-    background: rgba(255,255,255,0.2);
-    transform: scale(1.1);
-  }
+  .mute-btn:active { transform: scale(0.9); }
   
-  /* ===== CANVAS CONTAINER ===== */
+  /* ===== CANVAS ===== */
   .canvas-wrapper {
+    flex: 1;
     position: relative;
     width: 100%;
-    max-width: 700px;
-    aspect-ratio: 700 / 850;
-    border-radius: 15px;
+    min-height: 0;
+    border-radius: 12px;
     overflow: hidden;
-    box-shadow: 0 0 50px rgba(78, 205, 196, 0.3), 0 20px 60px rgba(0,0,0,0.8);
+    box-shadow: 0 0 30px rgba(78, 205, 196, 0.25), 0 10px 30px rgba(0,0,0,0.7);
     background: #1a1a2e;
   }
   
@@ -114,50 +124,46 @@
     transform: translate(-50%, -50%);
     background: rgba(26, 26, 46, 0.98);
     backdrop-filter: blur(15px);
-    border-radius: 20px;
-    padding: clamp(20px, 4vw, 40px);
+    border-radius: 18px;
+    padding: 18px;
     text-align: center;
     border: 3px solid rgba(255,217,61,0.6);
-    box-shadow: 0 0 80px rgba(255,217,61,0.3), 0 20px 60px rgba(0,0,0,0.9);
+    box-shadow: 0 0 60px rgba(255,217,61,0.3), 0 15px 40px rgba(0,0,0,0.9);
     z-index: 10;
-    width: 90%;
-    max-width: 420px;
+    width: 88%;
+    max-width: 380px;
+    max-height: 92%;
+    overflow-y: auto;
     animation: menuFloat 3s ease-in-out infinite;
   }
   
   @keyframes menuFloat {
     0%, 100% { transform: translate(-50%, -50%) translateY(0); }
-    50% { transform: translate(-50%, -50%) translateY(-10px); }
+    50% { transform: translate(-50%, -50%) translateY(-6px); }
   }
   
   .menu-overlay h1 {
     color: #ffd93d;
     font-family: 'Press Start 2P', monospace;
-    font-size: clamp(14px, 4vw, 24px);
-    text-shadow: 0 0 20px #ffd93d, 3px 3px 0 #ff6b6b;
-    margin-bottom: 10px;
-    animation: titlePulse 1.5s infinite;
-    line-height: 1.4;
-  }
-  
-  @keyframes titlePulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.03); }
+    font-size: clamp(13px, 3.8vw, 22px);
+    text-shadow: 0 0 15px #ffd93d, 2px 2px 0 #ff6b6b;
+    margin-bottom: 8px;
+    line-height: 1.3;
   }
   
   .menu-overlay .subtitle {
     color: #4ecdc4;
     font-family: 'Press Start 2P', monospace;
-    font-size: clamp(9px, 2.5vw, 12px);
-    margin-bottom: 20px;
-    text-shadow: 0 0 10px rgba(78,205,196,0.5);
+    font-size: clamp(8px, 2.2vw, 11px);
+    margin-bottom: 14px;
+    text-shadow: 0 0 8px rgba(78,205,196,0.5);
   }
   
   .instructions {
     background: rgba(0,0,0,0.5);
-    border-radius: 12px;
-    padding: clamp(12px, 3vw, 20px);
-    margin-bottom: 20px;
+    border-radius: 10px;
+    padding: 12px;
+    margin-bottom: 14px;
     border: 1px solid rgba(255,255,255,0.1);
     text-align: left;
   }
@@ -165,20 +171,18 @@
   .instructions h3 {
     color: #ffd93d;
     font-family: 'Press Start 2P', monospace;
-    font-size: clamp(9px, 2.5vw, 11px);
-    margin-bottom: 12px;
+    font-size: clamp(8px, 2.2vw, 10px);
+    margin-bottom: 10px;
     text-align: center;
   }
   
-  .instructions ul {
-    list-style: none;
-  }
+  .instructions ul { list-style: none; }
   
   .instructions li {
     color: #fff;
-    font-size: clamp(11px, 2.8vw, 14px);
-    margin: 8px 0;
-    padding-left: 22px;
+    font-size: clamp(11px, 3vw, 13px);
+    margin: 6px 0;
+    padding-left: 20px;
     position: relative;
     line-height: 1.4;
     font-family: Rubik, sans-serif;
@@ -194,149 +198,126 @@
   .btn {
     display: block;
     width: 100%;
-    padding: 14px 20px;
-    font-size: clamp(11px, 3vw, 14px);
+    padding: 13px 18px;
+    font-size: clamp(10px, 2.8vw, 13px);
     font-weight: bold;
     font-family: 'Press Start 2P', monospace;
     color: white;
     background: linear-gradient(135deg, #ff6b6b, #ee5a6f);
     border: none;
-    border-radius: 12px;
+    border-radius: 10px;
     cursor: pointer;
-    box-shadow: 0 6px 0 #c93d3d, 0 0 30px rgba(255,107,107,0.5);
-    transition: all 0.15s;
-    margin-bottom: 10px;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.4);
+    box-shadow: 0 5px 0 #c93d3d, 0 0 20px rgba(255,107,107,0.5);
+    transition: all 0.1s;
+    margin-bottom: 8px;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.4);
     letter-spacing: 1px;
   }
   
-  .btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 0 #c93d3d, 0 0 50px rgba(255,107,107,0.7);
-  }
-  
   .btn:active {
-    transform: translateY(4px);
-    box-shadow: 0 2px 0 #c93d3d, 0 0 20px rgba(255,107,107,0.4);
+    transform: translateY(3px);
+    box-shadow: 0 2px 0 #c93d3d, 0 0 15px rgba(255,107,107,0.4);
   }
   
   .btn.secondary {
     background: linear-gradient(135deg, #4ecdc4, #44a3aa);
-    box-shadow: 0 6px 0 #2d7a74, 0 0 30px rgba(78,205,196,0.5);
-  }
-  
-  .btn.secondary:hover {
-    box-shadow: 0 8px 0 #2d7a74, 0 0 50px rgba(78,205,196,0.7);
+    box-shadow: 0 5px 0 #2d7a74, 0 0 20px rgba(78,205,196,0.5);
   }
   
   .btn.secondary:active {
-    box-shadow: 0 2px 0 #2d7a74, 0 0 20px rgba(78,205,196,0.4);
+    box-shadow: 0 2px 0 #2d7a74, 0 0 15px rgba(78,205,196,0.4);
   }
   
   .hidden { display: none !important; }
   
   /* ===== AD BANNER ===== */
   #adbar {
+    flex-shrink: 0;
     width: 100%;
-    max-width: 700px;
-    margin-top: 20px;
-    margin-bottom: 10px;
-    min-height: 90px;
+    min-height: 50px;
     background: rgba(0,0,0,0.2);
-    border-radius: 12px;
+    border-radius: 10px;
     overflow: hidden;
   }
   
-  footer {
-    width: 100%;
-    max-width: 700px;
-    margin: 15px 0 20px;
-    font-size: 11px;
-    opacity: .7;
-    text-align: center;
-    line-height: 1.8;
-    color: #fff;
-  }
-  
-  footer a {
-    color: #7ce7ff;
-    text-decoration: none;
-    margin: 0 8px;
-  }
-  footer a:hover { text-decoration: underline; }
-  footer .sep { opacity: .4; margin: 0 4px; }
-  
-  /* ===== MOBILE FIX ===== */
-  @media (max-width: 480px) {
-    body { padding: 6px; }
-    .top-bar { padding: 6px 10px; }
-    .back-btn { padding: 6px 10px; font-size: 8px; }
-    .game-title { font-size: 9px; }
-    .mute-btn { width: 35px; height: 35px; font-size: 0.9em; }
+  /* ===== MOBILE - GIOCO PIÙ GRANDE ===== */
+  @media (max-width: 768px) {
+    .app { padding: 3px; gap: 3px; }
+    .top-bar { padding: 4px 8px; border-radius: 8px; }
+    .back-btn { padding: 5px 8px; font-size: 7px; }
+    .game-title { font-size: 8px; }
+    .mute-btn { width: 32px; height: 32px; font-size: 0.85em; }
     #adbar { min-height: 50px; }
   }
   
-  @media (max-height: 600px) and (orientation: landscape) {
-    body { padding: 5px; }
-    .canvas-wrapper { max-height: 75vh; aspect-ratio: auto; height: 75vh; width: auto; }
+  @media (max-width: 480px) {
+    .game-title { display: none; }
+    #adbar { min-height: 45px; }
+  }
+  
+  /* Landscape - canvas più grande */
+  @media (max-height: 500px) and (orientation: landscape) {
+    .top-bar { padding: 3px 8px; }
+    .back-btn { padding: 4px 8px; font-size: 7px; }
+    #adbar { min-height: 30px; }
+    .app { padding: 2px; gap: 2px; }
   }
 </style>
 </head>
 <body>
 
-<!-- ===== TOP BAR ===== -->
-<div class="top-bar">
-  <a href="index.html" class="back-btn">← BACK</a>
-  <div class="game-title">MATCH &amp; ESCAPE</div>
-  <button class="mute-btn" id="muteBtn" onclick="toggleMute()">♪</button>
-</div>
+<div class="app">
+  <!-- ===== TOP BAR ===== -->
+  <div class="top-bar">
+    <a href="index.html" class="back-btn">← BACK</a>
+    <div class="game-title">MATCH &amp; ESCAPE</div>
+    <button class="mute-btn" id="muteBtn" onclick="toggleMute()">♪</button>
+  </div>
 
-<!-- ===== GAME CANVAS ===== -->
-<div class="canvas-wrapper">
-  <canvas id="gameCanvas" width="700" height="850"></canvas>
-  
-  <div class="menu-overlay" id="menu">
-    <h1>MATCH &amp; ESCAPE</h1>
-    <p class="subtitle">◆ Puzzle Runner ◆</p>
+  <!-- ===== GAME CANVAS ===== -->
+  <div class="canvas-wrapper">
+    <canvas id="gameCanvas"></canvas>
     
-    <div class="instructions">
-      <h3>COME SI GIOCA</h3>
-      <ul>
-        <li>Tocca un simbolo, poi uno adiacente per scambiarli</li>
-        <li>Allinea 3+ simboli uguali per eliminarli</li>
-        <li>Ogni match fa correre l'omino verso il traguardo</li>
-        <li>Raggiungi la bandiera per passare al livello dopo</li>
-        <li>Il mostro ti insegue: non perdere tempo!</li>
-      </ul>
+    <div class="menu-overlay" id="menu">
+      <h1>MATCH &amp; ESCAPE</h1>
+      <p class="subtitle">◆ Puzzle Runner ◆</p>
+      
+      <div class="instructions">
+        <h3>COME SI GIOCA</h3>
+        <ul>
+          <li>Tocca un simbolo, poi uno adiacente per scambiarli</li>
+          <li>Allinea 3+ simboli uguali per eliminarli</li>
+          <li>Ogni match fa correre l'omino verso il traguardo</li>
+          <li>Raggiungi la bandiera per passare al livello dopo</li>
+          <li>Il mostro ti insegue: non perdere tempo!</li>
+        </ul>
+      </div>
+      
+      <button class="btn" onclick="startGame(1)">▶ NORMALE</button>
+      <button class="btn secondary" onclick="startGame(2)">▶ DIFFICILE</button>
     </div>
-    
-    <button class="btn" onclick="startGame(1)">▶ NORMALE</button>
-    <button class="btn secondary" onclick="startGame(2)">▶ DIFFICILE</button>
+  </div>
+
+  <!-- ===== ADSENSE BANNER ===== -->
+  <div id="adbar">
+    <ins class="adsbygoogle"
+         style="display:block"
+         data-ad-client="ca-pub-6380006770259018"
+         data-ad-slot="IL-TUO-SLOT-ID"
+         data-ad-format="auto"
+         data-full-width-responsive="true"></ins>
+    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
   </div>
 </div>
 
-<!-- ===== ADSENSE BANNER ===== -->
-<div id="adbar">
-  <ins class="adsbygoogle"
-       style="display:block"
-       data-ad-client="ca-pub-6380006770259018"
-       data-ad-slot="IL-TUO-SLOT-ID"
-       data-ad-format="auto"
-       data-full-width-responsive="true"></ins>
-  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
-</div>
-
-<!-- ===== FOOTER ===== -->
-<footer>
-  © 2026 Mini Games Arcade — All rights reserved.<br>
-  <a href="index.html">Home</a>
-  <span class="sep">•</span>
-  <a href="privacy.html">Privacy Policy</a>
-  <span class="sep">•</span>
-  <a href="mailto:davidebellomo1@icloud.com">Contact</a>
-</footer>
-
 <script>
+// ===== BLOCCO ZOOM =====
+document.addEventListener('gesturestart', e => e.preventDefault());
+document.addEventListener('gesturechange', e => e.preventDefault());
+document.addEventListener('gestureend', e => e.preventDefault());
+document.addEventListener('dblclick', e => e.preventDefault());
+document.addEventListener('wheel', e => { if (e.ctrlKey) e.preventDefault(); }, { passive: false });
+
 // ==================== AUDIO SYSTEM ====================
 class AudioSystem {
   constructor() {
@@ -367,6 +348,7 @@ class AudioSystem {
       case 'win': this.playWin(); break;
       case 'lose': this.playLose(); break;
       case 'tick': this.playTone(800, 0.03, 'square', 0.05); break;
+      case 'step': this.playTone(180 + Math.random()*40, 0.04, 'triangle', 0.08); break;
     }
   }
   
@@ -454,7 +436,6 @@ function toggleMute() { audio.toggleMute(); }
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
-// Dimensioni base del canvas (coordinate interne)
 const BASE_W = 700;
 const BASE_H = 850;
 
@@ -475,10 +456,13 @@ let score = 0;
 let level = 1;
 let combo = 0;
 let lastMatchTime = 0;
+let runCycle = 0;
+let lastStepTime = 0;
 
 let animationTime = 0;
 let particles = [];
 let floatingTexts = [];
+let dustParticles = [];
 let screenShake = 0;
 let flashAlpha = 0;
 let swapAnimation = null;
@@ -497,18 +481,16 @@ const symbols = [
 function handleResize() {
   const wrapper = document.querySelector('.canvas-wrapper');
   const rect = wrapper.getBoundingClientRect();
-  // Mantieni risoluzione interna alta per qualità
-  const dpr = window.devicePixelRatio || 1;
-  canvas.width = BASE_W * dpr;
-  canvas.height = BASE_H * dpr;
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  ctx.setTransform(dpr * rect.width / BASE_W, 0, 0, dpr * rect.height / BASE_H, 0, 0);
 }
 
 window.addEventListener('resize', handleResize);
-window.addEventListener('orientationchange', () => {
-  setTimeout(handleResize, 200);
-});
-handleResize();
+window.addEventListener('orientationchange', () => setTimeout(handleResize, 250));
+window.addEventListener('load', handleResize);
+setTimeout(handleResize, 100);
 
 // ==================== GAME FUNCTIONS ====================
 function startGame(diff) {
@@ -576,7 +558,6 @@ function handleInput(clientX, clientY) {
   if (gameState !== 'playing' || isProcessing) return;
   
   const rect = canvas.getBoundingClientRect();
-  // Converti coordinate schermo a coordinate base del canvas
   const x = ((clientX - rect.left) / rect.width) * BASE_W;
   const y = ((clientY - rect.top) / rect.height) * BASE_H;
   
@@ -766,19 +747,6 @@ function spawnExplosion(x, y, color, glow) {
       type: Math.random() > 0.7 ? 'spark' : 'circle'
     });
   }
-  
-  for (let i = 0; i < 5; i++) {
-    particles.push({
-      x: x + (Math.random() - 0.5) * 20,
-      y: y + (Math.random() - 0.5) * 20,
-      vx: (Math.random() - 0.5) * 2,
-      vy: -2 - Math.random() * 3,
-      life: 1,
-      color: '#fff',
-      size: 2 + Math.random() * 3,
-      type: 'trail'
-    });
-  }
 }
 
 function spawnFloatingText(text, x, y, color = '#4ecdc4') {
@@ -787,6 +755,17 @@ function spawnFloatingText(text, x, y, color = '#4ecdc4') {
 
 function spawnLevelUpText() {
   spawnFloatingText(`LIVELLO ${level}!`, BASE_W / 2, BASE_H / 2, '#ffd93d');
+}
+
+function spawnDust(x, y) {
+  dustParticles.push({
+    x: x + (Math.random() - 0.5) * 8,
+    y: y + Math.random() * 4,
+    vx: -0.5 - Math.random() * 1.5,
+    vy: -Math.random() * 1.5,
+    life: 1,
+    size: 2 + Math.random() * 3
+  });
 }
 
 function updateParticles() {
@@ -802,6 +781,15 @@ function updateParticles() {
     t.y -= 1;
     t.life -= 0.02;
     return t.life > 0;
+  });
+  
+  dustParticles = dustParticles.filter(d => {
+    d.x += d.vx;
+    d.y += d.vy;
+    d.vy += 0.05;
+    d.life -= 0.03;
+    d.size *= 1.02;
+    return d.life > 0;
   });
 }
 
@@ -830,13 +818,11 @@ function drawSymbol(x, y, symbol, size) {
       ctx.fill();
       ctx.stroke();
       break;
-      
     case 'square':
       const ss = s * 0.65;
       ctx.fillRect(x - ss/2, y - ss/2, ss, ss);
       ctx.strokeRect(x - ss/2, y - ss/2, ss, ss);
       break;
-      
     case 'triangle':
       ctx.beginPath();
       ctx.moveTo(x, y - s * 0.4);
@@ -846,7 +832,6 @@ function drawSymbol(x, y, symbol, size) {
       ctx.fill();
       ctx.stroke();
       break;
-      
     case 'diamond':
       ctx.beginPath();
       ctx.moveTo(x, y - s * 0.42);
@@ -857,20 +842,17 @@ function drawSymbol(x, y, symbol, size) {
       ctx.fill();
       ctx.stroke();
       break;
-      
     case 'star':
       drawStar(x, y, 5, s * 0.42, s * 0.2);
       ctx.fill();
       ctx.stroke();
       break;
-      
     case 'hexagon':
       drawPolygon(x, y, 6, s * 0.4);
       ctx.fill();
       ctx.stroke();
       break;
   }
-  
   ctx.restore();
 }
 
@@ -899,52 +881,235 @@ function drawPolygon(cx, cy, sides, radius) {
   ctx.closePath();
 }
 
+// ===== OMINO MIGLIORATO =====
 function drawHero(x, y) {
-  const bounce = Math.sin(animationTime * 10) * 3;
-  const runSpeed = animationTime * 15;
+  // Fase del ciclo di corsa (0-1)
+  const phase = (runCycle % 1 + 1) % 1;
+  const cycle = phase * Math.PI * 2;
+  
+  // Movimento verticale del corpo (rimbalzo)
+  const bodyBounce = Math.abs(Math.sin(cycle)) * 2;
+  const lean = 0.12; // inclinazione in avanti
+  
+  const monsterDistance = heroPos - monsterPos;
+  const panic = Math.max(0, Math.min(1, (15 - monsterDistance) / 15));
   
   ctx.save();
+  ctx.translate(x, y);
+  
+  // Ombra sotto i piedi
+  ctx.fillStyle = 'rgba(0,0,0,0.35)';
+  ctx.beginPath();
+  ctx.ellipse(0, 22, 14, 4, 0, 0, Math.PI * 2);
+  ctx.fill();
+  
+  ctx.rotate(lean);
+  
   ctx.shadowColor = '#4ecdc4';
-  ctx.shadowBlur = 10;
+  ctx.shadowBlur = 12;
   
+  // === GAMBE con animazione di corsa realistica ===
+  // Gamba sinistra
+  const leftThigh = Math.sin(cycle) * 0.9;
+  const leftKnee = Math.max(0, Math.sin(cycle - Math.PI/2)) * 1.2;
+  drawLeg(-4, 5, leftThigh, leftKnee);
+  
+  // Gamba destra (opposta)
+  const rightThigh = Math.sin(cycle + Math.PI) * 0.9;
+  const rightKnee = Math.max(0, Math.sin(cycle + Math.PI/2)) * 1.2;
+  drawLeg(4, 5, rightThigh, rightKnee);
+  
+  // === BRACCIA (opposte alle gambe) ===
+  const leftArm = Math.sin(cycle + Math.PI) * 0.8;
+  const rightArm = Math.sin(cycle) * 0.8;
+  drawArm(-8, -13, leftArm);
+  drawArm(8, -13, rightArm);
+  
+  // === CORPO ===
   ctx.fillStyle = '#4ecdc4';
-  ctx.fillRect(x - 8, y - 22 + bounce, 16, 26);
+  ctx.strokeStyle = '#2d9a92';
+  ctx.lineWidth = 2;
   
+  // Torso
+  ctx.beginPath();
+  ctx.moveTo(-9, -18 - bodyBounce);
+  ctx.lineTo(9, -18 - bodyBounce);
+  ctx.lineTo(7, 5 - bodyBounce);
+  ctx.lineTo(-7, 5 - bodyBounce);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  
+  // Dettaglio maglietta
+  ctx.fillStyle = '#3ab5ad';
+  ctx.fillRect(-3, -14 - bodyBounce, 6, 8);
+  
+  // === TESTA con espressione ===
+  const headBounce = bodyBounce * 1.2;
+  const headTilt = Math.sin(cycle * 2) * 0.05;
+  
+  ctx.save();
+  ctx.translate(0, -28 - headBounce);
+  ctx.rotate(headTilt);
+  
+  // Testa
   ctx.fillStyle = '#ffd93d';
+  ctx.strokeStyle = '#d4a017';
+  ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.arc(x, y - 32 + bounce, 12, 0, Math.PI * 2);
+  ctx.arc(0, 0, 11, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  
+  // Capelli
+  ctx.fillStyle = '#8b4513';
+  ctx.beginPath();
+  ctx.arc(0, -3, 11, Math.PI, Math.PI * 2);
+  ctx.lineTo(-10, -3);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillRect(-11, -4, 22, 3);
+  
+  // Occhi - cambiano in base al panico
+  ctx.fillStyle = '#fff';
+  ctx.beginPath();
+  ctx.ellipse(-4, -1, 3, panic > 0.5 ? 4 : 3, 0, 0, Math.PI * 2);
+  ctx.ellipse(4, -1, 3, panic > 0.5 ? 4 : 3, 0, 0, Math.PI * 2);
   ctx.fill();
   
+  // Pupille (guardano indietro quando in panico)
   ctx.fillStyle = '#000';
+  const pupilX = panic > 0.5 ? -1 : 1;
   ctx.beginPath();
-  ctx.arc(x + 3, y - 34 + bounce, 2.5, 0, Math.PI * 2);
+  ctx.arc(-4 + pupilX, -1, 1.5, 0, Math.PI * 2);
+  ctx.arc(4 + pupilX, -1, 1.5, 0, Math.PI * 2);
   ctx.fill();
   
-  const legAngle = Math.sin(runSpeed) * 0.4;
-  ctx.strokeStyle = '#4ecdc4';
+  // Sopracciglia
+  ctx.strokeStyle = '#000';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  if (panic > 0.5) {
+    // Sopracciglia alzate (preoccupate)
+    ctx.moveTo(-7, -6);
+    ctx.lineTo(-2, -5);
+    ctx.moveTo(7, -6);
+    ctx.lineTo(2, -5);
+  } else {
+    // Sopracciglia normali
+    ctx.moveTo(-7, -5);
+    ctx.lineTo(-2, -4);
+    ctx.moveTo(7, -5);
+    ctx.lineTo(2, -4);
+  }
+  ctx.stroke();
+  
+  // Bocca
+  ctx.strokeStyle = '#000';
+  ctx.lineWidth = 1.5;
+  ctx.fillStyle = '#c93d3d';
+  ctx.beginPath();
+  if (panic > 0.7) {
+    // Bocca spalancata (molto spaventato)
+    ctx.ellipse(0, 5, 3, 4, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+  } else if (panic > 0.3) {
+    // Bocca preoccupata
+    ctx.arc(0, 6, 2, Math.PI, 0, false);
+    ctx.stroke();
+  } else {
+    // Sorriso
+    ctx.arc(0, 3, 3, 0, Math.PI);
+    ctx.stroke();
+  }
+  
+  // Gocce di sudore quando in panico
+  if (panic > 0.4) {
+    ctx.fillStyle = '#74b9ff';
+    ctx.beginPath();
+    ctx.moveTo(8, -5);
+    ctx.lineTo(10, 0);
+    ctx.lineTo(6, 0);
+    ctx.closePath();
+    ctx.fill();
+  }
+  
+  ctx.restore(); // testa
+  
+  ctx.restore(); // tutto l'omino
+}
+
+function drawLeg(hipX, hipY, thighAngle, kneeAngle) {
+  const thighLength = 12;
+  const shinLength = 11;
+  
+  ctx.save();
+  ctx.translate(hipX, hipY);
+  ctx.rotate(thighAngle);
+  
+  // Coscia
+  ctx.strokeStyle = '#2d7a74';
+  ctx.lineWidth = 7;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.lineTo(0, thighLength);
+  ctx.stroke();
+  
+  // Polpaccio
+  ctx.translate(0, thighLength);
+  ctx.rotate(kneeAngle);
+  
+  ctx.strokeStyle = '#2d7a74';
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.lineTo(0, shinLength);
+  ctx.stroke();
+  
+  // Scarpa
+  ctx.fillStyle = '#ff6b6b';
+  ctx.strokeStyle = '#c93d3d';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.ellipse(2, shinLength + 2, 5, 3, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  
+  ctx.restore();
+}
+
+function drawArm(shoulderX, shoulderY, angle) {
+  const upperLength = 10;
+  const forearmLength = 9;
+  
+  ctx.save();
+  ctx.translate(shoulderX, shoulderY);
+  ctx.rotate(angle);
+  
+  // Braccio
+  ctx.strokeStyle = '#ffd93d';
   ctx.lineWidth = 5;
   ctx.lineCap = 'round';
-  
   ctx.beginPath();
-  ctx.moveTo(x - 4, y + 4 + bounce);
-  ctx.lineTo(x - 6 + Math.sin(legAngle) * 12, y + 22);
+  ctx.moveTo(0, 0);
+  ctx.lineTo(0, upperLength);
   ctx.stroke();
   
+  // Avambraccio (piegato)
+  ctx.translate(0, upperLength);
+  ctx.rotate(-1.2);
+  ctx.strokeStyle = '#ffd93d';
   ctx.beginPath();
-  ctx.moveTo(x + 4, y + 4 + bounce);
-  ctx.lineTo(x + 6 + Math.sin(legAngle + Math.PI) * 12, y + 22);
+  ctx.moveTo(0, 0);
+  ctx.lineTo(0, forearmLength);
   ctx.stroke();
   
-  const armAngle = Math.sin(runSpeed + Math.PI) * 0.5;
+  // Mano
+  ctx.fillStyle = '#ffd93d';
   ctx.beginPath();
-  ctx.moveTo(x - 8, y - 15 + bounce);
-  ctx.lineTo(x - 12 + Math.sin(armAngle) * 8, y - 5 + bounce);
-  ctx.stroke();
-  
-  ctx.beginPath();
-  ctx.moveTo(x + 8, y - 15 + bounce);
-  ctx.lineTo(x + 12 + Math.sin(armAngle + Math.PI) * 8, y - 5 + bounce);
-  ctx.stroke();
+  ctx.arc(0, forearmLength, 2.5, 0, Math.PI * 2);
+  ctx.fill();
   
   ctx.restore();
 }
@@ -955,6 +1120,12 @@ function drawMonster(x, y) {
   ctx.save();
   ctx.shadowColor = '#ff6b6b';
   ctx.shadowBlur = 20;
+  
+  // Ombra
+  ctx.fillStyle = 'rgba(0,0,0,0.4)';
+  ctx.beginPath();
+  ctx.ellipse(x, y + 22, 18, 5, 0, 0, Math.PI * 2);
+  ctx.fill();
   
   ctx.fillStyle = '#ff6b6b';
   ctx.beginPath();
@@ -974,19 +1145,18 @@ function drawMonster(x, y) {
   
   ctx.fillStyle = '#000';
   ctx.beginPath();
-  ctx.arc(x - 8, y - 22 + bounce, 3.5, 0, Math.PI * 2);
-  ctx.arc(x + 8, y - 22 + bounce, 3.5, 0, Math.PI * 2);
+  ctx.arc(x - 6, y - 22 + bounce, 3.5, 0, Math.PI * 2);
+  ctx.arc(x + 10, y - 22 + bounce, 3.5, 0, Math.PI * 2);
   ctx.fill();
   
-  ctx.strokeStyle = '#ff6b6b';
-  ctx.lineWidth = 3;
+  // Sopracciglia arrabbiate
+  ctx.strokeStyle = '#000';
+  ctx.lineWidth = 2.5;
   ctx.beginPath();
-  ctx.moveTo(x - 14, y - 32 + bounce);
-  ctx.lineTo(x - 8, y - 28 + bounce);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.moveTo(x + 14, y - 32 + bounce);
-  ctx.lineTo(x + 8, y - 28 + bounce);
+  ctx.moveTo(x - 13, y - 32 + bounce);
+  ctx.lineTo(x - 4, y - 29 + bounce);
+  ctx.moveTo(x + 13, y - 32 + bounce);
+  ctx.lineTo(x + 4, y - 29 + bounce);
   ctx.stroke();
   
   ctx.fillStyle = '#000';
@@ -1064,6 +1234,14 @@ function drawRoad() {
     }
   }
   
+  // Particelle di polvere dietro l'omino
+  dustParticles.forEach(d => {
+    ctx.fillStyle = `rgba(200, 180, 150, ${d.life * 0.6})`;
+    ctx.beginPath();
+    ctx.arc(d.x, d.y, d.size, 0, Math.PI * 2);
+    ctx.fill();
+  });
+  
   const heroX = roadX + (heroPos / 100) * roadWidth;
   drawHero(heroX, roadY + 40);
   
@@ -1076,20 +1254,20 @@ function drawRoad() {
 function drawHUD() {
   ctx.save();
   
-  ctx.fillStyle = 'rgba(0,0,0,0.4)';
-  ctx.fillRect(20, 20, 250, 70);
+  ctx.fillStyle = 'rgba(0,0,0,0.5)';
+  ctx.fillRect(15, 15, 220, 75);
   
   ctx.fillStyle = '#fff';
-  ctx.font = 'bold 22px Arial';
-  ctx.fillText(`TEMPO: ${Math.ceil(timeLeft)}s`, 35, 45);
+  ctx.font = 'bold 20px Arial';
+  ctx.fillText(`TEMPO: ${Math.ceil(timeLeft)}s`, 28, 40);
   
-  const barWidth = 200;
+  const barWidth = 180;
   const barHeight = 16;
   ctx.fillStyle = 'rgba(0,0,0,0.6)';
-  ctx.fillRect(35, 55, barWidth, barHeight);
+  ctx.fillRect(28, 52, barWidth, barHeight);
   
   const timePercent = Math.max(0, timeLeft / maxTime);
-  const gradient = ctx.createLinearGradient(35, 0, 35 + barWidth, 0);
+  const gradient = ctx.createLinearGradient(28, 0, 28 + barWidth, 0);
   if (timePercent > 0.5) {
     gradient.addColorStop(0, '#4ecdc4');
     gradient.addColorStop(1, '#7ee8e0');
@@ -1102,42 +1280,42 @@ function drawHUD() {
   }
   ctx.fillStyle = gradient;
   ctx.shadowColor = timePercent > 0.5 ? '#4ecdc4' : timePercent > 0.25 ? '#ffd93d' : '#ff6b6b';
-  ctx.shadowBlur = 10;
-  ctx.fillRect(35, 55, barWidth * timePercent, barHeight);
+  ctx.shadowBlur = 8;
+  ctx.fillRect(28, 52, barWidth * timePercent, barHeight);
   ctx.shadowBlur = 0;
   
-  ctx.fillStyle = 'rgba(0,0,0,0.4)';
-  ctx.fillRect(BASE_W - 200, 20, 180, 45);
+  ctx.fillStyle = 'rgba(0,0,0,0.5)';
+  ctx.fillRect(BASE_W - 170, 15, 155, 42);
   
   ctx.fillStyle = '#ffd93d';
-  ctx.font = 'bold 24px Arial';
+  ctx.font = 'bold 22px Arial';
   ctx.textAlign = 'right';
   ctx.shadowColor = '#ffd93d';
-  ctx.shadowBlur = 8;
-  ctx.fillText(`PUNTI: ${score}`, BASE_W - 35, 50);
+  ctx.shadowBlur = 6;
+  ctx.fillText(`PUNTI: ${score}`, BASE_W - 25, 43);
   ctx.shadowBlur = 0;
   ctx.textAlign = 'left';
   
-  ctx.fillStyle = 'rgba(0,0,0,0.4)';
-  ctx.fillRect(BASE_W / 2 - 70, 20, 140, 35);
+  ctx.fillStyle = 'rgba(0,0,0,0.5)';
+  ctx.fillRect(BASE_W / 2 - 65, 15, 130, 32);
   
   ctx.fillStyle = '#a29bfe';
-  ctx.font = 'bold 20px Arial';
+  ctx.font = 'bold 18px Arial';
   ctx.textAlign = 'center';
-  ctx.fillText(`LIVELLO ${level}`, BASE_W / 2, 45);
+  ctx.fillText(`LIVELLO ${level}`, BASE_W / 2, 38);
   ctx.textAlign = 'left';
   
   ctx.fillStyle = '#fff';
-  ctx.font = 'bold 16px Arial';
-  ctx.fillText(`Distanza: ${Math.floor(heroPos / goalPos * 100)}%`, 35, 255);
+  ctx.font = 'bold 15px Arial';
+  ctx.fillText(`Distanza: ${Math.floor(heroPos / goalPos * 100)}%`, 28, 240);
   
   if (combo > 1) {
     ctx.fillStyle = '#ffd93d';
-    ctx.font = 'bold 28px Arial';
+    ctx.font = 'bold 26px Arial';
     ctx.textAlign = 'center';
     ctx.shadowColor = '#ffd93d';
-    ctx.shadowBlur = 15;
-    ctx.fillText(`COMBO x${combo}`, BASE_W / 2, 280);
+    ctx.shadowBlur = 12;
+    ctx.fillText(`COMBO x${combo}`, BASE_W / 2, 270);
     ctx.shadowBlur = 0;
     ctx.textAlign = 'left';
   }
@@ -1228,10 +1406,10 @@ function drawFloatingTexts() {
     ctx.save();
     ctx.globalAlpha = t.life;
     ctx.fillStyle = t.color;
-    ctx.font = 'bold 32px Arial';
+    ctx.font = 'bold 30px Arial';
     ctx.textAlign = 'center';
     ctx.shadowColor = t.color;
-    ctx.shadowBlur = 15;
+    ctx.shadowBlur = 12;
     ctx.fillText(t.text, t.x, t.y);
     ctx.restore();
   });
@@ -1243,19 +1421,19 @@ function drawLevelComplete() {
   ctx.fillRect(0, 0, BASE_W, BASE_H);
   
   ctx.textAlign = 'center';
-  ctx.font = 'bold 60px Arial';
+  ctx.font = 'bold 55px Arial';
   ctx.fillStyle = '#4ecdc4';
   ctx.shadowColor = '#4ecdc4';
-  ctx.shadowBlur = 30;
+  ctx.shadowBlur = 25;
   ctx.fillText('TRAGUARDO!', BASE_W / 2, BASE_H / 2 - 60);
   
-  ctx.font = 'bold 40px Arial';
+  ctx.font = 'bold 36px Arial';
   ctx.fillStyle = '#ffd93d';
   ctx.shadowColor = '#ffd93d';
-  ctx.shadowBlur = 20;
+  ctx.shadowBlur = 18;
   ctx.fillText(`LIVELLO ${level} COMPLETATO`, BASE_W / 2, BASE_H / 2);
   
-  ctx.font = '24px Arial';
+  ctx.font = '22px Arial';
   ctx.fillStyle = '#fff';
   ctx.shadowBlur = 0;
   ctx.fillText('Preparati al prossimo...', BASE_W / 2, BASE_H / 2 + 60);
@@ -1269,30 +1447,31 @@ function drawEndScreen(won) {
   
   ctx.textAlign = 'center';
   
-  ctx.font = 'bold 64px Arial';
+  ctx.font = 'bold 60px Arial';
   ctx.fillStyle = won ? '#4ecdc4' : '#ff6b6b';
   ctx.shadowColor = won ? '#4ecdc4' : '#ff6b6b';
-  ctx.shadowBlur = 40;
+  ctx.shadowBlur = 30;
   ctx.fillText(won ? 'HAI VINTO!' : 'TI HA PRESO!', BASE_W / 2, BASE_H / 2 - 80);
   ctx.shadowBlur = 0;
   
-  ctx.font = 'bold 36px Arial';
+  ctx.font = 'bold 32px Arial';
   ctx.fillStyle = '#ffd93d';
   ctx.fillText(`PUNTEGGIO: ${score}`, BASE_W / 2, BASE_H / 2);
   
-  ctx.font = 'bold 28px Arial';
+  ctx.font = 'bold 26px Arial';
   ctx.fillStyle = '#a29bfe';
   ctx.fillText(`LIVELLO RAGGIUNTO: ${level}`, BASE_W / 2, BASE_H / 2 + 50);
   
-  ctx.font = '22px Arial';
+  ctx.font = '20px Arial';
   ctx.fillStyle = '#fff';
-  ctx.fillText('Tocca per tornare al menu', BASE_W / 2, BASE_H / 2 + 120);
+  ctx.fillText('Tocca per tornare al menu', BASE_W / 2, BASE_H / 2 + 110);
   
   ctx.restore();
 }
 
 // ==================== GAME LOOP ====================
 let lastTimestamp = 0;
+let prevHeroPos = 0;
 
 function gameLoop(timestamp) {
   if (gameState === 'menu') {
@@ -1300,7 +1479,7 @@ function gameLoop(timestamp) {
     return;
   }
   
-  const deltaTime = timestamp - lastTimestamp;
+  const deltaTime = Math.min(50, timestamp - lastTimestamp);
   lastTimestamp = timestamp;
   animationTime = timestamp / 1000;
   
@@ -1313,6 +1492,24 @@ function gameLoop(timestamp) {
     
     const monsterSpeed = difficulty === 1 ? 1 : 1.4;
     monsterPos = -15 + (1 - timeLeft / maxTime) * (heroPos + 12) * monsterSpeed;
+    
+    // Aggiorna ciclo di corsa basato sul movimento
+    const heroDelta = heroPos - prevHeroPos;
+    if (heroDelta > 0.01) {
+      runCycle += heroDelta * 0.15;
+      
+      // Genera polvere e suoni dei passi
+      if (timestamp - lastStepTime > 120) {
+        const roadX = 40;
+        const roadWidth = 620;
+        const heroX = roadX + (heroPos / 100) * roadWidth;
+        spawnDust(heroX - 8, 170);
+        spawnDust(heroX - 4, 172);
+        audio.play('step');
+        lastStepTime = timestamp;
+      }
+    }
+    prevHeroPos = heroPos;
     
     if (timeLeft <= 0 || monsterPos >= heroPos - 3) {
       gameState = 'lose';
