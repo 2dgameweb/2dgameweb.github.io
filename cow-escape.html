@@ -27,7 +27,7 @@ canvas.game{position:fixed;inset:0;display:block;z-index:0;cursor:crosshair}
 .tbtn.disabled{opacity:.4;filter:grayscale(.7)}
 #jumpBtn{right:24px;bottom:26px}
 #sprintBtn{right:24px;bottom:120px;background:rgba(255,180,0,.2);border-color:rgba(255,200,80,.4)}
-#tapHint{position:fixed;bottom:26px;left:50%;transform:translateX(-50%);z-index:34;pointer-events:none;color:#fff;font-size:11px;opacity:.7;background:rgba(0,0,0,.4);padding:8px 14px;border-radius:12px;backdrop-filter:blur(6px)}
+#tapHint{position:fixed;bottom:26px;left:50%;transform:translateX(-50%);z-index:34;pointer-events:none;color:#fff;font-size:11px;opacity:.7;background:rgba(0,0,0,.4);padding:8px 14px;border-radius:12px;backdrop-filter:blur(6px);transition:opacity 1s}
 #menuOverlay{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at 50% 80%,rgba(20,50,20,.4),rgba(0,0,0,.85));backdrop-filter:blur(3px)}
 #menuOverlay.hidden{display:none}
 .menuCard{background:rgba(12,18,12,.82);border:1px solid rgba(255,255,255,.1);border-radius:24px;padding:36px 32px;max-width:560px;width:92%;text-align:center;color:#fff;box-shadow:0 30px 80px rgba(0,0,0,.6);backdrop-filter:blur(12px)}
@@ -85,10 +85,9 @@ if(typeof THREE==='undefined'){
   throw new Error('Three.js not loaded');
 }
 
-const SAVE_KEY='cow_escape_v4';
+const SAVE_KEY='cow_escape_v5';
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const rand=(a,b)=>a+Math.random()*(b-a);
-const lerp=(a,b,t)=>a+(b-a)*t;
 const damp=(a,b,l,dt)=>a+(b-a)*(1-Math.exp(-l*dt));
 function dampAngle(a,b,l,dt){let d=b-a;while(d>Math.PI)d-=Math.PI*2;while(d<-Math.PI)d+=Math.PI*2;return a+d*(1-Math.exp(-l*dt))}
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=(Math.random()*(i+1))|0;[a[i],a[j]]=[a[j],a[i]]}return a}
@@ -160,7 +159,7 @@ const mudGeo=new THREE.CircleGeometry(1.4,16);
 
 let gameState='menu',level=1,MAZE_SIZE=17;
 const CELL=4;
-let maze=[],offsetX=0,offsetZ=0,wallBoxes=[],obstacles=[],cows=[],goals=[];
+let maze=[],offsetX=0,offsetZ=0,wallBoxes=[],obstacles=[],cows=[],goals=[],openCellsGlobal=[];
 const player={x:0,z:0,y:0,r:.42};
 let playerMesh=null,playerParts=null,goalArrow=null,targetMarker=null;
 let nearestGoal=null,nearestGoalDist=Infinity;
@@ -169,14 +168,17 @@ let velX=0,velZ=0,vy=0,grounded=true,inputMoving=false,inMud=false;
 let viewYaw=.8,viewPitch=.46,heading=0,runPhase=0,autoOrbitYaw=.8,idleTimer=0;
 let jumpHeld=false,jumpBuffer=0,coyote=0;
 let stumble=0,invuln=0,elapsed=0,shake=0,damageAlpha=0;
-let driftAngle=0; // angolo di "drift" per movimento più fluido
 const keys={};
 
 const raycaster=new THREE.Raycaster();
 const groundPlane=new THREE.Plane(new THREE.Vector3(0,1,0),0);
 let moveTargetActive=false,moveTarget={x:0,z:0},movePath=[],pointerDown=false,moveRepathTimer=0;
-let smoothPath=[],smoothPathT=0;
+let smoothPath=[],pathCursor=0;
 let tapHintShown=false;
+
+// Parametri di movimento fluido
+const LOOK_AHEAD_DIST = 1.8;  // quanto guardare avanti sul path
+const PATH_SAMPLES_PER_SEGMENT = 12; // densità della curva
 
 const particles=[];
 function spawnParticles(x,y,z,color,count){
@@ -200,7 +202,6 @@ function updateParticles(dt){
  }
 }
 
-// ============= AUDIO =============
 const SFX={ctx:null,master:null,
  init(){if(this.ctx){try{this.ctx.resume()}catch(e){}return}
   const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
@@ -225,7 +226,6 @@ const SFX={ctx:null,master:null,
  click(){this.tone(520,.07,'triangle',.1,700)},
  vault(){this.tone(300,.15,'sine',.15,600)},
  mud(){this.noise(.15,.15,300)},
- danger(){this.tone(80,.4,'sawtooth',.08,40)},
  win(){const notes=[523,659,784,1046];for(let i=0;i<notes.length;i++){const self=this;setTimeout(function(){self.tone(notes[i],.24,'triangle',.24)},i*115)}},
  lose(){const notes=[220,174,130,87];for(let i=0;i<notes.length;i++){const self=this;setTimeout(function(){self.tone(notes[i],.34,'sawtooth',.18)},i*175)}},
  moo(dist,aggressive){
@@ -243,7 +243,6 @@ const SFX={ctx:null,master:null,
  }
 };
 
-// ============= MAZE =============
 function generateMaze(size,lvl){
  const g=[];
  for(let y=0;y<size;y++){g[y]=[];for(let x=0;x<size;x++)g[y][x]=true}
@@ -319,25 +318,91 @@ function simplifyPath(p){
  out.push(p[p.length-1]);
  return out;
 }
-function catmullRomPoint(p0,p1,p2,p3,t){
+
+// ============ CATMULL-ROM con lunghezze cumulative per movimento uniforme ============
+function catmullRom(p0,p1,p2,p3,t){
  const t2=t*t,t3=t2*t;
  return{
   x:.5*((2*p1.x)+(-p0.x+p2.x)*t+(2*p0.x-5*p1.x+4*p2.x-p3.x)*t2+(-p0.x+3*p1.x-3*p2.x+p3.x)*t3),
   z:.5*((2*p1.z)+(-p0.z+p2.z)*t+(2*p0.z-5*p1.z+4*p2.z-p3.z)*t2+(-p0.z+3*p1.z-3*p2.z+p3.z)*t3)
  };
 }
-function buildSmoothPath(waypoints){
- if(waypoints.length<2)return waypoints.slice();
+
+// Costruisce un path denso di punti uniformemente spaziati (circa SAMPLE_STEP metri l'uno dall'altro)
+// con lunghezze cumulative per interpolazione precisa
+const SAMPLE_STEP = 0.35;
+function buildDensePath(waypoints){
+ if(waypoints.length<2)return{points:waypoints.slice(),cumLen:[0],totalLen:0};
+ // Duplica primo e ultimo per Catmull-Rom
  const pts=[waypoints[0]].concat(waypoints).concat([waypoints[waypoints.length-1]]);
- const smooth=[],steps=Math.max(8,waypoints.length*6);
- for(let i=0;i<steps;i++){
-  const t=i/(steps-1)*(waypoints.length-1);
-  const seg=Math.min(Math.floor(t),waypoints.length-2);
-  const lt=t-seg;
-  smooth.push(catmullRomPoint(pts[seg],pts[seg+1],pts[seg+2],pts[seg+3],lt));
+ const dense=[];
+ const nSegs=waypoints.length-1;
+ for(let s=0;s<nSegs;s++){
+  const p0=pts[s],p1=pts[s+1],p2=pts[s+2],p3=pts[s+3];
+  // Campiona finemente il segmento
+  const steps=PATH_SAMPLES_PER_SEGMENT;
+  for(let i=0;i<steps;i++){
+   const t=i/steps;
+   dense.push(catmullRom(p0,p1,p2,p3,t));
+  }
  }
- return smooth;
+ dense.push(waypoints[waypoints.length-1]);
+
+ // Calcola lunghezze cumulative
+ const cumLen=[0];
+ for(let i=1;i<dense.length;i++){
+  const dx=dense[i].x-dense[i-1].x, dz=dense[i].z-dense[i-1].z;
+  cumLen.push(cumLen[i-1]+Math.hypot(dx,dz));
+ }
+
+ // Ricampiona a spaziatura uniforme per movimento costante
+ const total=cumLen[cumLen.length-1];
+ if(total<0.01)return{points:dense,cumLen:cumLen,totalLen:total};
+
+ const uniform=[];
+ const nPoints=Math.max(2,Math.ceil(total/SAMPLE_STEP));
+ for(let i=0;i<=nPoints;i++){
+  const targetDist=(i/nPoints)*total;
+  // binary search
+  let lo=0,hi=cumLen.length-1;
+  while(lo<hi-1){
+   const mid=(lo+hi)>>1;
+   if(cumLen[mid]<targetDist)lo=mid;else hi=mid;
+  }
+  const segLen=cumLen[hi]-cumLen[lo];
+  const t=segLen>1e-6?(targetDist-cumLen[lo])/segLen:0;
+  uniform.push({
+   x:dense[lo].x+(dense[hi].x-dense[lo].x)*t,
+   z:dense[lo].z+(dense[hi].z-dense[lo].z)*t
+  });
+ }
+
+ // Ricalcola cumLen per uniform
+ const uCum=[0];
+ for(let i=1;i<uniform.length;i++){
+  const dx=uniform[i].x-uniform[i-1].x, dz=uniform[i].z-uniform[i-1].z;
+  uCum.push(uCum[i-1]+Math.hypot(dx,dz));
+ }
+
+ return{points:uniform,cumLen:uCum,totalLen:uCum[uCum.length-1]};
 }
+
+// Restituisce il punto sul path alla distanza 'dist' dall'inizio
+function samplePathAt(pathData,dist){
+ if(!pathData.points||pathData.points.length<2)return null;
+ dist=clamp(dist,0,pathData.totalLen);
+ const cum=pathData.cumLen;
+ let lo=0,hi=cum.length-1;
+ while(lo<hi-1){
+  const mid=(lo+hi)>>1;
+  if(cum[mid]<dist)lo=mid;else hi=mid;
+ }
+ const segLen=cum[hi]-cum[lo];
+ const t=segLen>1e-6?(dist-cum[lo])/segLen:0;
+ const a=pathData.points[lo],b=pathData.points[hi];
+ return{x:a.x+(b.x-a.x)*t,z:a.z+(b.z-a.z)*t};
+}
+
 function segmentClear(ax,az,bx,bz,r,steps){
  r=r||.5;steps=steps||10;
  for(let i=1;i<=steps;i++){const t=i/steps;if(circleHitsWalls(ax+(bx-ax)*t,az+(bz-az)*t,r))return false}
@@ -374,7 +439,6 @@ function pickGoals(openCells,startC,count){
  return chosen.slice(0,count);
 }
 
-// ============= COLLISIONS =============
 function resolveWalls(obj,r,iters){
  iters=iters||2;
  for(let it=0;it<iters;it++)for(let i=0;i<wallBoxes.length;i++){
@@ -444,7 +508,6 @@ function resolveObstacles(obj,r,isPlayer){
  }
 }
 
-// ============= MESH =============
 function createPlayerMesh(){
  const g=new THREE.Group();
  const bm=new THREE.MeshStandardMaterial({color:0xff8a3d,roughness:.62});
@@ -497,25 +560,34 @@ function updateNearestGoal(){
  }
 }
 function cancelMoveTarget(){
- moveTargetActive=false;movePath.length=0;smoothPath=[];smoothPathT=0;moveRepathTimer=0;
+ moveTargetActive=false;movePath.length=0;smoothPath=null;pathCursor=0;moveRepathTimer=0;
  if(targetMarker)targetMarker.visible=false;
 }
+
+// Costruisce il path denso una volta sola
 function computeMovePath(){
  const dx=moveTarget.x-player.x,dz=moveTarget.z-player.z,dist=Math.hypot(dx,dz);
  if(dist<CELL*1.8&&segmentClear(player.x,player.z,moveTarget.x,moveTarget.z,.5,8)){
-  movePath=[{x:moveTarget.x,z:moveTarget.z}];
-  smoothPath=movePath.slice();smoothPathT=0;return;
- }
- const p=findPath(player.x,player.z,moveTarget.x,moveTarget.z);
- if(p.length){
-  const last=p[p.length-1];
-  if(Math.hypot(last.x-moveTarget.x,last.z-moveTarget.z)>.3&&segmentClear(last.x,last.z,moveTarget.x,moveTarget.z,.5,6))p.push({x:moveTarget.x,z:moveTarget.z});
-  movePath=simplifyPath(p);
+  movePath=[{x:player.x,z:player.z},{x:moveTarget.x,z:moveTarget.z}];
  }else{
-  movePath=[{x:moveTarget.x,z:moveTarget.z}];
+  const p=findPath(player.x,player.z,moveTarget.x,moveTarget.z);
+  if(p.length){
+   // Aggiungi posizione corrente come primo waypoint per continuità
+   movePath=[{x:player.x,z:player.z}].concat(simplifyPath(p));
+   const last=movePath[movePath.length-1];
+   if(Math.hypot(last.x-moveTarget.x,last.z-moveTarget.z)>.3&&segmentClear(last.x,last.z,moveTarget.x,moveTarget.z,.5,6)){
+    movePath.push({x:moveTarget.x,z:moveTarget.z});
+   }
+  }else{
+   movePath=[{x:player.x,z:player.z},{x:moveTarget.x,z:moveTarget.z}];
+  }
  }
- smoothPath=buildSmoothPath(movePath);smoothPathT=0;
+ // Costruisci path denso e uniforme
+ smoothPath=buildDensePath(movePath);
+ // Imposta il cursore alla distanza iniziale (0 = inizio)
+ pathCursor=0;
 }
+
 function setMoveTargetFromPointer(e){
  if(gameState!=='playing')return;
  const rect=renderer.domElement.getBoundingClientRect();
@@ -552,6 +624,7 @@ function buildWorld(){
  for(let z=0;z<MAZE_SIZE;z++)for(let x=0;x<MAZE_SIZE;x++){
   if(maze[z][x])wallCells.push(cellCenter(x,z));else openCells.push({cx:x,cz:z});
  }
+ openCellsGlobal=openCells;
  for(let i=0;i<wallCells.length;i++){
   const c=wallCells[i];
   wallBoxes.push({minX:c.x-CELL/2,maxX:c.x+CELL/2,minZ:c.z-CELL/2,maxZ:c.z+CELL/2});
@@ -640,13 +713,7 @@ function buildWorld(){
   goals.push({x:p.x,z:p.z,grp:grp,flag:flag,light:light,color:col});
  }
 
- // ============= MUCHE CON PERSONALITÀ =============
  const cowCount=Math.min(2+level,7);
- // Tipi di personalità:
- // - chaser: insegue diretto, velocità media
- // - runner: molto veloce ma meno intelligente
- // - tank: lento ma resistente, blocca percorsi
- // - stalker: cerca di anticipare il giocatore andando verso le uscite
  const personalities=['chaser','chaser','runner','stalker','tank','stalker','runner'];
  let spawnCells=[];
  for(let i=0;i<openCells.length;i++){
@@ -665,7 +732,6 @@ function buildWorld(){
   const p=cellCenter(spawnCells[i].cx,spawnCells[i].cz);
   const personality=personalities[i%personalities.length];
   const model=createCowMesh(personality);
-
   let baseSpeed,aggroRadius,smartness;
   switch(personality){
    case 'runner':baseSpeed=7.2+level*.18;aggroRadius=35;smartness=.5;break;
@@ -673,41 +739,23 @@ function buildWorld(){
    case 'stalker':baseSpeed=5.2+level*.15;aggroRadius=45;smartness=.9;break;
    default:baseSpeed=4.8+level*.18;aggroRadius=30;smartness=.75;break;
   }
-
   const cow={
    x:p.x,z:p.z,y:0,
    r:.68*(personality==='tank'?1.25:(personality==='runner'?.85:1)),
-   baseSpeed:baseSpeed,
-   personality:personality,
-   aggroRadius:aggroRadius,
-   smartness:smartness,
-   state:'patrol',        // patrol, chase, search, stalk, idle
-   stateTimer:rand(2,5),
-   lastKnownPlayerX:p.x,
-   lastKnownPlayerZ:p.z,
-   sawPlayer:false,
-   targetX:p.x,targetZ:p.z,
-   patrolCell:spawnCells[i],
-   mesh:model.mesh,
-   legs:model.legs,
-   head:model.head,
-   tail:model.tail,
-   eyes:model.eyes,
-   path:[],
-   repath:Math.random()*.25,
-   stun:0,
-   anim:rand(0,10),
-   moo:rand(2.5,8),
-   headShake:0,
-   blocked:0,
-   lastVelX:0,lastVelZ:0
+   baseSpeed:baseSpeed,personality:personality,aggroRadius:aggroRadius,smartness:smartness,
+   state:'patrol',stateTimer:rand(2,5),
+   lastKnownPlayerX:p.x,lastKnownPlayerZ:p.z,sawPlayer:false,
+   targetX:p.x,targetZ:p.z,patrolCell:spawnCells[i],
+   mesh:model.mesh,legs:model.legs,head:model.head,tail:model.tail,eyes:model.eyes,
+   path:[],repath:Math.random()*.25,stun:0,anim:rand(0,10),moo:rand(2.5,8),
+   headShake:0,blocked:0,lastVelX:0,lastVelZ:0
   };
   cow.mesh.position.set(cow.x,0,cow.z);
   worldGroup.add(cow.mesh);
   cows.push(cow);
  }
  player.x=startC.x;player.z=startC.z;player.y=0;
- velX=0;velZ=0;vy=0;grounded=true;driftAngle=0;
+ velX=0;velZ=0;vy=0;grounded=true;
  cancelMoveTarget();updateNearestGoal();
  if(nearestGoal)viewYaw=Math.atan2(nearestGoal.x-player.x,nearestGoal.z-player.z);else viewYaw=.8;
  heading=viewYaw;autoOrbitYaw=viewYaw;idleTimer=0;
@@ -770,7 +818,6 @@ function drawMinimap(){
   mmCtx.arc(((g.x-offsetX)/CELL)*cs,((g.z-offsetZ)/CELL)*cs,4,0,Math.PI*2);
   mmCtx.fill();
  }
- // Mucche colorate per tipo
  for(let i=0;i<cows.length;i++){
   const c=cows[i];
   const px=((c.x-offsetX)/CELL)*cs,pz=((c.z-offsetZ)/CELL)*cs;
@@ -781,7 +828,6 @@ function drawMinimap(){
   mmCtx.beginPath();
   mmCtx.arc(px,pz,3.2,0,Math.PI*2);
   mmCtx.fill();
-  // Linea di vista se in chase
   if(c.state==='chase'){
    mmCtx.strokeStyle=mmCtx.fillStyle;
    mmCtx.lineWidth=1;mmCtx.globalAlpha=.4;
@@ -792,13 +838,13 @@ function drawMinimap(){
    mmCtx.globalAlpha=1;
   }
  }
- if(moveTargetActive&&smoothPath.length>1){
+ if(moveTargetActive&&movePath.length>1){
   mmCtx.strokeStyle='rgba(127,227,255,.8)';
   mmCtx.lineWidth=1.8;
   mmCtx.beginPath();
   mmCtx.moveTo(((player.x-offsetX)/CELL)*cs,((player.z-offsetZ)/CELL)*cs);
-  for(let i=0;i<smoothPath.length;i++){
-   mmCtx.lineTo(((smoothPath[i].x-offsetX)/CELL)*cs,((smoothPath[i].z-offsetZ)/CELL)*cs);
+  for(let i=0;i<movePath.length;i++){
+   mmCtx.lineTo(((movePath[i].x-offsetX)/CELL)*cs,((movePath[i].z-offsetZ)/CELL)*cs);
   }
   mmCtx.stroke();
  }
@@ -823,7 +869,7 @@ function damagePlayer(amount,src){
  if(hp<=0){hp=0;loseGame()}
 }
 
-// ============= MOVIMENTO GIOCATORE MIGLIORATO =============
+// ============ MOVIMENTO FLUIDO ============
 function updatePlayer(dt){
  const kf=(keys.KeyW||keys.ArrowUp?1:0)-(keys.KeyS||keys.ArrowDown?1:0);
  const krKeys=(keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0);
@@ -837,7 +883,6 @@ function updatePlayer(dt){
  const analogMag=Math.min(1,mag);
  const manual=mag>.08;
 
- // Auto-sprint quando in pericolo
  let nearestCowDist=Infinity;
  for(let i=0;i<cows.length;i++){
   const c=cows[i],d=Math.hypot(player.x-c.x,player.z-c.z);
@@ -846,7 +891,7 @@ function updatePlayer(dt){
  const autoSprint=nearestCowDist<8&&!sprintLocked&&stamina>20&&moveTargetActive;
  const wantsSprint=sprintHeld||keys.ShiftLeft||keys.ShiftRight||autoSprint;
 
- let dirX=0,dirZ=0,followPath=false,cameraYawTarget=null;
+ let dirX=0,dirZ=0,targetSpeed=0,followPath=false,cameraYawTarget=null;
  inputMoving=false;
 
  if(manual){
@@ -855,32 +900,84 @@ function updatePlayer(dt){
   dirX=(sin*f+cos*r)*analogMag;
   dirZ=(cos*f-sin*r)*analogMag;
   inputMoving=true;
- }else if(moveTargetActive){
+ }else if(moveTargetActive&&smoothPath&&smoothPath.totalLen>0.1){
+  // Ricalcolo periodico se il path è molto vecchio o ci siamo allontanati troppo
   moveRepathTimer-=dt;
-  if(moveRepathTimer<=0){computeMovePath();moveRepathTimer=.6}
-  if(smoothPath.length>1){
-   const speed=Math.hypot(velX,velZ)||6;
-   smoothPathT+=speed*dt/CELL*.5;
-   const idx=Math.min(Math.floor(smoothPathT),smoothPath.length-1);
-   const wp=smoothPath[idx];
-   const dx=wp.x-player.x,dz=wp.z-player.z,d=Math.hypot(dx,dz);
-   if(idx>=smoothPath.length-1&&d<.5){cancelMoveTarget()}
-   else{
-    dirX=dx/(d||1);dirZ=dz/(d||1);
-    inputMoving=true;followPath=true;
-    // Look-ahead per camera più stabile
-    const lookIdx=Math.min(idx+8,smoothPath.length-1);
-    const look=smoothPath[lookIdx];
-    const ldx=look.x-player.x,ldz=look.z-player.z,ld=Math.hypot(ldx,ldz);
-    if(ld>.1)cameraYawTarget=Math.atan2(ldx,ldz);
+  if(moveRepathTimer<=0){
+   computeMovePath();
+   moveRepathTimer=.8;
+  }
+
+  // Avanza il cursore lungo il path in base alla velocità attuale
+  const currentSpeed=Math.hypot(velX,velZ);
+  // Proietta la velocità sulla direzione del path per avanzamento corretto
+  const curPoint=samplePathAt(smoothPath,pathCursor);
+  if(curPoint){
+   const tangentSample=samplePathAt(smoothPath,pathCursor+0.3);
+   if(tangentSample){
+    const tdx=tangentSample.x-curPoint.x,tdz=tangentSample.z-curPoint.z;
+    const tLen=Math.hypot(tdx,tdz)||1;
+    const tangentX=tdx/tLen, tangentZ=tdz/tLen;
+    // Componente della velocità lungo la tangente
+    const projectedSpeed=velX*tangentX+velZ*tangentZ;
+    // Avanza il cursore usando la proiezione (evita di andare troppo avanti/indietro)
+    pathCursor+=Math.max(0,projectedSpeed)*dt;
+   }else{
+    pathCursor+=currentSpeed*dt;
    }
-  }else{
-   const dx=moveTarget.x-player.x,dz=moveTarget.z-player.z,d=Math.hypot(dx,dz);
-   if(d<.4)cancelMoveTarget();
-   else{dirX=dx/d;dirZ=dz/d;inputMoving=true;followPath=true;cameraYawTarget=Math.atan2(dx,dz)}
+  }
+
+  // Punto corrente sul path
+  const here=samplePathAt(smoothPath,pathCursor);
+  if(!here){cancelMoveTarget();return}
+
+  // Distanza tra giocatore e punto sul path
+  const errDx=player.x-here.x, errDz=player.z-here.z;
+  const errDist=Math.hypot(errDx,errDz);
+
+  // Se il giocatore si è allontanato troppo (spinto da mucca/ostacolo),
+  // riallinea il cursore al punto più vicino sul path
+  if(errDist>2.0){
+   // Riempi cursor: cerca il punto sul path più vicino
+   let best=0,bestD=Infinity;
+   for(let i=0;i<smoothPath.points.length;i+=5){
+    const p=smoothPath.points[i];
+    const d=(player.x-p.x)**2+(player.z-p.z)**2;
+    if(d<bestD){bestD=d;best=i}
+   }
+   pathCursor=smoothPath.cumLen[best];
+  }
+
+  // LOOK-AHEAD: mira a un punto leggermente avanti sul path
+  const lookDist=LOOK_AHEAD_DIST;
+  const target=samplePathAt(smoothPath,Math.min(smoothPath.totalLen,pathCursor+lookDist));
+  if(!target){cancelMoveTarget();return}
+
+  const tdx=target.x-player.x, tdz=target.z-player.z;
+  const tDist=Math.hypot(tdx,tdz);
+
+  // Fine path
+  if(pathCursor>=smoothPath.totalLen-0.2&&tDist<0.5){
+   cancelMoveTarget();
+   return;
+  }
+
+  if(tDist>0.05){
+   dirX=tdx/tDist;
+   dirZ=tdz/tDist;
+   inputMoving=true;
+   followPath=true;
+   // Camera look-ahead più lontano
+   const camLook=samplePathAt(smoothPath,Math.min(smoothPath.totalLen,pathCursor+lookDist*3));
+   if(camLook){
+    const cdx=camLook.x-player.x,cdz=camLook.z-player.z;
+    const cd=Math.hypot(cdx,cdz);
+    if(cd>.1)cameraYawTarget=Math.atan2(cdx,cdz);
+   }
   }
  }
 
+ // Sprint
  if(wantsSprint&&!sprintLocked&&stamina>0&&inputMoving&&stumble<=0){
   if(!sprintActive)SFX.sprint();
   sprintActive=true;stamina-=34*dt;sprintRegenDelay=.72;
@@ -894,35 +991,35 @@ function updatePlayer(dt){
  let speed=stumble>0?2.2:(sprintActive?11.2:6.5);
  if(inMud)speed*=.45;
 
- // Drift: quando si cambia direzione rapidamente, aggiungi una leggera "scivolata"
+ // Riduzione velocità in curva: calcola curvatura tra heading attuale e target
  if(inputMoving){
   const targetHeading=Math.atan2(dirX,dirZ);
-  const headingDiff=normalizeAngle(targetHeading-heading);
-  // Accumula drift proporzionale alla differenza di angolo
-  driftAngle=damp(driftAngle,headingDiff*.15,4,dt);
-  // Ruota lentamente il personaggio verso la direzione desiderata
-  heading=dampAngle(heading,targetHeading,16,dt);
- }else{
-  driftAngle=damp(driftAngle,0,8,dt);
+  const headingDiff=Math.abs(normalizeAngle(targetHeading-heading));
+  // Rallenta progressivamente in base alla curvatura (max -40%)
+  const curvePenalty=clamp(headingDiff/Math.PI,0,1)*.4;
+  speed*=(1-curvePenalty);
  }
 
  const targetX=dirX*speed,targetZ=dirZ*speed;
- if(followPath&&cameraYawTarget!==null)autoOrbitYaw=dampAngle(autoOrbitYaw,cameraYawTarget,4,dt);
 
- // Accelerazione migliorata: più rapida in curva, più fluida in rettilineo
- const currentSpeed=Math.hypot(velX,velZ);
- const turning=Math.abs(driftAngle)>.1;
- const accel=grounded?(inputMoving?(turning?26:21):28):7;
+ // Rotazione fluido dell'heading: velocità proporzionale alla differenza angolare
+ if(inputMoving){
+  const targetHeading=Math.atan2(dirX,dirZ);
+  const diff=normalizeAngle(targetHeading-heading);
+  // Più grande la differenza, più veloce la rotazione (fino a un limite)
+  const rotSpeed=clamp(Math.abs(diff)*10,6,20);
+  heading=dampAngle(heading,targetHeading,rotSpeed,dt);
+ }
+
+ if(followPath&&cameraYawTarget!==null){
+  autoOrbitYaw=dampAngle(autoOrbitYaw,cameraYawTarget,4,dt);
+ }
+
+ // Accelerazione adattiva: più rapida quando si vuole cambiare direzione
+ const turning=inputMoving&&Math.abs(normalizeAngle(Math.atan2(targetX,targetZ)-Math.atan2(velX||0.001,velZ||0.001)))>.3;
+ const accel=grounded?(inputMoving?(turning?18:14):24):6;
  velX=damp(velX,targetX,accel,dt);
  velZ=damp(velZ,targetZ,accel,dt);
-
- // Applica drift: aggiunge un po' di slittamento laterale
- if(grounded&&Math.abs(driftAngle)>.02){
-  const cosH=Math.cos(heading),sinH=Math.sin(heading);
-  const lateralVel=driftAngle*currentSpeed*.4;
-  velX+=cosH*lateralVel*dt*3;
-  velZ-=sinH*lateralVel*dt*3;
- }
 
  jumpBuffer-=dt;
  coyote=grounded?.12:coyote-dt;
@@ -949,15 +1046,13 @@ function updatePlayer(dt){
  const hSpeed=Math.hypot(velX,velZ);
  runPhase+=dt*(4+hSpeed*1.5);
  const swing=Math.sin(runPhase)*Math.min(1,hSpeed/6)*(grounded?.9:.3);
- // Durante il drift, inclina il personaggio
- const leanAngle=driftAngle*.3;
- playerParts.body.rotation.z=leanAngle;
- playerParts.head.rotation.z=leanAngle*.5;
  playerParts.legL.rotation.x=swing;
  playerParts.legR.rotation.x=-swing;
- playerParts.armL.rotation.x=-swing*.8+leanAngle*.4;
- playerParts.armR.rotation.x=swing*.8-leanAngle*.4;
+ playerParts.armL.rotation.x=-swing*.8;
+ playerParts.armR.rotation.x=swing*.8;
  playerParts.body.position.y=1.05+Math.abs(Math.sin(runPhase))*.05*Math.min(1,hSpeed/6);
+ playerParts.body.rotation.z=0;
+ playerParts.head.rotation.z=0;
  if(!grounded){
   playerParts.legL.rotation.x=-.45;playerParts.legR.rotation.x=.55;
   playerParts.armL.rotation.x=-.85;playerParts.armR.rotation.x=-.35;
@@ -967,9 +1062,7 @@ function updatePlayer(dt){
  if(nearestGoal&&nearestGoalDist<1.75)winGame();
 }
 
-// ============= MUCHE MIGLIORATE =============
 function updateCows(dt){
- // Calcola distanza di ogni mucca dal giocatore
  let closestCow=null,closestDist=Infinity;
  for(let i=0;i<cows.length;i++){
   const c=cows[i];
@@ -980,11 +1073,7 @@ function updateCows(dt){
 
  for(let ci=0;ci<cows.length;ci++){
   const cow=cows[ci];
-
-  // Stato macchina per comportamento
   cow.stateTimer-=dt;
-
-  // Transizioni di stato
   const seesPlayer=cow.distToPlayer<cow.aggroRadius&&cow.state!=='stalk';
   const canSeePlayer=cow.distToPlayer<15&&segmentClear(cow.x,cow.z,player.x,player.z,.6,6);
 
@@ -996,25 +1085,18 @@ function updateCows(dt){
 
   if(cow.stateTimer<=0){
    if(cow.personality==='stalker'&&cow.distToPlayer<30&&nearestGoal){
-    // Lo stalker cerca di andare verso l'uscita più vicina per intercettare
-    cow.state='stalk';
-    cow.stateTimer=rand(3,6);
-    // Scegli un'uscita come target
+    cow.state='stalk';cow.stateTimer=rand(3,6);
     const goal=goals[(Math.random()*goals.length)|0];
     cow.targetX=goal.x;cow.targetZ=goal.z;
    }else if(canSeePlayer||cow.distToPlayer<cow.aggroRadius*.6){
-    cow.state='chase';
-    cow.stateTimer=rand(2,4);
+    cow.state='chase';cow.stateTimer=rand(2,4);
    }else if(cow.sawPlayer){
-    cow.state='search';
-    cow.stateTimer=rand(3,6);
+    cow.state='search';cow.stateTimer=rand(3,6);
    }else{
-    cow.state='patrol';
-    cow.stateTimer=rand(4,8);
-    // Scegli una nuova cella da pattugliare
+    cow.state='patrol';cow.stateTimer=rand(4,8);
     const cells=[];
-    for(let i=0;i<openCells.length;i++){
-     const c=openCells[i],p=cellCenter(c.cx,c.cz);
+    for(let i=0;i<openCellsGlobal.length;i++){
+     const c=openCellsGlobal[i],p=cellCenter(c.cx,c.cz);
      if(Math.hypot(p.x-cow.x,p.z-cow.z)<CELL*8)cells.push(p);
     }
     if(cells.length){
@@ -1024,42 +1106,31 @@ function updateCows(dt){
    }
   }
 
-  // Determina target in base allo stato
   let targetX,targetZ;
   switch(cow.state){
-   case 'chase':
-    targetX=player.x;targetZ=player.z;
-    break;
+   case 'chase':targetX=player.x;targetZ=player.z;break;
    case 'stalk':
-    // Anticipa il giocatore andando verso l'uscita
     targetX=cow.targetX;targetZ=cow.targetZ;
-    // Se molto vicino al giocatore, cambia a chase
     if(cow.distToPlayer<10){cow.state='chase';cow.stateTimer=3}
     break;
    case 'search':
-    // Va verso l'ultima posizione nota del giocatore
     targetX=cow.lastKnownPlayerX;targetZ=cow.lastKnownPlayerZ;
     if(Math.hypot(cow.x-targetX,cow.z-targetZ)<1.5){
-     // Ha raggiunto la posizione, torna a patrol
      cow.state='patrol';cow.stateTimer=rand(2,4);cow.sawPlayer=false;
     }
     break;
-   default: // patrol
+   default:
     targetX=cow.targetX;targetZ=cow.targetZ;
-    if(Math.hypot(cow.x-targetX,cow.z-targetZ)<1.5){
-     cow.stateTimer=0; // forza cambio stato
-    }
+    if(Math.hypot(cow.x-targetX,cow.z-targetZ)<1.5)cow.stateTimer=0;
     break;
   }
 
-  // Ricalcola path
   cow.repath-=dt;
   if(cow.repath<=0||cow.path.length===0){
    cow.path=findPath(cow.x,cow.z,targetX,targetZ);
    cow.repath=.3+Math.random()*.2;
   }
 
-  // Segui il path
   let pathTx=targetX,pathTz=targetZ;
   if(cow.path.length){
    pathTx=cow.path[0].x;pathTz=cow.path[0].z;
@@ -1069,23 +1140,15 @@ function updateCows(dt){
   let dx=pathTx-cow.x,dz=pathTz-cow.z,d=Math.hypot(dx,dz)||1;
   dx/=d;dz/=d;
 
-  // Velocità basata su stato e personalità
   let speed=cow.baseSpeed;
-  if(cow.state==='chase'){
-   speed*=1.2;
-   if(cow.distToPlayer<7)speed+=.85;
-  }else if(cow.state==='stalk'){
-   speed*=1.1;
-  }else if(cow.state==='search'){
-   speed*=.8;
-  }else{
-   speed*=.5;
-  }
+  if(cow.state==='chase'){speed*=1.2;if(cow.distToPlayer<7)speed+=.85}
+  else if(cow.state==='stalk')speed*=1.1;
+  else if(cow.state==='search')speed*=.8;
+  else speed*=.5;
 
   if(cow.stun>0){cow.stun-=dt;speed=.45}
   if(cow.blocked>0){cow.blocked-=dt;speed*=.5}
 
-  // Separazione dalle altre mucche (boids-like)
   let sepX=0,sepZ=0;
   for(let oi=0;oi<cows.length;oi++){
    if(oi===ci)continue;
@@ -1099,10 +1162,7 @@ function updateCows(dt){
    }
   }
 
-  // Coordinazione: alcune mucche provano a tagliare la strada al giocatore
   if(cow.personality==='chaser'&&closestCow===cow&&cow.state==='chase'&&nearestGoal){
-   // La mucca "leader" prova ad andare verso l'uscita che il giocatore sta raggiungendo
-   // per bloccarlo (con probabilità)
    if(Math.random()<.005){
     const goalDir=Math.atan2(nearestGoal.x-player.x,nearestGoal.z-player.z);
     const perpAngle=goalDir+Math.PI/2;
@@ -1113,11 +1173,9 @@ function updateCows(dt){
    }
   }
 
-  // Combina forze
   const sepMag=Math.hypot(sepX,sepZ);
   if(sepMag>.01){sepX/=sepMag;sepZ/=sepMag}
-  dx=dx+sepX*.8;
-  dz=dz+sepZ*.8;
+  dx=dx+sepX*.8;dz=dz+sepZ*.8;
 
   const dm=Math.hypot(dx,dz)||1;
   dx/=dm;dz/=dm;
@@ -1126,7 +1184,6 @@ function updateCows(dt){
   cow.x+=dx*speed*dt;cow.z+=dz*speed*dt;
   resolveWalls(cow,cow.r,2);
 
-  // Se si è mossa molto poco (bloccata), aumenta blocked timer
   if(Math.hypot(cow.x-prevX,cow.z-prevZ)<speed*dt*.2){
    cow.blocked=Math.min(cow.blocked+dt*2,3);
   }else{
@@ -1135,7 +1192,6 @@ function updateCows(dt){
 
   cow.mesh.position.set(cow.x,0,cow.z);
 
-  // Rotazione fluido verso direzione di movimento
   const movingSpeed=Math.hypot(cow.x-prevX,cow.z-prevZ)/dt;
   if(movingSpeed>.2){
    const targetAngle=Math.atan2(dx,dz);
@@ -1147,7 +1203,6 @@ function updateCows(dt){
    cow.legs[li].rotation.x=Math.sin(cow.anim+li*Math.PI/2)*.72*Math.min(1,movingSpeed/3);
   }
 
-  // Head shake quando perde il giocatore
   if(cow.state==='search'){
    cow.headShake+=dt*8;
    cow.head.rotation.y=Math.sin(cow.headShake)*.3;
@@ -1157,16 +1212,12 @@ function updateCows(dt){
   cow.head.position.y=1.1+Math.sin(cow.anim*.7)*.035;
   cow.tail.rotation.x=.7+Math.sin(cow.anim*.9)*.42;
 
-  // Muggiti contestuali
   cow.moo-=dt;
   if(cow.moo<=0){
-   if(cow.distToPlayer<34){
-    SFX.moo(cow.distToPlayer,cow.state==='chase');
-   }
+   if(cow.distToPlayer<34)SFX.moo(cow.distToPlayer,cow.state==='chase');
    cow.moo=cow.state==='chase'?rand(2,4):rand(4,9);
   }
 
-  // Danni al giocatore
   if(cow.distToPlayer<cow.r+player.r+.28&&invuln<=0&&cow.stun<=0){
    const dmg=cow.personality==='tank'?30:22;
    damagePlayer(dmg,cow);cow.stun=.55;cow.path=[];
@@ -1175,7 +1226,6 @@ function updateCows(dt){
  }
 }
 
-// ============= CAMERA =============
 function updateCamera(dt){
  const hSpeed=Math.hypot(velX,velZ),moving=inputMoving||hSpeed>.55;
  let targetYaw;
@@ -1219,7 +1269,6 @@ function updateCamera(dt){
  camera.lookAt(lx,player.y+1.35,lz);
 }
 
-// ============= DANGER INDICATOR =============
 function drawDangerIndicator(){
  if(!settings.showDanger){dangerCanvas.style.opacity='0';return}
  const W=300,H=300,cx=150,cy=150;
@@ -1231,7 +1280,6 @@ function drawDangerIndicator(){
   const d=Math.hypot(dx,dz);
   if(d>25)continue;
   anyDanger=true;
-  // Angolo relativo alla camera
   const worldAngle=Math.atan2(dx,dz);
   const screenAngle=worldAngle-viewYaw+Math.PI;
   const intensity=clamp(1-d/25,0,1);
@@ -1276,7 +1324,6 @@ function updateWorldFX(dt){
  drawDangerIndicator();
 }
 
-// ============= MENU =============
 function showMainMenu(){
  gameState='menu';
  menuOverlay.classList.remove('hidden');
@@ -1371,7 +1418,7 @@ window.startLevel=function(l){
  hp=100;stamina=100;
  sprintLocked=false;sprintActive=false;sprintHeld=false;sprintRegenDelay=0;
  stumble=0;invuln=0;elapsed=0;damageAlpha=0;shake=0;
- jumpBuffer=0;coyote=0;viewPitch=.46;driftAngle=0;
+ jumpBuffer=0;coyote=0;viewPitch=.46;
  if(!playerMesh){const p=createPlayerMesh();playerMesh=p.mesh;playerParts=p.parts;scene.add(playerMesh)}
  if(!goalArrow)goalArrow=createGoalArrow();
  if(!targetMarker)targetMarker=createTargetMarker();
